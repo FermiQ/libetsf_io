@@ -36,11 +36,11 @@ module etsf_io_low_level
   end interface
 
   !Generic interface of the routines etsf_io_low_get_var
-  interface etsf_io_low_get_var
-    module procedure etsf_io_low_get_var_integer
-    module procedure etsf_io_low_get_var_double
-    module procedure etsf_io_low_get_var_character
-  end interface etsf_io_low_get_var
+!  interface etsf_io_low_get_var
+!    module procedure etsf_io_low_get_var_integer
+!    module procedure etsf_io_low_get_var_double
+!    module procedure etsf_io_low_get_var_character
+!  end interface etsf_io_low_get_var
   !End of the generic interface of etsf_io_low_get_var
   
 contains
@@ -183,73 +183,73 @@ contains
     ierr = .true.
   end subroutine etsf_io_low_check_var
   
-  subroutine etsf_io_low_get_var_integer(ncid, ncvarid, var, vardim, ierr, error_handle)
-    integer, intent(in)   :: ncid
-    integer, intent(in)   :: ncvarid
-    integer, intent(in)   :: vardim
-    integer, intent(out)  :: var(1:vardim)
-    logical, intent(out)  :: ierr
-    optional              :: error_handle
-
-    !Local
-    character(len = *), parameter :: me = "etsf_io_low_get_var_integer"
-    integer :: s
-
-    ierr = .false.    
-    s = nf90_get_var(ncid, ncvarid, values = var)
-    if (s /= nf90_noerr) then
-      if (present(error_handle)) then
-        call error_handle(ERROR_GET, ERROR_VAR, "name not available", me, nf90_strerror(s))
-      end if
-      return
-    end if
-    ierr = .true.
-  end subroutine etsf_io_low_get_var_integer
-  subroutine etsf_io_low_get_var_double(ncid, ncvarid, var, vardim, ierr, error_handle)
-    integer, intent(in)            :: ncid
-    integer, intent(in)            :: ncvarid
-    integer, intent(in)            :: vardim
-    double precision, intent(out)  :: var(1:vardim)
-    logical, intent(out)           :: ierr
-    optional                       :: error_handle
-
-    !Local
-    character(len = *), parameter :: me = "etsf_io_low_get_var_double"
-    integer :: s
-
-    ierr = .false.    
-    s = nf90_get_var(ncid, ncvarid, values = var)
-    if (s /= nf90_noerr) then
-      if (present(error_handle)) then
-        call error_handle(ERROR_GET, ERROR_VAR, "name not available", me, nf90_strerror(s))
-      end if
-      return
-    end if
-    ierr = .true.
-  end subroutine etsf_io_low_get_var_double
-  subroutine etsf_io_low_get_var_character(ncid, ncvarid, var, vardim, &
-                                          & chardim, ierr, error_handle)
-    integer, intent(in)                    :: ncid
-    integer, intent(in)                    :: ncvarid
-    integer, intent(in)                    :: vardim, chardim
-    character(len = chardim), intent(out)  :: var(1:vardim)
-    logical, intent(out)                   :: ierr
-    optional                               :: error_handle
-
-    !Local
-    character(len = *), parameter :: me = "etsf_io_low_get_var_character"
-    integer :: s
-
-    ierr = .false.    
-    s = nf90_get_var(ncid, ncvarid, values = var)
-    if (s /= nf90_noerr) then
-      if (present(error_handle)) then
-        call error_handle(ERROR_GET, ERROR_VAR, "name not available", me, nf90_strerror(s))
-      end if
-      return
-    end if
-    ierr = .true.
-  end subroutine etsf_io_low_get_var_character
+!  subroutine etsf_io_low_get_var_integer(ncid, ncvarid, var, vardim, ierr, error_handle)
+!    integer, intent(in)   :: ncid
+!    integer, intent(in)   :: ncvarid
+!    integer, intent(in)   :: vardim
+!    integer, intent(out)  :: var(1:vardim)
+!    logical, intent(out)  :: ierr
+!    optional              :: error_handle
+!
+!    !Local
+!    character(len = *), parameter :: me = "etsf_io_low_get_var_integer"
+!    integer :: s
+!
+!    ierr = .false.    
+!    s = nf90_get_var(ncid, ncvarid, values = var)
+!    if (s /= nf90_noerr) then
+!      if (present(error_handle)) then
+!        call error_handle(ERROR_GET, ERROR_VAR, "name not available", me, nf90_strerror(s))
+!      end if
+!      return
+!    end if
+!    ierr = .true.
+!  end subroutine etsf_io_low_get_var_integer
+!  subroutine etsf_io_low_get_var_double(ncid, ncvarid, var, vardim, ierr, error_handle)
+!    integer, intent(in)            :: ncid
+!    integer, intent(in)            :: ncvarid
+!    integer, intent(in)            :: vardim
+!    double precision, intent(out)  :: var(1:vardim)
+!    logical, intent(out)           :: ierr
+!    optional                       :: error_handle
+!
+!    !Local
+!    character(len = *), parameter :: me = "etsf_io_low_get_var_double"
+!    integer :: s
+!
+!    ierr = .false.    
+!    s = nf90_get_var(ncid, ncvarid, values = var)
+!    if (s /= nf90_noerr) then
+!      if (present(error_handle)) then
+!        call error_handle(ERROR_GET, ERROR_VAR, "name not available", me, nf90_strerror(s))
+!      end if
+!      return
+!    end if
+!    ierr = .true.
+!  end subroutine etsf_io_low_get_var_double
+!  subroutine etsf_io_low_get_var_character(ncid, ncvarid, var, vardim, &
+!                                          & chardim, ierr, error_handle)
+!    integer, intent(in)                    :: ncid
+!    integer, intent(in)                    :: ncvarid
+!    integer, intent(in)                    :: vardim, chardim
+!    character(len = chardim), intent(out)  :: var(1:vardim)
+!    logical, intent(out)                   :: ierr
+!    optional                               :: error_handle
+!
+!    !Local
+!    character(len = *), parameter :: me = "etsf_io_low_get_var_character"
+!    integer :: s
+!
+!    ierr = .false.    
+!    s = nf90_get_var(ncid, ncvarid, values = var)
+!    if (s /= nf90_noerr) then
+!      if (present(error_handle)) then
+!        call error_handle(ERROR_GET, ERROR_VAR, "name not available", me, nf90_strerror(s))
+!      end if
+!      return
+!    end if
+!    ierr = .true.
+!  end subroutine etsf_io_low_get_var_character
   
   subroutine etsf_io_low_check_att(ncid, ncvarid, attname, atttype, attlen, ierr, error_handle)
     integer, intent(in)            :: ncid
@@ -282,7 +282,8 @@ contains
       return
     end if
     ! Check the dimensions
-    if (nclen > attlen) then
+    if ((atttype == NF90_CHAR .and. nclen > attlen) .or. &
+      & (atttype /= NF90_CHAR .and. nclen /= attlen)) then
       write(err, "(A,I5,A,I5,A)") "wrong length (read = ", nclen, &
                                 & ", awaited = ", attlen, ")"
       if (present(error_handle)) then
@@ -317,6 +318,8 @@ contains
       end if
       return
     end if
+    ! From now on the file is open. If an error occur,
+    ! we should close it.
     
     ! Check the header
     if (present(error_handle)) then
@@ -326,6 +329,7 @@ contains
       call etsf_io_low_check_att(ncid, NF90_GLOBAL, "file_format", NF90_CHAR, 80, stat) 
     end if
     if (.not. stat) then
+      call etsf_io_low_close(ncid, stat)
       return
     end if
     write(format, "(A80)") " "
@@ -334,6 +338,7 @@ contains
       if (present(error_handle)) then
         call error_handle(ERROR_GET, ERROR_ATT, "file_format", me, nf90_strerror(s))
       end if
+      call etsf_io_low_close(ncid, stat)
       return
     end if
     if (trim(adjustl(format)) /= "ETSF Nanoquanta") then
@@ -341,6 +346,7 @@ contains
       if (present(error_handle)) then
         call error_handle(ERROR_SPEC, ERROR_ATT, "file_format", me, err)
       end if
+      call etsf_io_low_close(ncid, stat)
       return
     end if
     ! Check the version
@@ -350,6 +356,7 @@ contains
       call etsf_io_low_check_att(ncid, NF90_GLOBAL, "file_format_version", NF90_DOUBLE, 1, stat)
       version_real = 0.
       if (.not. stat) then
+        call etsf_io_low_close(ncid, stat)
         return
       end if
     end if
@@ -363,6 +370,7 @@ contains
       if (present(error_handle)) then
         call error_handle(ERROR_GET, ERROR_ATT, "file_format_version", me, nf90_strerror(s))
       end if
+      call etsf_io_low_close(ncid, stat)
       return
     end if
     if (present(version_min)) then
@@ -375,6 +383,7 @@ contains
       if (present(error_handle)) then
         call error_handle(ERROR_SPEC, ERROR_ATT, "file_format_version", me, err)
       end if
+      call etsf_io_low_close(ncid, stat)
       return
     end if
     ! Check for the Conventions flag
@@ -385,6 +394,7 @@ contains
       call etsf_io_low_check_att(ncid, NF90_GLOBAL, "Conventions", NF90_CHAR, 80, stat) 
     end if
     if (.not. stat) then
+      call etsf_io_low_close(ncid, stat)
       return
     end if
     ierr = .true.
