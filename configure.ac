@@ -10,6 +10,7 @@ dnl  - PACKAGE_VERSION, the version ;
 dnl  - PACKAGE_STRING, the name + the version ;
 dnl  - PACKAGE_BUGREPORT, the mail.
 AC_INIT([ETSF - IO library], [0.1], [caliste@pcpm.ucl.ac.be], [etsf_io])
+AC_SUBST(ETSF_FILE_FORMAT,   "mod")
 
 dnl All temporary building files are put in this directory.
 dnl his must be called before AM_INIT_AUTOMAKE

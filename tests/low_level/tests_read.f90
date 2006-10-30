@@ -4,9 +4,7 @@ program tests_read
   
   implicit none
 
-  integer :: ncid, nArg
-  logical :: stat
-  integer :: dimval
+  integer :: nArg
   character(len = 256) :: path
   
   nArg = iargc()
@@ -57,7 +55,7 @@ contains
     
     call etsf_io_low_open_read(ncid, path//"/open_read_t01.nc", lstat, error_data = error)
     call tests_read_status("argument filename: NetCDF without header", (.not. lstat .and. &
-      & error%access_mode_id == ERROR_MODE_INQ), error)
+      & error%access_mode_id == ERROR_MODE_INQ .and. error%target_type_id == ERROR_TYPE_ATT), error)
     
     call etsf_io_low_open_read(ncid, path//"/open_read_t02.nc", lstat, error_data = error)
     call tests_read_status("argument filename: NetCDF with wrong file_format header", &
@@ -196,13 +194,13 @@ contains
 
     call etsf_io_low_check_att(ncid, NF90_GLOBAL, "file_format", NF90_INT, 80, lstat, &
                              & error_data = error)
-    call tests_read_status("argument atttype: wrong value", (.not. lstat), error)
+    call tests_read_status("argument atttype: wrong type", (.not. lstat), error)
 
-    call etsf_io_low_check_att(ncid, NF90_GLOBAL, "file_format_version", NF90_DOUBLE, 2, lstat, &
+    call etsf_io_low_check_att(ncid, NF90_GLOBAL, "file_format_version", NF90_FLOAT, 2, lstat, &
                              & error_data = error)
-    call tests_read_status("argument attlen: wrong value", (.not. lstat), error)
+    call tests_read_status("argument attlen: wrong dimension", (.not. lstat), error)
 
-    call etsf_io_low_check_att(ncid, NF90_GLOBAL, "file_format_version", NF90_DOUBLE, 1, lstat, &
+    call etsf_io_low_check_att(ncid, NF90_GLOBAL, "file_format_version", NF90_FLOAT, 1, lstat, &
                              & error_data = error)
     call tests_read_status("argument attlen: good value", lstat, error)
     call etsf_io_low_close(ncid, lstat)

@@ -171,52 +171,28 @@
     lstat = .true.
   end subroutine etsf_io_low_check_att
   
-  subroutine etsf_io_low_open_read(ncid, filename, lstat, version_min, error_data)
-    integer, intent(out)                           :: ncid
-    character(len = *), intent(in)                 :: filename
-    real, intent(in), optional                     :: version_min
+  subroutine etsf_io_low_check_header(ncid, lstat, version_min, error_data)
+    integer, intent(in)                            :: ncid
     logical, intent(out)                           :: lstat
+    real, intent(in), optional                     :: version_min
     type(etsf_io_low_error), intent(out), optional :: error_data
 
     !Local
-    character(len = *), parameter :: me = "etsf_io_low_open_read"
+    character(len = *), parameter :: me = "etsf_io_low_check_header"
     character(len = 80) :: err, format
-    integer :: s, nctype, nclen
+    integer :: s
     real :: version_real
-    double precision :: version_double
     logical :: stat
-    
+
     lstat = .false.
-    ! Open file for reading
-    s = nf90_open(path = filename, mode = NF90_NOWRITE, ncid = ncid)
-    if (s /= nf90_noerr) then
-      if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_IO, ERROR_TYPE_ORD, me, tgtname = filename, &
-                     & errid = s, errmess = nf90_strerror(s))
-      end if
-      return
-    end if
-    ! From now on the file is open. If an error occur,
-    ! we should close it.
-    
     ! Check the header
+    write(format, "(A80)") " "
     if (present(error_data)) then
-      call etsf_io_low_check_att(ncid, NF90_GLOBAL, "file_format", &
-                               & NF90_CHAR, 80, stat, error_data) 
+      call etsf_io_low_read_att(ncid, NF90_GLOBAL, "file_format", 80, format, stat, error_data) 
     else
-      call etsf_io_low_check_att(ncid, NF90_GLOBAL, "file_format", NF90_CHAR, 80, stat) 
+      call etsf_io_low_read_att(ncid, NF90_GLOBAL, "file_format", 80, format, stat) 
     end if
     if (.not. stat) then
-      call etsf_io_low_close(ncid, stat)
-      return
-    end if
-    write(format, "(A80)") " "
-    s = nf90_get_att(ncid, NF90_GLOBAL, "file_format", format)
-    if (s /= nf90_noerr) then
-      if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_GET, ERROR_TYPE_ATT, me, tgtname = "file_format", &
-                     & errid = s, errmess = nf90_strerror(s))
-      end if
       call etsf_io_low_close(ncid, stat)
       return
     end if
@@ -230,27 +206,14 @@
       return
     end if
     ! Check the version
-    version_real = 1.
-    call etsf_io_low_check_att(ncid, NF90_GLOBAL, "file_format_version", NF90_FLOAT, 1, stat) 
-    if (.not. stat) then
-      call etsf_io_low_check_att(ncid, NF90_GLOBAL, "file_format_version", NF90_DOUBLE, 1, stat)
-      version_real = 0.
-      if (.not. stat) then
-        call etsf_io_low_close(ncid, stat)
-        return
-      end if
-    end if
-    if (version_real == 1.) then
-      s = nf90_get_att(ncid, NF90_GLOBAL, "file_format_version", version_real)
+    if (present(error_data)) then
+      call etsf_io_low_read_att(ncid, NF90_GLOBAL, "file_format_version", &
+                              & version_real, stat, error_data) 
     else
-      s = nf90_get_att(ncid, NF90_GLOBAL, "file_format_version", version_double)
-      version_real = real(version_double)
+      call etsf_io_low_read_att(ncid, NF90_GLOBAL, "file_format_version", &
+                              & version_real, stat)
     end if
-    if (s /= nf90_noerr) then
-      if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_GET, ERROR_TYPE_ATT, me, tgtname = "file_format_version", &
-                     & errid = s, errmess = nf90_strerror(s))
-      end if
+    if (.not. stat) then
       call etsf_io_low_close(ncid, stat)
       return
     end if
@@ -260,7 +223,7 @@
       stat = (version_real >= 1.3)
     end if
     if (.not. stat) then
-      write(err, "(A)") "wrong value"
+      write(err, "(A,F10.5)") "wrong value: ", version_real
       if (present(error_data)) then
         call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, tgtname = "file_format_version", &
                      & errmess = err)
@@ -280,26 +243,43 @@
       return
     end if
     lstat = .true.
-  end subroutine etsf_io_low_open_read
+  end subroutine etsf_io_low_check_header
   
-  subroutine etsf_io_low_close(ncid, lstat, error_data)
-    integer, intent(in)                            :: ncid
+  subroutine etsf_io_low_open_read(ncid, filename, lstat, version_min, error_data)
+    integer, intent(out)                           :: ncid
+    character(len = *), intent(in)                 :: filename
     logical, intent(out)                           :: lstat
+    real, intent(in), optional                     :: version_min
     type(etsf_io_low_error), intent(out), optional :: error_data
 
     !Local
-    character(len = *), parameter :: me = "etsf_io_low_close"
+    character(len = *), parameter :: me = "etsf_io_low_open_read"
     integer :: s
     
     lstat = .false.
-    ! Close file
-    s = nf90_close(ncid)
+    ! Open file for reading
+    s = nf90_open(path = filename, mode = NF90_NOWRITE, ncid = ncid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_IO, ERROR_TYPE_CLO, me, &
+        call set_error(error_data, ERROR_MODE_IO, ERROR_TYPE_ORD, me, tgtname = filename, &
                      & errid = s, errmess = nf90_strerror(s))
       end if
       return
     end if
-    lstat = .true.
-  end subroutine etsf_io_low_close
+    ! From now on the file is open. If an error occur,
+    ! we should close it.
+
+    if (present(error_data)) then
+      if (present(version_min)) then
+        call etsf_io_low_check_header(ncid, lstat, version_min, error_data)
+      else
+        call etsf_io_low_check_header(ncid, lstat, error_data = error_data)
+      end if
+    else
+      if (present(version_min)) then
+        call etsf_io_low_check_header(ncid, lstat, version_min = version_min)
+      else
+        call etsf_io_low_check_header(ncid, lstat)
+      end if
+    end if
+  end subroutine etsf_io_low_open_read

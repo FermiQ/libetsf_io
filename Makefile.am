@@ -8,4 +8,4 @@ run-tests-low-level: run-tests-low-level-read
 
 run-tests-low-level-read:
 	cd tests/low_level; \
-	make run-tests-read
+	make run-tests

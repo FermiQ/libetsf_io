@@ -3,7 +3,13 @@ module etsf_io_low_level
   use netcdf
 
   implicit none
-  
+
+  ! Basic variables  
+  character(len = *), parameter, private :: &
+    & etsf_io_low_file_format = "ETSF Nanoquanta"
+  character(len = *), parameter, private :: &
+    & etsf_io_low_conventions = "http://www.etsf.eu/fileformats/"
+
   ! Error handling
   integer, parameter, private :: nb_access_mode = 6
   character(len = 15), dimension(nb_access_mode), parameter, private :: &
@@ -18,7 +24,7 @@ module etsf_io_low_level
   character(len = 22), dimension(nb_target_type), parameter, private :: &
     & etsf_io_low_error_type = (/ "attribute             ", "dimension ID          ", &
                                 & "dimension             ", "end definitions       ", &
-                                & "initialize file       ", "create file           ", &
+                                & "define mode           ", "create file           ", &
                                 & "open file for reading ", "open file for writing ", &
                                 & "variable              ", "variable ID           ", &
                                 & "close file            " /)
@@ -53,6 +59,17 @@ module etsf_io_low_level
   end interface etsf_io_low_read_var
   !End of the generic interface of etsf_io_low_read_var
   
+  !Generic interface of the routines etsf_io_low_read_att
+  interface etsf_io_low_read_att
+    module procedure etsf_io_low_read_att_integer
+    module procedure etsf_io_low_read_att_real
+    module procedure etsf_io_low_read_att_double
+    module procedure etsf_io_low_read_att_integer_1D
+    module procedure etsf_io_low_read_att_real_1D
+    module procedure etsf_io_low_read_att_double_1D
+    module procedure etsf_io_low_read_att_character_1D
+  end interface etsf_io_low_read_att
+  !End of the generic interface of etsf_io_low_read_att
   
 contains
 
@@ -130,7 +147,31 @@ contains
     write(*,*) 
   end subroutine etsf_io_low_error_handle
 
+  subroutine etsf_io_low_close(ncid, lstat, error_data)
+    integer, intent(in)                            :: ncid
+    logical, intent(out)                           :: lstat
+    type(etsf_io_low_error), intent(out), optional :: error_data
+
+    !Local
+    character(len = *), parameter :: me = "etsf_io_low_close"
+    integer :: s
+    
+    lstat = .false.
+    ! Close file
+    s = nf90_close(ncid)
+    if (s /= nf90_noerr) then
+      if (present(error_data)) then
+        call set_error(error_data, ERROR_MODE_IO, ERROR_TYPE_CLO, me, &
+                     & errid = s, errmess = nf90_strerror(s))
+      end if
+      return
+    end if
+    lstat = .true.
+  end subroutine etsf_io_low_close
+
   include "read_routines.f90"
   include "read_routines_auto.f90"
+
+  include "write_routines.f90"
 
 end module etsf_io_low_level
