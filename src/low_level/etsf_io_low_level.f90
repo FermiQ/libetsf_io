@@ -28,13 +28,30 @@ module etsf_io_low_level
   
   include "public_variables.f90"
     
-  !Generic interface of the routines etsf_io_low_get_var
-!  interface etsf_io_low_get_var
-!    module procedure etsf_io_low_get_var_integer
-!    module procedure etsf_io_low_get_var_double
-!    module procedure etsf_io_low_get_var_character
-!  end interface etsf_io_low_get_var
-  !End of the generic interface of etsf_io_low_get_var
+  !Generic interface of the routines etsf_io_low_read_var
+  interface etsf_io_low_read_var
+    module procedure etsf_io_low_read_var_integer_1D
+    module procedure etsf_io_low_read_var_integer_2D
+    module procedure etsf_io_low_read_var_integer_3D
+    module procedure etsf_io_low_read_var_integer_4D
+    module procedure etsf_io_low_read_var_integer_5D
+    module procedure etsf_io_low_read_var_integer_6D
+    module procedure etsf_io_low_read_var_integer_7D
+    module procedure etsf_io_low_read_var_double_1D
+    module procedure etsf_io_low_read_var_double_2D
+    module procedure etsf_io_low_read_var_double_3D
+    module procedure etsf_io_low_read_var_double_4D
+    module procedure etsf_io_low_read_var_double_5D
+    module procedure etsf_io_low_read_var_double_6D
+    module procedure etsf_io_low_read_var_double_7D
+    module procedure etsf_io_low_read_var_character_2D
+    module procedure etsf_io_low_read_var_character_3D
+    module procedure etsf_io_low_read_var_character_4D
+    module procedure etsf_io_low_read_var_character_5D
+    module procedure etsf_io_low_read_var_character_6D
+    module procedure etsf_io_low_read_var_character_7D
+  end interface etsf_io_low_read_var
+  !End of the generic interface of etsf_io_low_read_var
   
   
 contains

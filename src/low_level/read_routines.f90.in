@@ -125,74 +125,6 @@
     lstat = .true.
   end subroutine etsf_io_low_check_var
   
-!  subroutine etsf_io_low_get_var_integer(ncid, ncvarid, var, vardim, lstat, error_data)
-!    integer, intent(in)   :: ncid
-!    integer, intent(in)   :: ncvarid
-!    integer, intent(in)   :: vardim
-!    integer, intent(out)  :: var(1:vardim)
-!    logical, intent(out)  :: lstat
-!    optional              :: error_handle
-!
-!    !Local
-!    character(len = *), parameter :: me = "etsf_io_low_get_var_integer"
-!    integer :: s
-!
-!    lstat = .false.    
-!    s = nf90_get_var(ncid, ncvarid, values = var)
-!    if (s /= nf90_noerr) then
-!      if (present(error_data)) then
-!        call error_handle(ERROR_MODE_GET, ERROR_TYPE_VAR, "name not available", me, nf90_strerror(s))
-!      end if
-!      return
-!    end if
-!    lstat = .true.
-!  end subroutine etsf_io_low_get_var_integer
-!  subroutine etsf_io_low_get_var_double(ncid, ncvarid, var, vardim, lstat, error_data)
-!    integer, intent(in)            :: ncid
-!    integer, intent(in)            :: ncvarid
-!    integer, intent(in)            :: vardim
-!    double precision, intent(out)  :: var(1:vardim)
-!    logical, intent(out)           :: lstat
-!    type(etsf_io_low_error), intent(out), optional :: error_data
-!
-!    !Local
-!    character(len = *), parameter :: me = "etsf_io_low_get_var_double"
-!    integer :: s
-!
-!    lstat = .false.    
-!    s = nf90_get_var(ncid, ncvarid, values = var)
-!    if (s /= nf90_noerr) then
-!      if (present(error_data)) then
-!        call error_handle(ERROR_MODE_GET, ERROR_TYPE_VAR, "name not available", me, nf90_strerror(s))
-!      end if
-!      return
-!    end if
-!    lstat = .true.
-!  end subroutine etsf_io_low_get_var_double
-!  subroutine etsf_io_low_get_var_character(ncid, ncvarid, var, vardim, &
-!                                          & chardim, lstat, error_data)
-!    integer, intent(in)                    :: ncid
-!    integer, intent(in)                    :: ncvarid
-!    integer, intent(in)                    :: vardim, chardim
-!    character(len = chardim), intent(out)  :: var(1:vardim)
-!    logical, intent(out)                   :: lstat
-!    optional                               :: error_handle
-!
-!    !Local
-!    character(len = *), parameter :: me = "etsf_io_low_get_var_character"
-!    integer :: s
-!
-!    lstat = .false.    
-!    s = nf90_get_var(ncid, ncvarid, values = var)
-!    if (s /= nf90_noerr) then
-!      if (present(error_data)) then
-!        call error_handle(ERROR_MODE_GET, ERROR_TYPE_VAR, "name not available", me, nf90_strerror(s))
-!      end if
-!      return
-!    end if
-!    lstat = .true.
-!  end subroutine etsf_io_low_get_var_character
-  
   subroutine etsf_io_low_check_att(ncid, ncvarid, attname, atttype, attlen, lstat, error_data)
     integer, intent(in)                            :: ncid
     integer, intent(in)                            :: ncvarid
@@ -371,3 +303,4 @@
     end if
     lstat = .true.
   end subroutine etsf_io_low_close
+  
