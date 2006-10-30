@@ -303,4 +303,3 @@
     end if
     lstat = .true.
   end subroutine etsf_io_low_close
-  

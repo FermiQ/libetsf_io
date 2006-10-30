@@ -131,5 +131,6 @@ contains
   end subroutine etsf_io_low_error_handle
 
   include "read_routines.f90"
+  include "read_routines_auto.f90"
 
 end module etsf_io_low_level

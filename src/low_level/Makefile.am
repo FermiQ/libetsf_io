@@ -9,4 +9,5 @@ libetsf_io_low_level_a_SOURCES = etsf_io_low_level.f90
 #dependencies
 etsf_io_low_level.o: etsf_io_low_level.f90 \
 	public_variables.f90 \
-	read_routines.f90
+	read_routines.f90 \
+	read_routines_auto.f90
