@@ -20,12 +20,22 @@ AM_INIT_AUTOMAKE
 
 dnl Defining fortran language for tests.
 AC_LANG(Fortran)
+AC_FC_SRCEXT(f90)
+
+dnl Set th default prefix to /opt (see the discussion
+dnl on the nanoquanta mailing list of october 2006).
+AC_PREFIX_DEFAULT(/opt)
 
 dnl If FC environement variable is not already set, it
 dnl looks for a modern Fortran compiler, prefering newest
 dnl fortran available (e. g. Fortran95). Then FC variable
 dnl is set.
 AC_PROG_FC()
+
+dnl We custom the module naming scheme depending on the compiler
+dnl and the platform.
+dnl Not done yet
+AC_SUBST(MODULE_EXT, "mod")
 
 dnl Set the FCFLAGS and FFLAGS variable
 if test -z "$FFLAGS" ; then
@@ -46,19 +56,51 @@ if test "$ar" = ":" ; then
   AC_MSG_ERROR(["No 'ar' program found."])
 fi
 
+dnl Get the NetCDF module
+AC_ARG_WITH(netcdf-module-path, AS_HELP_STRING([--with-netcdf-module-path], [Give the path of the NetCDF Fortran90 module (default = /usr/include).]),
+            ac_netcdf_mod=$withval, ac_netcdf_mod=/usr/include)
+AC_CHECK_FILE(${ac_netcdf_mod}/netcdf.mod, withnetcdf=yes, withnetcdf=no)
+if test "$withnetcdf" = "no" ; then
+  AC_CHECK_FILE(${ac_netcdf_mod}/NETCDF.mod, withnetcdf=yes, withnetcdf=no)
+  if test "$withnetcdf" = "no" ; then
+    AC_CHECK_FILE(${ac_netcdf_mod}/NETCDF.MOD, withnetcdf=yes, withnetcdf=no)
+  fi
+fi
+if test "$withnetcdf" = "no" ; then
+  AC_MSG_ERROR(["No 'NetCDF' module found."])
+  echo "Action: install NetCDF and set its path with --with-netcdf-module."
+fi
+AC_SUBST(NETCDF_CFLAGS, "$ac_netcdf_mod")
+
 dnl Get the NetCDF library
 ac_netcdf_dir=/usr/lib
-AC_ARG_WITH(netcdf-path, AS_HELP_STRING([--with-netcdf-path], [Give the path of the NetCDF Fortran90 library (default = /usr/lib).]),
+AC_ARG_WITH(netcdf-lib-path, AS_HELP_STRING([--with-netcdf-lib-path], [Give the path of the NetCDF Fortran90 library (default = /usr/lib).]),
             ac_netcdf_dir=$withval, ac_netcdf_dir=)
-if test -n "$ac_lapack_dir" ; then
-  LDFLAGS="$LDFLAGS -L$ac_lapack_dir"
+if test -n "$ac_netcdf_dir" ; then
+  LDFLAGS="$LDFLAGS -L$ac_netcdf_dir"
 fi
-AC_CHECK_LIB(netcdf, nf90_open, withnetcdf=yes, withnetcdf=no)
+FCFLAGS_SVG=$FCFLAGS
+FCFLAGS="$FCFLAGS -I$ac_netcdf_mod"
+LIBS="$LIBS -lnetcdf"
+AC_MSG_CHECKING([for netcdf library])
+AC_LINK_IFELSE([
+program main
+  use netcdf
+ integer :: s, ncid
+ s = nf90_open(path = "", mode = NF90_NOWRITE, ncid = ncid)
+end program main
+], withnetcdf=yes, withnetcdf=no)
+AC_MSG_RESULT([$withnetcdf])
+FCFLAGS=$FCFLAGS_SVG
 if test "$withnetcdf" = "no" ; then
+  echo "LDFLAGS was $LDFLAGS"
+  echo "Action: install NetCDF and set its path with --with-netcdf-lib-path."
   AC_MSG_ERROR(["No 'NetCDF' library found."])
-  echo "LDFLAGS was $(LDFLAGS)"
-  echo "Action: install NetCDF and set its path with --with-netcdf-path."
 fi
+
+dnl default installation directories
+moduledir=${includedir}/$FC
+AC_SUBST(moduledir)
 
 
 dnl Give the name of file.in to transform to file
@@ -76,4 +118,6 @@ Basics:
   Fortran90 flags:        $FCFLAGS
   Linker flags:           $LDFLAGS
   Linked libraries:       $LIBS
+  Installed module dir:   $moduledir
+  Installed lib dir:      $libdir
 "
