@@ -1,3 +1,28 @@
+  !!****m* etsf_io_low_level/etsf_io_low_read_dim
+  !! NAME
+  !!  etsf_io_low_read_dim
+  !!
+  !! FUNCTION
+  !!  This method is a wraper to get in one call the id of one dimension
+  !!  and its value.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!
+  !! INPUTS
+  !!  * ncid = a NetCDF handler, opened with read access.
+  !!  * dimname = a string identifying a dimension.
+  !!
+  !! OUTPUT
+  !!  * dimvalue = a positive integer which is the length of the dimension.
+  !!  * lstat = .true. if operation succeed.
+  !!  * ncdimid = (optional) the id used by NetCDF to identify the read dimension.
+  !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!
+  !! SOURCE
   subroutine etsf_io_low_read_dim(ncid, dimname, dimvalue, lstat, ncdimid, error_data)
     integer, intent(in)                            :: ncid
     character(len = *), intent(in)                 :: dimname
@@ -33,7 +58,42 @@
     end if
     lstat = .true.    
   end subroutine etsf_io_low_read_dim
+  !!***
   
+  !!****m* etsf_io_low_level/etsf_io_low_check_var
+  !! NAME
+  !!  etsf_io_low_check_var
+  !!
+  !! FUNCTION
+  !!  This method is used to check that a variable:
+  !!   * exists in the read NetCDF file ;
+  !!   * has the right type ;
+  !!   * has the right shape and the right dimensions.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!
+  !! INPUTS
+  !!  * ncid = a NetCDF handler, opened with read access.
+  !!  * varname = a string identifying a variable.
+  !!  * vartype = an integer identifying the type (see #constants).
+  !!  * vardims = an array with sizes for every dimension. This argument is
+  !!              used when @nbvardims is null, which denotes a scalar variable.
+  !!  * nbvardims = the number of dimensions for the variable (0 if scalar).
+  !!
+  !! OUTPUT
+  !!  * ncvarid = the id used by NetCDF to identify the checked variable.
+  !!  * lstat = .true. if operation succeed.
+  !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!
+  !! ERRORS
+  !!  * ERROR_MODE_INQ & ERROR_TYPE_VAR: when the variable doesn't exist.
+  !!  * ERROR_MODE_SPEC & ERROR_TYPE_VAR: when the variable has a wrong type or shape.
+  !!
+  !! SOURCE
   subroutine etsf_io_low_check_var(ncid, ncvarid, varname, vartype, vardims, &
                                  & nbvardims, lstat, error_data)
     integer, intent(in)                            :: ncid
@@ -130,7 +190,43 @@
     end if
     lstat = .true.
   end subroutine etsf_io_low_check_var
+  !!***
   
+  !!****m* etsf_io_low_level/etsf_io_low_check_att
+  !! NAME
+  !!  etsf_io_low_check_att
+  !!
+  !! FUNCTION
+  !!  This method is used to check that an attribute:
+  !!   * exists in the read NetCDF file ;
+  !!   * has the right type ;
+  !!   * has the right length (1 for scalar, > 1 for arrays).
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!
+  !! INPUTS
+  !!  * ncid = a NetCDF handler, opened with read access.
+  !!  * ncvarid = the id of the variable the attribute is attached to.
+  !!              in the case of global attributes, use the constance
+  !!              NF90_GLOBAL (when linking against NetCDF) or #etsf_io_low_global_att
+  !!              which is a wrapper exported by this module (see #constants).
+  !!  * attname = a string identifying an attribute.
+  !!  * atttype = an integer identifying the type (see #constants).
+  !!  * attlen = the size of the array, or 1 when the attribute is a scalar.
+  !!
+  !! OUTPUT
+  !!  * lstat = .true. if operation succeed.
+  !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!
+  !! ERRORS
+  !!  * ERROR_MODE_INQ & ERROR_TYPE_ATT: when the attribute doesn't exist.
+  !!  * ERROR_MODE_SPEC & ERROR_TYPE_ATT: when the attribute has a wrong type or dimension.
+  !!
+  !! SOURCE
   subroutine etsf_io_low_check_att(ncid, ncvarid, attname, atttype, attlen, lstat, error_data)
     integer, intent(in)                            :: ncid
     integer, intent(in)                            :: ncvarid
@@ -176,7 +272,35 @@
     end if
     lstat = .true.
   end subroutine etsf_io_low_check_att
+  !!***
   
+  !!****m* etsf_io_low_level/etsf_io_low_check_header
+  !! NAME
+  !!  etsf_io_low_check_header
+  !!
+  !! FUNCTION
+  !!  This method is specific to ETSF files. It checks if the header is
+  !!  conform to the specifications, which means having the right "file_format"
+  !!  attribute, the right "file_format_version" one and also an attribute named
+  !!  "Conventions". Moreover, the routine can do a check on the value of the
+  !!  file_format_version to ensure high enough value.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!
+  !! INPUTS
+  !!  * ncid = a NetCDF handler, opened with read access.
+  !!
+  !! OUTPUT
+  !!  * lstat = .true. if operation succeed.
+  !!  * version_min = (optional) the number of minimal version to be read.
+  !                   when not specified, 1.3 is the minimum value by default.
+  !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!
+  !! SOURCE
   subroutine etsf_io_low_check_header(ncid, lstat, version_min, error_data)
     integer, intent(in)                            :: ncid
     logical, intent(out)                           :: lstat
@@ -250,7 +374,34 @@
     end if
     lstat = .true.
   end subroutine etsf_io_low_check_header
+  !!***
   
+  !!****m* etsf_io_low_level/etsf_io_low_open_read
+  !! NAME
+  !!  etsf_io_low_open_read
+  !!
+  !! FUNCTION
+  !!  This method is used to open a NetCDF file with read access only. Moreover,
+  !!  a check on the header is done to verify that the file is conformed to
+  !!  specifications (see etsf_io_low_check_header()).
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!
+  !! INPUTS
+  !!  * filename = the path to the file to open.
+  !!
+  !! OUTPUT
+  !!  * ncid = the NetCDF handler, opened with read access.
+  !!  * lstat = .true. if operation succeed.
+  !!  * version_min = (optional) the number of minimal version to be read.
+  !                   when not specified, 1.3 is the minimum value by default.
+  !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!
+  !! SOURCE
   subroutine etsf_io_low_open_read(ncid, filename, lstat, version_min, error_data)
     integer, intent(out)                           :: ncid
     character(len = *), intent(in)                 :: filename
@@ -289,3 +440,4 @@
       end if
     end if
   end subroutine etsf_io_low_open_read
+  !!***

@@ -165,7 +165,7 @@ contains
     
     write(*,*)
     write(*,*) "Testing etsf_io_low_check_att()..."
-    call etsf_io_low_check_att(0, NF90_GLOBAL, "", atttype, attlen, lstat, error_data = error)
+    call etsf_io_low_check_att(0, etsf_io_low_global_att, "", atttype, attlen, lstat, error_data = error)
     call tests_read_status("argument ncid: wrong value", (.not. lstat), error)
     
     call etsf_io_low_open_read(ncid, path//"/check_att_t01.nc", lstat)
@@ -181,26 +181,30 @@ contains
       return
     end if
 
-    call etsf_io_low_check_att(ncid, NF90_GLOBAL, "file_format", NF90_CHAR, 80, lstat, &
+    call etsf_io_low_check_att(ncid, etsf_io_low_global_att, "file_format", NF90_CHAR, 80, lstat, &
                              & error_data = error)
-    call tests_read_status("argument ncvarid: NF90_GLOBAL value", lstat, error)
+    call tests_read_status("argument ncvarid: etsf_io_low_global_att value", lstat, error)
 
     call etsf_io_low_check_att(ncid, 0, "comment", NF90_CHAR, 80, lstat, error_data = error)
     call tests_read_status("argument ncvarid: wrong value", (.not. lstat), error)
 
+    call etsf_io_low_check_att(ncid, ncvarid, "mass", NF90_FLOAT, 1, lstat, &
+                             & error_data = error)
+    call tests_read_status("argument ncvarid: valid variable attribute (0D)", lstat, error)
+
     call etsf_io_low_check_att(ncid, ncvarid, "comment", NF90_CHAR, 80, lstat, &
                              & error_data = error)
-    call tests_read_status("argument ncvarid: valid variable attribute", lstat, error)
+    call tests_read_status("argument ncvarid: valid variable attribute (1D)", lstat, error)
 
-    call etsf_io_low_check_att(ncid, NF90_GLOBAL, "file_format", NF90_INT, 80, lstat, &
+    call etsf_io_low_check_att(ncid, etsf_io_low_global_att, "file_format", NF90_INT, 80, lstat, &
                              & error_data = error)
     call tests_read_status("argument atttype: wrong type", (.not. lstat), error)
 
-    call etsf_io_low_check_att(ncid, NF90_GLOBAL, "file_format_version", NF90_FLOAT, 2, lstat, &
+    call etsf_io_low_check_att(ncid, etsf_io_low_global_att, "file_format_version", NF90_FLOAT, 2, lstat, &
                              & error_data = error)
     call tests_read_status("argument attlen: wrong dimension", (.not. lstat), error)
 
-    call etsf_io_low_check_att(ncid, NF90_GLOBAL, "file_format_version", NF90_FLOAT, 1, lstat, &
+    call etsf_io_low_check_att(ncid, etsf_io_low_global_att, "file_format_version", NF90_FLOAT, 1, lstat, &
                              & error_data = error)
     call tests_read_status("argument attlen: good value", lstat, error)
     call etsf_io_low_close(ncid, lstat)
@@ -242,6 +246,10 @@ contains
     call tests_read_status("argument var: wrong dimensions", (.not. lstat .and. &
       & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
       & error)
+
+    call etsf_io_low_read_var(ncid, "space_group", var(1), lstat, error_data = error)
+    call tests_read_status("argument var: good value (0D)", (lstat .and. &
+                         & var(1) == 1), error)
 
     call etsf_io_low_read_var(ncid, "atom_species", (/ 5 /), var, lstat, error_data = error)
     call tests_read_status("argument var: good value (1D)", (lstat .and. &
@@ -293,6 +301,10 @@ contains
     call tests_read_status("argument var: wrong dimensions", (.not. lstat .and. &
       & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
       & error)
+
+    call etsf_io_low_read_var(ncid, "test_double_0d", var(1), lstat, error_data = error)
+    call tests_read_status("argument var: good value (0D)", (lstat .and. &
+                         & var(1) == 3.14d0), error)
 
     call etsf_io_low_read_var(ncid, "test_double_1d", (/ 3 /), var, lstat, error_data = error)
     call tests_read_status("argument var: good value (1D)", (lstat .and. &

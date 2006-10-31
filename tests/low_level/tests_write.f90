@@ -88,7 +88,7 @@ contains
     call tests_write_status(" | opening test", lstat, error)
 
     ! We test the two fields title and history.
-    call etsf_io_low_read_att(ncid, NF90_GLOBAL, "title", 80, title, &
+    call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "title", 80, title, &
                             & lstat, error_data = error)
     call tests_write_status(" | reading title", lstat, error)
     if (trim(title) /= "Testing header") then
@@ -98,7 +98,7 @@ contains
       lstat = .false.
     end if
     call tests_write_status(" | value title", lstat, error)
-    call etsf_io_low_read_att(ncid, NF90_GLOBAL, "history", 1024, history, &
+    call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "history", 1024, history, &
                             & lstat, error_data = error)
     call tests_write_status(" | reading history", lstat, error)
     if (trim(history) /= "Testing suite") then
@@ -157,7 +157,7 @@ contains
                                & title = "Testing title" , error_data = error)
     call tests_write_status("argument filename: NetCDF with title creation", lstat, error)
     ! We test the title.
-    call etsf_io_low_read_att(ncid, NF90_GLOBAL, "title", 80, title, &
+    call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "title", 80, title, &
                             & lstat, error_data = error)
     call tests_write_status(" | reading title", lstat, error)
     if (trim(title) /= "Testing title") then
@@ -178,7 +178,7 @@ contains
                                & title = "Modifying title" , error_data = error)
     call tests_write_status("argument filename: NetCDF with title modification", lstat, error)
     ! We test the title.
-    call etsf_io_low_read_att(ncid, NF90_GLOBAL, "title", 80, title, &
+    call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "title", 80, title, &
                             & lstat, error_data = error)
     call tests_write_status(" | reading title", lstat, error)
     if (trim(title) /= "Modifying title") then
@@ -199,7 +199,7 @@ contains
                                & history = "Testing history" , error_data = error)
     call tests_write_status("argument filename: NetCDF with history creation", lstat, error)
     ! We test the title.
-    call etsf_io_low_read_att(ncid, NF90_GLOBAL, "history", 1024, history, &
+    call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "history", 1024, history, &
                             & lstat, error_data = error)
     call tests_write_status(" | reading history", lstat, error)
     if (trim(history) /= "Testing history") then
@@ -220,7 +220,7 @@ contains
                                & history = "Modifying history" , error_data = error)
     call tests_write_status("argument filename: NetCDF with history updating", lstat, error)
     ! We test the title.
-    call etsf_io_low_read_att(ncid, NF90_GLOBAL, "history", 1024, history, &
+    call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "history", 1024, history, &
                             & lstat, error_data = error)
     call tests_write_status(" | reading history", lstat, error)
     if (trim(history) /= "Testing history"//char(10)//"Modifying history") then

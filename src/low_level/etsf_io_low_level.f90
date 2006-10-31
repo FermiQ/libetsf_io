@@ -12,6 +12,11 @@
 !!  It also support an optional error handling structure. This structure
 !!  can be used on any methods to get fine informations about any failure.
 !!
+!!  All methods have a logical argument that is set to .true. if everything
+!!  went fine. In that case, all output arguments have relevant values. If @lstat
+!!  is .false., no output values should be used since their values are not
+!!  guaranteed.
+!!
 !! COPYRIGHT
 !!  Copyright (C) 2006
 !!  This file is distributed under the terms of the
@@ -55,8 +60,58 @@ module etsf_io_low_level
   
   include "public_variables.f90"
     
+  !!****m* etsf_io_low_level/etsf_io_low_read_var
+  !! NAME
+  !!  etsf_io_low_read_var
+  !!
+  !! SYNOPSIS
+  !!  call etsf_io_low_read_var(ncid, varname, vardims, var, lstat, ncvarid, error_data)
+  !!  call etsf_io_low_read_var(ncid, varname, var, lstat, ncvarid, error_data)
+  !!
+  !! FUNCTION
+  !!  This is a generic interface to read values of a variables (either integer
+  !!  or double or character). Before puting values in the @var argument, the
+  !!  dimensions of the read data are compared with the given dimensions (@vardims).
+  !!  The type is also checked, based on the type of the @var argument. Using
+  !!  this routine is then a safe way to read data from a NetCDF file. The size and
+  !!  shape of @var can be either a scalar, a one dimensional array or a multi
+  !!  dimensional array. Strings are considered to be one dimensional arrays. See
+  !!  the example below on how to read a string.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!
+  !! INPUTS
+  !!  * ncid = a NetCDF handler, opened with read access.
+  !!  * varname = a string identifying a variable.
+  !!  * vardims = a dimension with allocated space for argument @var.
+  !!
+  !! OUTPUT
+  !!  * var = an allocated array to store the read values. When @vardims is
+  !!          omitted, this argument @var must be a scalar, not an array.
+  !!  * lstat = .true. if operation succeed.
+  !!  * ncvarid = (optional) the id used by NetCDF to identify the read variable.
+  !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!
+  !! EXAMPLE
+  !!  Read a string stored in "exchange_functional" variable of length 80:
+  !!   character(len = 80) :: var
+  !!   call etsf_io_low_read_var(ncid, "exchange_functional", (/ 80 /), var, lstat)
+  !!
+  !!  Get one single integer stored in "space_group":
+  !!   integer :: sp
+  !!   call etsf_io_low_read_var(ncid, "space_group", sp, lstat)
+  !!
+  !!  Get a 2 dimensional array storing reduced atom coordinates:
+  !!   double precision :: coord(3, 5)
+  !!   call etsf_io_low_read_var(ncid, "reduced_atom_positions", (/ 3, 5 /), coord, lstat)
+  !!***
   !Generic interface of the routines etsf_io_low_read_var
   interface etsf_io_low_read_var
+    module procedure etsf_io_low_read_var_integer_0D
     module procedure etsf_io_low_read_var_integer_1D
     module procedure etsf_io_low_read_var_integer_2D
     module procedure etsf_io_low_read_var_integer_3D
@@ -64,6 +119,7 @@ module etsf_io_low_level
     module procedure etsf_io_low_read_var_integer_5D
     module procedure etsf_io_low_read_var_integer_6D
     module procedure etsf_io_low_read_var_integer_7D
+    module procedure etsf_io_low_read_var_double_0D
     module procedure etsf_io_low_read_var_double_1D
     module procedure etsf_io_low_read_var_double_2D
     module procedure etsf_io_low_read_var_double_3D
@@ -81,6 +137,55 @@ module etsf_io_low_level
   end interface etsf_io_low_read_var
   !End of the generic interface of etsf_io_low_read_var
   
+  !!****m* etsf_io_low_level/etsf_io_low_read_att
+  !! NAME
+  !!  etsf_io_low_read_att
+  !!
+  !! SYNOPSIS
+  !!  call etsf_io_low_read_att(ncid, ncvarid, attname, attlen, att, lstat, error_data)
+  !!  call etsf_io_low_read_att(ncid, ncvarid, attname, att, lstat, error_data)
+  !!
+  !! FUNCTION
+  !!  This is a generic interface to read values of an attribute (either integer,
+  !!  real, double or character). Before puting values in the @att argument, the
+  !!  dimensions of the read data are compared with the given dimensions (@attlen).
+  !!  The type is also checked, based on the type of the @att argument. Using
+  !!  this routine is then a safe way to read attribute data from a NetCDF file.
+  !!  The size and shape of @att can be either a scalar or a one dimensional array.
+  !!  In the former case, the argument @attlen must be omitted. Strings are considered
+  !!  to be one dimensional arrays. See the example below on how to read a string.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!
+  !! INPUTS
+  !!  * ncid = a NetCDF handler, opened with read access.
+  !!  * ncvarid = the id of the variable the attribute is attached to.
+  !!              in the case of global attributes, use the constance
+  !!              NF90_GLOBAL (when linking against NetCDF) or #etsf_io_low_global_att
+  !!              which is a wrapper exported by this module (see #constants).
+  !!  * attname = a string identifying an attribute.
+  !!  * attlen = the size of the array @att (when required).
+  !!
+  !! OUTPUT
+  !!  * att = an allocated array to store the read values. When @attlen is
+  !!          omitted, this argument @att must be a scalar, not an array.
+  !!  * lstat = .true. if operation succeed.
+  !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!
+  !! EXAMPLE
+  !!  Read a string stored in "symmorphic" attribute of length 80:
+  !!   character(len = 80) :: att
+  !!   call etsf_io_low_read_att(ncid, ncvarid, "symmorphic", 80, att, lstat)
+  !!
+  !!  Get one single real stored in "file_format_version" which is a global attribute:
+  !!   real :: version
+  !!   call etsf_io_low_read_att(ncid, "file_format_version", version, lstat)
+  !!
+  !!***
   !Generic interface of the routines etsf_io_low_read_att
   interface etsf_io_low_read_att
     module procedure etsf_io_low_read_att_integer
@@ -187,7 +292,7 @@ contains
     end if
   end subroutine set_error
 
-  !!****m* low_level/etsf_io_low_error_handle
+  !!****m* etsf_io_low_level/etsf_io_low_error_handle
   !! NAME
   !!  etsf_io_low_error_handle
   !!
@@ -203,7 +308,7 @@ contains
   !!  or http://www.gnu.org/copyleft/gpl.txt .
   !!
   !! INPUTS
-  !!  error_data <type(etsf_io_low_error)>=informations about an error.
+  !!  * error_data <type(etsf_io_low_error)>=informations about an error.
   !!
   !! SOURCE
   subroutine etsf_io_low_error_handle(error_data)
@@ -234,7 +339,7 @@ contains
   end subroutine etsf_io_low_error_handle
   !!***
 
-  !!****m* low_level/etsf_io_low_close
+  !!****m* etsf_io_low_level/etsf_io_low_close
   !! NAME
   !!  etsf_io_low_close
   !!
@@ -248,9 +353,11 @@ contains
   !!  or http://www.gnu.org/copyleft/gpl.txt .
   !!
   !! INPUTS
-  !!  ncid = a NetCDF handler, opened with write access.
-  !!  lstat = .true. if operation succeed.
-  !!  error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!  * ncid = a NetCDF handler, opened with write access.
+  !!
+  !! OUTPUT
+  !!  * lstat = .true. if operation succeed.
+  !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
   !!
   !! SOURCE
   subroutine etsf_io_low_close(ncid, lstat, error_data)
@@ -276,7 +383,7 @@ contains
   end subroutine etsf_io_low_close
   !!***
 
-  !!****m* low_level/etsf_io_low_write_var_mode
+  !!****m* etsf_io_low_level/etsf_io_low_write_var_mode
   !! NAME
   !!  etsf_io_low_write_var_mode
   !!
@@ -295,9 +402,11 @@ contains
   !!  or http://www.gnu.org/copyleft/gpl.txt .
   !!
   !! INPUTS
-  !!  ncid = a NetCDF handler, opened with write access.
-  !!  lstat = .true. if operation succeed.
-  !!  error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!  * ncid = a NetCDF handler, opened with write access.
+  !!
+  !! OUTPUT
+  !!  * lstat = .true. if operation succeed.
+  !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
   !!
   !! SOURCE
   subroutine etsf_io_low_write_var_mode(ncid, lstat, error_data)
