@@ -18,6 +18,9 @@ program tests_write
   call tests_write_modify(trim(path))
   call tests_write_dim(trim(path))
   call tests_def_var(trim(path))
+  call tests_write_var_integer(trim(path))
+  call tests_write_var_double(trim(path))
+  call tests_write_var_character(trim(path))
   
 contains
 
@@ -387,4 +390,190 @@ contains
     
     write(*,*) 
   end subroutine tests_def_var
+
+  subroutine tests_write_var_integer(path)
+    character(len = *), intent(in) :: path
+    integer :: ncid, ncvarid
+    integer :: var(4)
+    double precision :: vard(4)
+    logical :: lstat
+    type(etsf_io_low_error) :: error
+    
+    write(*,*)
+    write(*,*) "Testing etsf_io_low_write_var_integer()..."
+    call etsf_io_low_write_var(0, "atom_species", var, lstat, error_data = error)
+    call tests_write_status("argument ncid: wrong value", (.not. lstat .and. &
+      & error%access_mode_id == ERROR_MODE_INQ), error)
+    
+    call etsf_io_low_open_modify(ncid, "open_create_t01.nc", lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't open file"
+      return
+    end if
+    call etsf_io_low_write_var_mode(ncid, lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't switch to data mode"
+      return
+    end if
+
+    call etsf_io_low_write_var(ncid, "pouet", var, lstat, error_data = error)
+    call tests_write_status("argument varname: wrong value", (.not. lstat .and. &
+      & error%access_mode_id == ERROR_MODE_INQ .and. error%target_type_id == ERROR_TYPE_VID), &
+      & error)
+
+    call etsf_io_low_write_var(ncid, "atom_species", vard, lstat, error_data = error)
+    call tests_write_status("argument var: wrong type", (.not. lstat .and. &
+      & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
+      & error)
+
+    call etsf_io_low_write_var(ncid, "atom_species", var(1:3), lstat, error_data = error)
+    call tests_write_status("argument var: wrong dimensions", (.not. lstat .and. &
+      & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
+      & error)
+
+    var(:) = (/ 1, 2, 3, 4 /)
+    call etsf_io_low_write_var(ncid, "atom_species", var, lstat, error_data = error)
+    call tests_write_status("argument var: good value (1D)", lstat, error)
+    call etsf_io_low_read_var(ncid, "atom_species", (/ 4 /), var, lstat, error_data = error)
+    call tests_write_status(" | reading variable", lstat, error)
+    if (.not. (var(1) == 1 .and. var(2) == 2 .and. var(3) == 3 .and. var(4) == 4)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | checking values", lstat, error)
+
+    call etsf_io_low_close(ncid, lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't close file"
+      return
+    end if
+
+    write(*,*) 
+  end subroutine tests_write_var_integer
+
+  subroutine tests_write_var_double(path)
+    character(len = *), intent(in) :: path
+    integer :: ncid, ncvarid
+    double precision :: var(3, 4)
+    integer :: vari(3, 4)
+    logical :: lstat
+    type(etsf_io_low_error) :: error
+    
+    write(*,*)
+    write(*,*) "Testing etsf_io_low_write_var_double()..."
+    call etsf_io_low_write_var(0, "reduced_atom_positions", var, lstat, error_data = error)
+    call tests_write_status("argument ncid: wrong value", (.not. lstat .and. &
+      & error%access_mode_id == ERROR_MODE_INQ), error)
+    
+    call etsf_io_low_open_modify(ncid, "open_create_t01.nc", lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't open file"
+      return
+    end if
+    call etsf_io_low_write_var_mode(ncid, lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't switch to data mode"
+      return
+    end if
+
+    call etsf_io_low_write_var(ncid, "pouet", var, lstat, error_data = error)
+    call tests_write_status("argument varname: wrong value", (.not. lstat .and. &
+      & error%access_mode_id == ERROR_MODE_INQ .and. error%target_type_id == ERROR_TYPE_VID), &
+      & error)
+
+    call etsf_io_low_write_var(ncid, "reduced_atom_positions", vari, lstat, error_data = error)
+    call tests_write_status("argument var: wrong type", (.not. lstat .and. &
+      & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
+      & error)
+
+    call etsf_io_low_write_var(ncid, "reduced_atom_positions", var(:, 1:3), lstat, error_data = error)
+    call tests_write_status("argument var: wrong dimensions", (.not. lstat .and. &
+      & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
+      & error)
+
+    var = reshape((/ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 /), (/ 3, 4 /))
+    call etsf_io_low_write_var(ncid, "reduced_atom_positions", var, lstat, error_data = error)
+    call tests_write_status("argument var: good value (2D)", lstat, error)
+    call etsf_io_low_read_var(ncid, "reduced_atom_positions", (/ 3, 4 /), var, lstat, error_data = error)
+    call tests_write_status(" | reading variable", lstat, error)
+    if (.not. (var(1, 1) == 1 .and. var(2, 1) == 2 .and. var(3, 1) == 3 .and. &
+      & var(1, 2) == 4 .and. var(2, 2) == 5 .and. var(3, 2) == 6 .and. &
+      & var(1, 3) == 7 .and. var(2, 3) == 8 .and. var(3, 3) == 9 .and. &
+      & var(1, 4) == 10 .and. var(2, 4) == 11 .and. var(3, 4) == 12) ) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | checking values", lstat, error)
+
+    call etsf_io_low_close(ncid, lstat)
+    
+    write(*,*) 
+  end subroutine tests_write_var_double
+
+  subroutine tests_write_var_character(path)
+    character(len = *), intent(in) :: path
+    integer :: ncid, ncvarid, pos
+    character(len = 80) :: var
+    integer :: vari(80)
+    logical :: lstat
+    type(etsf_io_low_error) :: error
+    
+    write(*,*)
+    write(*,*) "Testing etsf_io_low_write_var_character()..."
+    call etsf_io_low_write_var(0, "exchange_functional", var, 80, lstat, error_data = error)
+    call tests_write_status("argument ncid: wrong value", (.not. lstat .and. &
+      & error%access_mode_id == ERROR_MODE_INQ), error)
+    
+    call etsf_io_low_open_modify(ncid, "open_create_t01.nc", lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't open file"
+      return
+    end if
+    call etsf_io_low_write_var_mode(ncid, lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't switch to data mode"
+      return
+    end if
+
+    call etsf_io_low_write_var(ncid, "pouet", var, 80, lstat, error_data = error)
+    call tests_write_status("argument varname: wrong value", (.not. lstat .and. &
+      & error%access_mode_id == ERROR_MODE_INQ .and. error%target_type_id == ERROR_TYPE_VID), &
+      & error)
+
+    call etsf_io_low_write_var(ncid, "exchange_functional", vari, lstat, error_data = error)
+    call tests_write_status("argument var: wrong type", (.not. lstat .and. &
+      & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
+      & error)
+
+    call etsf_io_low_write_var(ncid, "exchange_functional", var(1:50), 50, lstat, error_data = error)
+    call tests_write_status("argument var: wrong dimensions", (.not. lstat .and. &
+      & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
+      & error)
+
+    write(var, "(A)") "This is a wonderful functional"
+    call etsf_io_low_write_var(ncid, "exchange_functional", var, 80, lstat, error_data = error)
+    call tests_write_status("argument var: good value (one string)", lstat, error)
+    call etsf_io_low_read_var(ncid, "exchange_functional", (/ 80 /), var, lstat, error_data = error)
+    call tests_write_status(" | reading variable", lstat, error)
+    pos = index(var, char(0))
+    if (pos > 0) then
+      var(pos:len(var)) = repeat(" ", len(var) - pos + 1)
+    end if
+    if (trim(var) /= "This is a wonderful functional") then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | checking values", lstat, error)
+
+    call etsf_io_low_close(ncid, lstat)
+    
+    write(*,*) 
+  end subroutine tests_write_var_character
+
 end program tests_write

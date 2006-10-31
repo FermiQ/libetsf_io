@@ -34,7 +34,7 @@ for ((i=0;i<3;i++)) ; do
   else
     start=1
   fi
-  for ((dim=$start;dim<8;dim++)) ; do
+  for ((dim=1;dim<8;dim++)) ; do
     # We customize the type for the Fortran argument declaration.
     if test $type = "character" ; then
       fortrantype=${GENERATED_TYPES[i]}'(len = charlen)'
@@ -56,8 +56,10 @@ for ((i=0;i<3;i++)) ; do
         vardims=${vardims}":,"
       done
       vardims=${vardims}":)"
+      addcomment=
     else
       vardims=
+      addcomment="!"
     fi
     cat >> $TARGET_FILE << EOF
   subroutine etsf_io_low_write_var_${type}_${dim}D(ncid, varname, var${addarg}, &
@@ -76,9 +78,9 @@ for ((i=0;i<3;i++)) ; do
 
     lstat = .false.
     ! We first check the definition of the variable (name, type and dims)
-    do i = ${start}, ${dim}, 1
-      vardims(i) = size(var, i - ${start} + 1)
-    end do
+    ${addcomment}do i = ${start}, ${dim}, 1
+    ${addcomment}  vardims(i) = size(var, i - ${start} + 1)
+    ${addcomment}end do
     ${addlen}
     if (present(error_data)) then
       call etsf_io_low_check_var(ncid, varid, varname, ${nctype}, &
@@ -90,6 +92,7 @@ for ((i=0;i<3;i++)) ; do
     if (.not. lstat) then
       return
     end if
+    lstat = .false.
     ! Now that we are sure that the written var has the same type and dimension
     ! that the argument one, we can do the put action securely.
     s = nf90_put_var(ncid, varid, values = var)

@@ -33,7 +33,7 @@ for ((i=0;i<3;i++)) ; do
   else
     start=1
   fi
-  for ((dim=$start;dim<8;dim++)) ; do
+  for ((dim=1;dim<8;dim++)) ; do
     # We customize the type for the Fortran argument declaration.
     if test $type = "character" ; then
       fortrantype=${GENERATED_TYPES[i]}'(len = vardims(1))'
@@ -67,7 +67,7 @@ for ((i=0;i<3;i++)) ; do
 
     !Local
     character(len = *), parameter :: me = "etsf_io_low_read_var_${type}_${dim}D"
-    integer :: s, varid
+    integer :: s, varid, i
 
     lstat = .false.
     ! We first check the definition of the variable (name, type and dims)
@@ -81,6 +81,7 @@ for ((i=0;i<3;i++)) ; do
     if (.not. lstat) then
       return
     end if
+    lstat = .false.
     ! Now that we are sure that the read var has the same type and dimension
     ! that the argument one, we can do the get action securely.
     s = nf90_get_var(ncid, varid, values = var)
