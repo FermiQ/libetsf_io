@@ -1,8 +1,9 @@
-  subroutine etsf_io_low_read_dim(ncid, dimname, dimvalue, lstat, error_data)
+  subroutine etsf_io_low_read_dim(ncid, dimname, dimvalue, lstat, ncdimid, error_data)
     integer, intent(in)                            :: ncid
     character(len = *), intent(in)                 :: dimname
     integer, intent(out)                           :: dimvalue
     logical, intent(out)                           :: lstat
+    integer, intent(out), optional                 :: ncdimid
     type(etsf_io_low_error), intent(out), optional :: error_data
 
     !local
@@ -26,6 +27,9 @@
                      & tgtid = dimid, errid = s, errmess = nf90_strerror(s))
       end if
       return
+    end if
+    if (present(ncdimid)) then
+      ncdimid = dimid
     end if
     lstat = .true.    
   end subroutine etsf_io_low_read_dim
@@ -86,42 +90,44 @@
       end if
       return
     end if
-    ! will inq_vardimid()
-    allocate(ncdimids(1:nbvardims))
-    s = nf90_inquire_variable(ncid, ncvarid, dimids = ncdimids)
-    if (s /= nf90_noerr) then
-      if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, tgtname = varname, &
-                     & tgtid = ncvarid, errid = s, errmess = nf90_strerror(s))
-      end if
-      deallocate(ncdimids)
-      return
-    end if
-    do i = 1, nbvardims, 1
-      ! will inq_dimlen()
-      s = nf90_inquire_dimension(ncid, ncdimids(i), len = dimvalue)
+    if (ncdims > 0) then
+      ! will inq_vardimid()
+      allocate(ncdimids(1:nbvardims))
+      s = nf90_inquire_variable(ncid, ncvarid, dimids = ncdimids)
       if (s /= nf90_noerr) then
         if (present(error_data)) then
-          call set_error(error_data, ERROR_MODE_INQ, ERROR_TYPE_DIM, me, &
-                       & tgtid = ncdimids(i), errid = s, errmess = nf90_strerror(s))
+          call set_error(error_data, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, tgtname = varname, &
+                       & tgtid = ncvarid, errid = s, errmess = nf90_strerror(s))
         end if
         deallocate(ncdimids)
         return
       end if
-      ! Test the dimensions
-      if (dimvalue /= vardims(i)) then
-        write(err, "(A,I0,A,I5,A,I5,A)") "wrong dimension length for index ", i, &
-                                       & " (read = ", dimvalue, &
-                                       & ", awaited = ", vardims(i), ")"
-        if (present(error_data)) then
-          call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, tgtname = varname, &
-                       & tgtid = ncvarid, errmess = err)
+      do i = 1, nbvardims, 1
+        ! will inq_dimlen()
+        s = nf90_inquire_dimension(ncid, ncdimids(i), len = dimvalue)
+        if (s /= nf90_noerr) then
+          if (present(error_data)) then
+            call set_error(error_data, ERROR_MODE_INQ, ERROR_TYPE_DIM, me, &
+                         & tgtid = ncdimids(i), errid = s, errmess = nf90_strerror(s))
+          end if
+          deallocate(ncdimids)
+          return
         end if
-        deallocate(ncdimids)
-        return
-      end if
-    end do
-    deallocate(ncdimids)
+        ! Test the dimensions
+        if (dimvalue /= vardims(i)) then
+          write(err, "(A,I0,A,I5,A,I5,A)") "wrong dimension length for index ", i, &
+                                         & " (read = ", dimvalue, &
+                                         & ", awaited = ", vardims(i), ")"
+          if (present(error_data)) then
+            call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, tgtname = varname, &
+                         & tgtid = ncvarid, errmess = err)
+          end if
+          deallocate(ncdimids)
+          return
+        end if
+      end do
+      deallocate(ncdimids)
+    end if
     lstat = .true.
   end subroutine etsf_io_low_check_var
   

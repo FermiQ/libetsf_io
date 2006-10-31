@@ -70,6 +70,13 @@ module etsf_io_low_level
     module procedure etsf_io_low_read_att_character_1D
   end interface etsf_io_low_read_att
   !End of the generic interface of etsf_io_low_read_att
+
+  !Generic interface of the routines etsf_io_low_def_var
+  interface etsf_io_low_def_var
+    module procedure etsf_io_low_def_var_0D
+    module procedure etsf_io_low_def_var_nD
+  end interface etsf_io_low_def_var
+  !End of the generic interface of etsf_io_low_def_var
   
 contains
 
@@ -173,5 +180,6 @@ contains
   include "read_routines_auto.f90"
 
   include "write_routines.f90"
+  include "write_routines_auto.f90"
 
 end module etsf_io_low_level

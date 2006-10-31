@@ -128,18 +128,17 @@
       return
     end if
 
-    ! If a modification is necessary, we switch to define mode.
-    if (present(title) .or. present(history) .or. present(version)) then
-      s = nf90_redef(ncid)
-      if (s /= nf90_noerr) then
-        if (present(error_data)) then
-          call set_error(error_data, ERROR_MODE_IO, ERROR_TYPE_DEF, me, tgtid = ncid, &
-                       & tgtname = filename, errid = s, errmess = nf90_strerror(s))
-        end if
-        call etsf_io_low_close(ncid, stat)
-        return
+    ! By default, we switch to define mode.
+    s = nf90_redef(ncid)
+    if (s /= nf90_noerr) then
+      if (present(error_data)) then
+        call set_error(error_data, ERROR_MODE_IO, ERROR_TYPE_DEF, me, tgtid = ncid, &
+                      & tgtname = filename, errid = s, errmess = nf90_strerror(s))
       end if
+      call etsf_io_low_close(ncid, stat)
+      return
     end if
+
     ! If a title is given, we change it.
     if (present(title)) then
       s = nf90_put_att(ncid, NF90_GLOBAL, "title", title(1:min(80, len(title))))
@@ -188,18 +187,107 @@
         return
       end if
     end if
-    ! If a modification has been done, we switch back to normal mode.
-    if (present(title) .or. present(history) .or. present(version)) then
-      s = nf90_enddef(ncid)
-      if (s /= nf90_noerr) then
-        if (present(error_data)) then
-          call set_error(error_data, ERROR_MODE_IO, ERROR_TYPE_END, me, tgtid = ncid, &
-                       & tgtname = filename, errid = s, errmess = nf90_strerror(s))
-        end if
-        call etsf_io_low_close(ncid, stat)
-        return
-      end if
-    end if
     
     lstat = .true.
   end subroutine etsf_io_low_open_modify
+  
+  subroutine etsf_io_low_write_dim(ncid, dimname, value, lstat, ncdimid, error_data)
+    integer, intent(in)                            :: ncid
+    character(len = *), intent(in)                 :: dimname
+    integer, intent(in)                            :: value
+    logical, intent(out)                           :: lstat
+    integer, intent(out), optional                 :: ncdimid
+    type(etsf_io_low_error), intent(out), optional :: error_data
+    
+    ! Local
+    character(len = *), parameter :: me = "etsf_io_low_write_dim"
+    integer :: s, dimid
+    
+    lstat = .false.
+    s = nf90_def_dim(ncid, dimname, value, dimid)
+    if (s /= nf90_noerr) then
+      if (present(error_data)) then
+        call set_error(error_data, ERROR_MODE_DEF, ERROR_TYPE_DIM, me, &
+                      & tgtname = dimname, errid = s, errmess = nf90_strerror(s))
+      end if
+      return
+    end if
+    if (present(ncdimid)) then
+      ncdimid = dimid
+    end if    
+    lstat = .true.
+  end subroutine etsf_io_low_write_dim
+  
+  subroutine etsf_io_low_def_var_0D(ncid, varname, vartype, lstat, ncvarid, error_data)
+    integer, intent(in)                            :: ncid
+    character(len = *), intent(in)                 :: varname
+    integer, intent(in)                            :: vartype
+    logical, intent(out)                           :: lstat
+    integer, intent(out), optional                 :: ncvarid
+    type(etsf_io_low_error), intent(out), optional :: error_data
+    
+    ! Local
+    character(len = *), parameter :: me = "etsf_io_low_def_var"
+    integer :: s, varid
+
+    lstat = .false.    
+    ! Special case where dimension is null
+    s = nf90_def_var(ncid, varname, vartype, varid)
+    if (s /= nf90_noerr) then
+      if (present(error_data)) then
+        call set_error(error_data, ERROR_MODE_DEF, ERROR_TYPE_VAR, me, &
+                      & tgtname = varname, errid = s, errmess = nf90_strerror(s))
+      end if
+      return
+    end if
+    if (present(ncvarid)) then
+      ncvarid = varid
+    end if    
+    lstat = .true.
+  end subroutine etsf_io_low_def_var_0D
+  
+  subroutine etsf_io_low_def_var_nD(ncid, varname, vartype, vardims, lstat, ncvarid, error_data)
+    integer, intent(in)                            :: ncid
+    character(len = *), intent(in)                 :: varname
+    integer, intent(in)                            :: vartype
+    character(len = *), intent(in)                 :: vardims(:)
+    logical, intent(out)                           :: lstat
+    integer, intent(out), optional                 :: ncvarid
+    type(etsf_io_low_error), intent(out), optional :: error_data
+    
+    ! Local
+    character(len = *), parameter :: me = "etsf_io_low_def_var"
+    integer :: s, varid, ndims, i, val
+    integer, allocatable :: ncdims(:)
+    logical :: stat
+
+    lstat = .false.
+    ! The dimension are given by their names, we must first fetch them.
+    ndims = size(vardims)
+    allocate(ncdims(1:ndims))
+    do i = 1, ndims, 1
+      if (present(error_data)) then
+        call etsf_io_low_read_dim(ncid, trim(vardims(i)), val, stat, ncdimid = ncdims(i), error_data = error_data)
+      else
+        call etsf_io_low_read_dim(ncid, trim(vardims(i)), val, stat, ncdimid = ncdims(i))
+      end if
+      if (.not. stat) then
+        deallocate(ncdims)
+        return
+      end if
+    end do
+    s = nf90_def_var(ncid, varname, vartype, ncdims, varid)
+    if (s /= nf90_noerr) then
+      if (present(error_data)) then
+        call set_error(error_data, ERROR_MODE_DEF, ERROR_TYPE_VAR, me, &
+                      & tgtname = varname, errid = s, errmess = nf90_strerror(s))
+      end if
+      deallocate(ncdims)
+      return
+    end if
+    deallocate(ncdims)
+    if (present(ncvarid)) then
+      ncvarid = varid
+    end if    
+    lstat = .true.
+  end subroutine etsf_io_low_def_var_nD
