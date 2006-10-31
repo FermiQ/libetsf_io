@@ -77,6 +77,43 @@ module etsf_io_low_level
     module procedure etsf_io_low_def_var_nD
   end interface etsf_io_low_def_var
   !End of the generic interface of etsf_io_low_def_var
+
+  !Generic interface of the routines etsf_io_low_write_att
+  interface etsf_io_low_write_att
+    module procedure etsf_io_low_write_att_integer
+    module procedure etsf_io_low_write_att_real
+    module procedure etsf_io_low_write_att_double
+    module procedure etsf_io_low_write_att_integer_1D
+    module procedure etsf_io_low_write_att_real_1D
+    module procedure etsf_io_low_write_att_double_1D
+    module procedure etsf_io_low_write_att_character_1D
+  end interface etsf_io_low_write_att
+  !End of the generic interface of etsf_io_low_write_att
+
+  !Generic interface of the routines etsf_io_low_write_var
+  interface etsf_io_low_write_var
+    module procedure etsf_io_low_write_var_integer_1D
+    module procedure etsf_io_low_write_var_integer_2D
+    module procedure etsf_io_low_write_var_integer_3D
+    module procedure etsf_io_low_write_var_integer_4D
+    module procedure etsf_io_low_write_var_integer_5D
+    module procedure etsf_io_low_write_var_integer_6D
+    module procedure etsf_io_low_write_var_integer_7D
+    module procedure etsf_io_low_write_var_double_1D
+    module procedure etsf_io_low_write_var_double_2D
+    module procedure etsf_io_low_write_var_double_3D
+    module procedure etsf_io_low_write_var_double_4D
+    module procedure etsf_io_low_write_var_double_5D
+    module procedure etsf_io_low_write_var_double_6D
+    module procedure etsf_io_low_write_var_double_7D
+    module procedure etsf_io_low_write_var_character_2D
+    module procedure etsf_io_low_write_var_character_3D
+    module procedure etsf_io_low_write_var_character_4D
+    module procedure etsf_io_low_write_var_character_5D
+    module procedure etsf_io_low_write_var_character_6D
+    module procedure etsf_io_low_write_var_character_7D
+  end interface etsf_io_low_write_var
+  !End of the generic interface of etsf_io_low_write_var
   
 contains
 

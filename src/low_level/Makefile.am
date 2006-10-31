@@ -3,7 +3,8 @@ lib_LIBRARIES = libetsf_io_low_level.a
 EXTRA_DIST = public_variables.f90 \
 	read_routines_auto.f90 \
 	read_routines.f90 \
-	write_routines.f90
+	write_routines.f90 \
+	write_routines_auto.f90
 
 module_DATA = etsf_io_low_level.@MODULE_EXT@
 
@@ -18,4 +19,5 @@ etsf_io_low_level.o: etsf_io_low_level.f90 \
 	public_variables.f90 \
 	read_routines.f90 \
 	read_routines_auto.f90 \
-	write_routines.f90
+	write_routines.f90 \
+	write_routines_auto.f90

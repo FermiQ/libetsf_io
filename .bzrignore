@@ -4,5 +4,5 @@ autom4te.cache
 configure
 config/*
 *Makefile.in
-src/low_level/read_routines_auto.f90
-src/low_level/read_routines_auto.f90.old
+src/low_level/read_routines_auto.f90*
+src/low_level/write_routines_auto.f90*
