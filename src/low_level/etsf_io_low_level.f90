@@ -18,10 +18,10 @@
 !!  guaranteed.
 !!
 !! COPYRIGHT
-!!  Copyright (C) 2006
+!!  Copyright (C) 2006 - (DC)
 !!  This file is distributed under the terms of the
-!!  GNU General Public License, see ~abinit/COPYING
-!!  or http://www.gnu.org/copyleft/gpl.txt .
+!!  GNU Lesser General Public License, see COPYING
+!!  or http://www.gnu.org/copyleft/lesser.txt .
 !!
 !!***
 module etsf_io_low_level
@@ -79,10 +79,10 @@ module etsf_io_low_level
   !!  the example below on how to read a string.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006 - (DC)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with read access.
@@ -156,10 +156,10 @@ module etsf_io_low_level
   !!  to be one dimensional arrays. See the example below on how to read a string.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006 - (DC)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with read access.
@@ -214,10 +214,10 @@ module etsf_io_low_level
   !!  to a maximum of 7 dimensions). See the examples below to know how to use such methods.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006 - (DC)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with write access (define mode).
@@ -266,10 +266,10 @@ module etsf_io_low_level
   !!  of integer, real or double precision.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006 - (DC)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with write access (define mode).
@@ -324,10 +324,10 @@ module etsf_io_low_level
   !!  the example below on how to write a string.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006 - (DC)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with read access.
@@ -440,10 +440,10 @@ contains
   !!  if custom error handling is required.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006 - (DC)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * error_data <type(etsf_io_low_error)>=informations about an error.
@@ -485,10 +485,10 @@ contains
   !!  This method is used to close an openend NetCDF file.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006 - (DC)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with write access.
@@ -534,10 +534,10 @@ contains
   !!  be in the data mode.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006 - (DC)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with write access.

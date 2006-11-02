@@ -7,10 +7,10 @@
   !!  and its value.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006 - (DC)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with read access.
@@ -71,10 +71,10 @@
   !!   * has the right shape and the right dimensions.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006 - (DC)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with read access.
@@ -203,10 +203,10 @@
   !!   * has the right length (1 for scalar, > 1 for arrays).
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006 - (DC)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with read access.
@@ -286,10 +286,10 @@
   !!  file_format_version to ensure high enough value.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006 - (DC)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with read access.
@@ -386,10 +386,10 @@
   !!  specifications (see etsf_io_low_check_header()).
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006 - (DC)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * filename = the path to the file to open.

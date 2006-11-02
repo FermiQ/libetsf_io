@@ -15,10 +15,10 @@
   !!  etsf_io_low_open_modify() instead.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006 - (DC)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * filename = the path to the file to open.
@@ -150,10 +150,10 @@
   !!    If one wants to create a new file, one should use etsf_io_low_open_create() instead.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006 - (DC)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * filename = the path to the file to open.
@@ -293,10 +293,10 @@
   !!  calls, overwriting a value is not permitted.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006 - (DC)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with write access (define mode).
