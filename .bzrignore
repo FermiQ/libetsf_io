@@ -2,6 +2,7 @@ tmp
 aclocal.m4
 autom4te.cache
 configure
+robodoc.log
 config/missing
 config/install-sh
 *Makefile.in

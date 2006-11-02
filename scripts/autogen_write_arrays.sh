@@ -110,6 +110,51 @@ for ((i=0;i<3;i++)) ; do
   end subroutine etsf_io_low_write_var_${type}_${dim}D
 EOF
   done
+  if test $type != "character" ; then
+    cat >> $TARGET_FILE << EOF
+  subroutine etsf_io_low_write_var_${type}_0D(ncid, varname, var, &
+                                          & lstat, ncvarid, error_data)
+    integer, intent(in)                            :: ncid
+    character(len = *), intent(in)                 :: varname
+    ${fortrantype}, intent(in)                     :: var
+    logical, intent(out)                           :: lstat
+    integer, intent(out), optional                 :: ncvarid
+    type(etsf_io_low_error), intent(out), optional :: error_data
+
+    !Local
+    character(len = *), parameter :: me = "etsf_io_low_write_var_${type}_0D"
+    integer :: s, varid, i
+
+    lstat = .false.
+    ! We first check the definition of the variable (name, type and dims)
+    if (present(error_data)) then
+      call etsf_io_low_check_var(ncid, varid, varname, ${nctype}, &
+                               & (/ 0 /), 0, lstat, error_data = error_data)
+    else
+      call etsf_io_low_check_var(ncid, varid, varname, ${nctype}, &
+                               & (/ 0 /), 0, lstat)
+    end if
+    if (.not. lstat) then
+      return
+    end if
+    lstat = .false.
+    ! Now that we are sure that the written var has the same type and dimension
+    ! that the argument one, we can do the put action securely.
+    s = nf90_put_var(ncid, varid, values = var)
+    if (s /= nf90_noerr) then
+      if (present(error_data)) then
+        call set_error(error_data, ERROR_MODE_PUT, ERROR_TYPE_VAR, me, &
+                     & tgtname = varname, tgtid = varid, errid = s, errmess = nf90_strerror(s))
+      end if
+      return
+    end if
+    if (present(ncvarid)) then
+      ncvarid = varid
+    end if
+    lstat = .true.
+  end subroutine etsf_io_low_write_var_${type}_0D
+EOF
+  fi
 done
 
 echo "!==========================================" >> $TARGET_FILE
@@ -120,10 +165,8 @@ for ((i=0;i<4;i++)) ; do
   type=${ATT_GENERATED_TYPES[i]}
   nctype=${ATT_NF90_TYPES[i]}
   if test $type = "character" ; then
-    fortrantype=${ATT_GENERATED_TYPES[i]}'(len = charlen)'
+    fortrantype=${ATT_GENERATED_TYPES[i]}'(len = *)'
     vardims=
-    addarg=', charlen'
-    attlen='charlen'
   else
     if test $type = "double" ; then
       fortrantype=${ATT_GENERATED_TYPES[i]}' precision'
@@ -131,13 +174,11 @@ for ((i=0;i<4;i++)) ; do
       fortrantype=${ATT_GENERATED_TYPES[i]}
     fi
     vardims="(:)"
-    addarg=
-    attlen='size(att)'
   fi
   cat >> $TARGET_FILE << EOF
-  subroutine etsf_io_low_write_att_${type}_1D(ncid, ncvarid, attname, att${addarg}, &
+  subroutine etsf_io_low_write_att_${type}_1D(ncid, ncvarid, attname, att, &
                                         & lstat, error_data)
-    integer, intent(in)                            :: ncid${addarg}
+    integer, intent(in)                            :: ncid
     integer, intent(in)                            :: ncvarid
     character(len = *), intent(in)                 :: attname
     ${fortrantype}, intent(in)                     :: att${vardims}
@@ -149,19 +190,6 @@ for ((i=0;i<4;i++)) ; do
     integer :: s
 
     lstat = .false.
-    ! We first check the definition of the attribute (name, type and dims)
-    if (present(error_data)) then
-      call etsf_io_low_check_att(ncid, ncvarid, attname, ${nctype}, &
-                               & ${attlen}, lstat, error_data = error_data)
-    else
-      call etsf_io_low_check_att(ncid, ncvarid, attname, ${nctype}, &
-                               & ${attlen}, lstat)
-    end if
-    if (.not. lstat) then
-      return
-    end if
-    ! Now that we are sure that the written attribute has the same type and dimension
-    ! that the argument one, we can do the put action securely.
     s = nf90_put_att(ncid, ncvarid, attname, att)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
@@ -189,19 +217,6 @@ EOF
     integer :: s
 
     lstat = .false.
-    ! We first check the definition of the attribute (name, type and dims)
-    if (present(error_data)) then
-      call etsf_io_low_check_att(ncid, ncvarid, attname, ${nctype}, &
-                               & 1, lstat, error_data = error_data)
-    else
-      call etsf_io_low_check_att(ncid, ncvarid, attname, ${nctype}, &
-                               & 1, lstat)
-    end if
-    if (.not. lstat) then
-      return
-    end if
-    ! Now that we are sure that the written attribute has the same type and dimension
-    ! that the argument one, we can do the put action securely.
     s = nf90_put_att(ncid, ncvarid, attname, att)
     if (s /= nf90_noerr) then
       if (present(error_data)) then

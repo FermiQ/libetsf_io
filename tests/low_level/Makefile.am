@@ -51,5 +51,5 @@ run-tests-read: $(test_dependencies) tests_read
 	./tests_read $(srcdir)
 
 run-tests-write: $(test_dependencies) tests_write
-	\rm -f *_t*.nc
+	\rm -f open_create_t*.nc
 	./tests_write $(srcdir)

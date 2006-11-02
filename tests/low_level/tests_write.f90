@@ -17,6 +17,10 @@ program tests_write
   call tests_write_create(trim(path))
   call tests_write_modify(trim(path))
   call tests_write_dim(trim(path))
+  call tests_write_att_integer(trim(path))
+  call tests_write_att_real(trim(path))
+  call tests_write_att_double(trim(path))
+  call tests_write_att_character(trim(path))
   call tests_def_var(trim(path))
   call tests_write_var_integer(trim(path))
   call tests_write_var_double(trim(path))
@@ -307,6 +311,215 @@ contains
     write(*,*) 
   end subroutine tests_write_dim
 
+  subroutine tests_write_att_integer(path)
+    character(len = *), intent(in) :: path
+    integer :: ncid, ncvarid, var(3)
+    logical :: lstat
+    type(etsf_io_low_error) :: error
+    
+    write(*,*)
+    write(*,*) "Testing etsf_io_low_write_att_integer()..."
+    call etsf_io_low_write_att(0, etsf_io_low_global_att, "test_att_integer", &
+                             & 2, lstat, error_data = error)
+    call tests_write_status("argument ncid: wrong value", (.not. lstat), error)
+    
+    call etsf_io_low_open_modify(ncid, "open_create_t02.nc", lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't open file"
+      return
+    end if
+
+    call etsf_io_low_write_att(ncid, etsf_io_low_global_att, "test_att_integer", &
+                             & 2, lstat, error_data = error)
+    call tests_write_status("argument att: good value (0D)", lstat, error)
+    call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "test_att_integer", &
+                            & var(1), lstat, error_data = error)
+    call tests_write_status(" | reading variable", lstat, error)
+    if (.not. (var(1) == 2)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | checking values", lstat, error)
+
+    call etsf_io_low_write_att(ncid, etsf_io_low_global_att, "test_att_integer_1D", &
+                             & (/ 2, 3, 4 /), lstat, error_data = error)
+    call tests_write_status("argument att: good value (1D)", lstat, error)
+    call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "test_att_integer_1D", &
+                            & 3, var, lstat, error_data = error)
+    call tests_write_status(" | reading variable", lstat, error)
+    if (.not. (var(1) == 2 .and. var(2) == 3 .and. var(3) == 4)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | checking values", lstat, error)
+
+    call etsf_io_low_close(ncid, lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't close file"
+      return
+    end if
+
+    write(*,*) 
+  end subroutine tests_write_att_integer
+
+  subroutine tests_write_att_real(path)
+    character(len = *), intent(in) :: path
+    integer :: ncid, ncvarid
+    real :: var(3)
+    logical :: lstat
+    type(etsf_io_low_error) :: error
+    
+    write(*,*)
+    write(*,*) "Testing etsf_io_low_write_att_real()..."
+    call etsf_io_low_write_att(0, etsf_io_low_global_att, "test_att_real", &
+                             & 2., lstat, error_data = error)
+    call tests_write_status("argument ncid: wrong value", (.not. lstat), error)
+    
+    call etsf_io_low_open_modify(ncid, "open_create_t02.nc", lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't open file"
+      return
+    end if
+
+    call etsf_io_low_write_att(ncid, etsf_io_low_global_att, "test_att_real", &
+                             & 2., lstat, error_data = error)
+    call tests_write_status("argument att: good value (0D)", lstat, error)
+    call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "test_att_real", &
+                            & var(1), lstat, error_data = error)
+    call tests_write_status(" | reading variable", lstat, error)
+    if (.not. (var(1) == 2.)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | checking values", lstat, error)
+
+    call etsf_io_low_write_att(ncid, etsf_io_low_global_att, "test_att_real_1D", &
+                             & (/ 2., 3., 4. /), lstat, error_data = error)
+    call tests_write_status("argument att: good value (1D)", lstat, error)
+    call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "test_att_real_1D", &
+                            & 3, var, lstat, error_data = error)
+    call tests_write_status(" | reading variable", lstat, error)
+    if (.not. (var(1) == 2. .and. var(2) == 3. .and. var(3) == 4.)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | checking values", lstat, error)
+
+    call etsf_io_low_close(ncid, lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't close file"
+      return
+    end if
+
+    write(*,*) 
+  end subroutine tests_write_att_real
+
+  subroutine tests_write_att_double(path)
+    character(len = *), intent(in) :: path
+    integer :: ncid, ncvarid
+    double precision :: var(3)
+    logical :: lstat
+    type(etsf_io_low_error) :: error
+    
+    write(*,*)
+    write(*,*) "Testing etsf_io_low_write_att_double()..."
+    call etsf_io_low_write_att(0, etsf_io_low_global_att, "test_att_double", &
+                             & 2.d0, lstat, error_data = error)
+    call tests_write_status("argument ncid: wrong value", (.not. lstat), error)
+    
+    call etsf_io_low_open_modify(ncid, "open_create_t02.nc", lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't open file"
+      return
+    end if
+
+    call etsf_io_low_write_att(ncid, etsf_io_low_global_att, "test_att_double", &
+                             & 2.d0, lstat, error_data = error)
+    call tests_write_status("argument att: good value (0D)", lstat, error)
+    call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "test_att_double", &
+                            & var(1), lstat, error_data = error)
+    call tests_write_status(" | reading variable", lstat, error)
+    if (.not. (var(1) == 2.d0)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | checking values", lstat, error)
+
+    call etsf_io_low_write_att(ncid, etsf_io_low_global_att, "test_att_double_1D", &
+                             & (/ 2.d0, 3.d0, 4.d0 /), lstat, error_data = error)
+    call tests_write_status("argument att: good value (1D)", lstat, error)
+    call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "test_att_double_1D", &
+                            & 3, var, lstat, error_data = error)
+    call tests_write_status(" | reading variable", lstat, error)
+    if (.not. (var(1) == 2.d0 .and. var(2) == 3.d0 .and. var(3) == 4.d0)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | checking values", lstat, error)
+
+    call etsf_io_low_close(ncid, lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't close file"
+      return
+    end if
+
+    write(*,*) 
+  end subroutine tests_write_att_double
+
+  subroutine tests_write_att_character(path)
+    character(len = *), intent(in) :: path
+    integer :: ncid, ncvarid
+    character(len = 80) :: var
+    logical :: lstat
+    type(etsf_io_low_error) :: error
+    
+    write(*,*)
+    write(*,*) "Testing etsf_io_low_write_att_character()..."
+    call etsf_io_low_write_att(0, etsf_io_low_global_att, "test_att_character", &
+                             & "toto", lstat, error_data = error)
+    call tests_write_status("argument ncid: wrong value", (.not. lstat), error)
+    
+    call etsf_io_low_open_modify(ncid, "open_create_t02.nc", lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't open file"
+      return
+    end if
+
+    call etsf_io_low_write_att(ncid, etsf_io_low_global_att, "test_att_character", &
+                             & "toto", lstat, error_data = error)
+    call tests_write_status("argument att: good value", lstat, error)
+    call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "test_att_character", &
+                            & 80, var, lstat, error_data = error)
+    call tests_write_status(" | reading variable", lstat, error)
+    if (.not. (trim(var) == "toto")) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | checking values", lstat, error)
+
+    call etsf_io_low_close(ncid, lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't close file"
+      return
+    end if
+
+    write(*,*) 
+  end subroutine tests_write_att_character
+
 
   subroutine tests_def_var(path)
     character(len = *), intent(in) :: path
@@ -431,6 +644,18 @@ contains
       & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
       & error)
 
+    call etsf_io_low_write_var(ncid, "number_of_electrons", 12, lstat, error_data = error)
+    call tests_write_status("argument var: good value (0D)", lstat, error)
+    call etsf_io_low_read_var(ncid, "number_of_electrons", var(1), lstat, error_data = error)
+    call tests_write_status(" | reading variable", lstat, error)
+    if (.not. (var(1) == 12)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | checking values", lstat, error)
+    
     var(:) = (/ 1, 2, 3, 4 /)
     call etsf_io_low_write_var(ncid, "atom_species", var, lstat, error_data = error)
     call tests_write_status("argument var: good value (1D)", lstat, error)

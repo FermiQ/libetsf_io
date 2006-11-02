@@ -1,3 +1,5 @@
+EXTRA_DIST = doc
+
 SUBDIRS = \
 	src/low_level \
 	tests/low_level

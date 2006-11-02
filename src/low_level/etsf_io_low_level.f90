@@ -198,6 +198,54 @@ module etsf_io_low_level
   end interface etsf_io_low_read_att
   !End of the generic interface of etsf_io_low_read_att
 
+  !!****m* etsf_io_low_level/etsf_io_low_def_var
+  !! NAME
+  !!  etsf_io_low_def_var
+  !!
+  !! SYNOPSIS
+  !!  call etsf_io_low_def_var(ncid, varname, vartype, vardims, lstat, ncvarid, error_data)
+  !!  call etsf_io_low_def_var(ncid, varname, vartype, lstat, ncvarid, error_data)
+  !!
+  !! FUNCTION
+  !!  In the contrary of dimensions or attributes, before using a write method on variables
+  !!  they must be defined using such methods. This allow to choose the type, the shape
+  !!  and the size of a new variable. Once defined, a variable can't be changed or removed.
+  !!    One can add scalars, one dimensional arrays or multi-dimensional arrays (restricted
+  !!  to a maximum of 7 dimensions). See the examples below to know how to use such methods.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!
+  !! INPUTS
+  !!  * ncid = a NetCDF handler, opened with write access (define mode).
+  !!  * varname = the name for the new variable.
+  !!  * vartype = the type of the new variable (see #constants).
+  !!  * vardims = an array with the size for each dimension of the variable.
+  !!              Each size is given by the name of its dimension. Thus dimensions
+  !!              must already exist (see etsf_io_low_write_dim()).
+  !!              When omitted, the variable is considered as a scalar.
+  !!
+  !! OUTPUT
+  !!  * lstat = .true. if operation succeed.
+  !!  * ncvarid = (optional) the id used by NetCDF to identify the written variable.
+  !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!
+  !! EXAMPLE
+  !!  Define a string stored as "basis_set" of length "character_string_length":
+  !!   call etsf_io_low_def_var(ncid, "basis_set", etsf_io_low_character, &
+  !!                          & (/ "character_string_length" /), lstat)
+  !!
+  !!  Define one integer stored as "space_group":
+  !!   call etsf_io_low_def_var(ncid, "space_group", etsf_io_low_integer, lstat)
+  !!
+  !!  Define a two dimensional array of double stored as "reduced_symetry_translations":
+  !!   call etsf_io_low_def_var(ncid, "reduced_symetry_translations", etsf_io_low_double, &
+  !!                          & (/ "number_of_reduced_dimensions", &
+  !!                          &    "number_of_symetry_operations" /), lstat)
+  !!***
   !Generic interface of the routines etsf_io_low_def_var
   interface etsf_io_low_def_var
     module procedure etsf_io_low_def_var_0D
@@ -205,6 +253,45 @@ module etsf_io_low_level
   end interface etsf_io_low_def_var
   !End of the generic interface of etsf_io_low_def_var
 
+  !!****m* etsf_io_low_level/etsf_io_low_write_att
+  !! NAME
+  !!  etsf_io_low_write_att
+  !!
+  !! SYNOPSIS
+  !!  call etsf_io_low_write_att(ncid, ncvarid, attname, att, lstat, error_data)
+  !!
+  !! FUNCTION
+  !!  When in defined mode, one can add attributes and set then a value in one call
+  !!  using such a method. Attributes can be strings, scalar or one dimensional arrays
+  !!  of integer, real or double precision.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!
+  !! INPUTS
+  !!  * ncid = a NetCDF handler, opened with write access (define mode).
+  !!  * ncvarid = the id of the variable the attribute is attached to.
+  !!              in the case of global attributes, use the constance
+  !!              NF90_GLOBAL (when linking against NetCDF) or #etsf_io_low_global_att
+  !!              which is a wrapper exported by this module (see #constants).
+  !!  * attname = the name for the new attribute.
+  !!  * att = the value, can be a string a scalar or a one-dimension array.
+  !!
+  !! OUTPUT
+  !!  * lstat = .true. if operation succeed.
+  !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!
+  !! EXAMPLE
+  !!  Write a string stored as "symmorphic", attribute of varaible ncvarid:
+  !!   call etsf_io_low_def_var(ncid, ncvarid, "symmorphic", "Yes", lstat)
+  !!
+  !!  Write one real stored as "file_format_version", global attribute:
+  !!   call etsf_io_low_def_var(ncid, etsf_io_low_global_att, "file_format_version", &
+  !!                          & 1.3, lstat)
+  !!***
   !Generic interface of the routines etsf_io_low_write_att
   interface etsf_io_low_write_att
     module procedure etsf_io_low_write_att_integer
@@ -217,8 +304,58 @@ module etsf_io_low_level
   end interface etsf_io_low_write_att
   !End of the generic interface of etsf_io_low_write_att
 
+  !!****m* etsf_io_low_level/etsf_io_low_write_var
+  !! NAME
+  !!  etsf_io_low_write_var
+  !!
+  !! SYNOPSIS
+  !!  call etsf_io_low_write_var(ncid, varname, var, lstat, ncvarid, error_data)
+  !!  call etsf_io_low_write_var(ncid, varname, var, charlen, lstat, ncvarid, error_data)
+  !!
+  !! FUNCTION
+  !!  This is a generic interface to write values of a variables (either integer
+  !!  or double or strings). Before using such methods, variables must have been
+  !!  defined using etsf_io_low_def_var(). Before writting values from the @var argument, the
+  !!  dimensions of the given data are compared with the defined dimensions.
+  !!  The type is also checked, based on the type of the @var argument. Using
+  !!  this routine is then a safe way to write data from a NetCDF file. The size and
+  !!  shape of @var can be either a scalar, a one dimensional array or a multi
+  !!  dimensional array. Strings are considered to be one dimensional arrays. See
+  !!  the example below on how to write a string.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!
+  !! INPUTS
+  !!  * ncid = a NetCDF handler, opened with read access.
+  !!  * varname = a string identifying a variable.
+  !!  * var = the values to be written, either a scalar or an array.
+  !!  * charlen = when @var is a string or an array of strings, their size
+  !!              must be given.
+  !!
+  !! OUTPUT
+  !!  * lstat = .true. if operation succeed.
+  !!  * ncvarid = (optional) the id used by NetCDF to identify the written variable.
+  !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!
+  !! EXAMPLE
+  !!  Write a string stored in "exchange_functional" variable of length 80:
+  !!   call etsf_io_low_read_var(ncid, "exchange_functional", "My functional", 80, lstat)
+  !!
+  !!  Write one single integer stored in "space_group":
+  !!   call etsf_io_low_read_var(ncid, "space_group", 156, lstat)
+  !!
+  !!  Write a 2 dimensional array storing reduced atom coordinates:
+  !!   double precision :: coord
+  !!   coord = reshape((/ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 /), (/ 3, 4 /))
+  !!   call etsf_io_low_read_var(ncid, "reduced_atom_positions", coord, coord, lstat)
+  !!***
   !Generic interface of the routines etsf_io_low_write_var
   interface etsf_io_low_write_var
+    module procedure etsf_io_low_write_var_integer_0D
     module procedure etsf_io_low_write_var_integer_1D
     module procedure etsf_io_low_write_var_integer_2D
     module procedure etsf_io_low_write_var_integer_3D
@@ -226,6 +363,7 @@ module etsf_io_low_level
     module procedure etsf_io_low_write_var_integer_5D
     module procedure etsf_io_low_write_var_integer_6D
     module procedure etsf_io_low_write_var_integer_7D
+    module procedure etsf_io_low_write_var_double_0D
     module procedure etsf_io_low_write_var_double_1D
     module procedure etsf_io_low_write_var_double_2D
     module procedure etsf_io_low_write_var_double_3D
