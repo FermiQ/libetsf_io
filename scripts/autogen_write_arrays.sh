@@ -30,25 +30,24 @@ for ((i=0;i<3;i++)) ; do
   nctype=${NF90_TYPES[i]}
   # When character are concerned, one dimension is reserved for the length.
   if test $type = "character" ; then
+    fortrantype=${GENERATED_TYPES[i]}'(len = charlen)'
+    # When character are concerned, one dimension is reserved for the length.
     start=2
+    dimstart=1
+    addarg=', charlen'
+    charcomment=
   else
-    start=1
-  fi
-  for ((dim=1;dim<8;dim++)) ; do
-    # We customize the type for the Fortran argument declaration.
-    if test $type = "character" ; then
-      fortrantype=${GENERATED_TYPES[i]}'(len = charlen)'
-      addarg=', charlen'
-      addlen='vardims(1) = charlen'
+    if test $type = "double" ; then
+      fortrantype=${GENERATED_TYPES[i]}' precision'
     else
-      if test $type = "double" ; then
-        fortrantype=${GENERATED_TYPES[i]}' precision'
-      else
-        fortrantype=${GENERATED_TYPES[i]}
-      fi
-      addarg=
-      addlen=
+      fortrantype=${GENERATED_TYPES[i]}
     fi
+    start=1
+    dimstart=0
+    addarg=
+    charcomment='!'
+  fi
+  for ((dim=${dimstart};dim<8;dim++)) ; do
     # We create the dimension declaration for the var array.
     if test $start -le $dim ; then
       vardims="("
@@ -57,12 +56,13 @@ for ((i=0;i<3;i++)) ; do
       done
       vardims=${vardims}":)"
       addcomment=
+      
     else
       vardims=
-      addcomment="!"
+      addcomment='!'
     fi
     cat >> $TARGET_FILE << EOF
-  subroutine etsf_io_low_write_var_${type}_${dim}D(ncid, varname, var${addarg}, &
+  subroutine write_var_${type}_${dim}D(ncid, varname, var${addarg}, &
                                           & lstat, ncvarid, error_data)
     integer, intent(in)                            :: ncid${addarg}
     character(len = *), intent(in)                 :: varname
@@ -73,88 +73,60 @@ for ((i=0;i<3;i++)) ; do
 
     !Local
     character(len = *), parameter :: me = "etsf_io_low_write_var_${type}_${dim}D"
-    integer :: s, varid, i
-    integer :: vardims(1:7)
+    type(etsf_io_low_var_infos) :: var_from, var_to
+    integer :: s, lvl, i
+    logical :: stat
 
     lstat = .false.
-    ! We first check the definition of the variable (name, type and dims)
-    ${addcomment}do i = ${start}, ${dim}, 1
-    ${addcomment}  vardims(i) = size(var, i - ${start} + 1)
-    ${addcomment}end do
-    ${addlen}
+    ! We first check the compatibility between the NetCDF var definition and the given data.
     if (present(error_data)) then
-      call etsf_io_low_check_var(ncid, varid, varname, ${nctype}, &
-                               & vardims(1:${dim}), ${dim}, lstat, error_data = error_data)
+      call etsf_io_low_read_var_infos(ncid, varname, var_to, stat, error_data = error_data)
     else
-      call etsf_io_low_check_var(ncid, varid, varname, ${nctype}, &
-                               & vardims(1:${dim}), ${dim}, lstat)
+      call etsf_io_low_read_var_infos(ncid, varname, var_to, stat)
     end if
-    if (.not. lstat) then
+    if (.not. stat) then
       return
     end if
-    lstat = .false.
+    var_from%nctype = ${nctype}
+    var_from%ncshape = ${dim}
+    ${addcomment}var_from%ncdims(${start}:${dim}) = shape(var)
+    ${charcomment}var_from%ncdims(1) = charlen
+    if (present(error_data)) then
+      call etsf_io_low_check_var(var_from, var_to, stat, level = lvl, error_data = error_data)
+    else
+      call etsf_io_low_check_var(var_from, var_to, stat, level = lvl)
+    end if
+    if (.not. stat) then
+      return
+    end if
+
     ! Now that we are sure that the written var has the same type and dimension
     ! that the argument one, we can do the put action securely.
-    s = nf90_put_var(ncid, varid, values = var)
+    if (modulo(lvl / etsf_io_low_var_shape_dif, 2) == 1) then
+      ! The shape differs but is compatible, we then give the count and ma
+      ! arguments.
+      ${addcomment}s = nf90_put_var(ncid, var_to%ncid, values = var, &
+      ${addcomment}                & count = var_to%ncdims(1:var_to%ncshape), &
+      ${addcomment}                & map = (/ 1, (product(var_to%ncdims(:i)), &
+      ${addcomment}                             & i = 1, var_to%ncshape - 1) /))
+    else
+      s = nf90_put_var(ncid, var_to%ncid, values = var)
+    end if
     if (s /= nf90_noerr) then
       if (present(error_data)) then
         call set_error(error_data, ERROR_MODE_PUT, ERROR_TYPE_VAR, me, &
-                     & tgtname = varname, tgtid = varid, errid = s, errmess = nf90_strerror(s))
+                     & tgtname = varname, tgtid = var_to%ncid, errid = s, &
+                     & errmess = nf90_strerror(s))
       end if
       return
     end if
     if (present(ncvarid)) then
-      ncvarid = varid
+      ncvarid = var_to%ncid
     end if
     lstat = .true.
-  end subroutine etsf_io_low_write_var_${type}_${dim}D
+  end subroutine write_var_${type}_${dim}D
 EOF
   done
-  if test $type != "character" ; then
-    cat >> $TARGET_FILE << EOF
-  subroutine etsf_io_low_write_var_${type}_0D(ncid, varname, var, &
-                                          & lstat, ncvarid, error_data)
-    integer, intent(in)                            :: ncid
-    character(len = *), intent(in)                 :: varname
-    ${fortrantype}, intent(in)                     :: var
-    logical, intent(out)                           :: lstat
-    integer, intent(out), optional                 :: ncvarid
-    type(etsf_io_low_error), intent(out), optional :: error_data
-
-    !Local
-    character(len = *), parameter :: me = "etsf_io_low_write_var_${type}_0D"
-    integer :: s, varid, i
-
-    lstat = .false.
-    ! We first check the definition of the variable (name, type and dims)
-    if (present(error_data)) then
-      call etsf_io_low_check_var(ncid, varid, varname, ${nctype}, &
-                               & (/ 0 /), 0, lstat, error_data = error_data)
-    else
-      call etsf_io_low_check_var(ncid, varid, varname, ${nctype}, &
-                               & (/ 0 /), 0, lstat)
-    end if
-    if (.not. lstat) then
-      return
-    end if
-    lstat = .false.
-    ! Now that we are sure that the written var has the same type and dimension
-    ! that the argument one, we can do the put action securely.
-    s = nf90_put_var(ncid, varid, values = var)
-    if (s /= nf90_noerr) then
-      if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_PUT, ERROR_TYPE_VAR, me, &
-                     & tgtname = varname, tgtid = varid, errid = s, errmess = nf90_strerror(s))
-      end if
-      return
-    end if
-    if (present(ncvarid)) then
-      ncvarid = varid
-    end if
-    lstat = .true.
-  end subroutine etsf_io_low_write_var_${type}_0D
-EOF
-  fi
 done
 
 echo "!==========================================" >> $TARGET_FILE
@@ -176,7 +148,7 @@ for ((i=0;i<4;i++)) ; do
     vardims="(:)"
   fi
   cat >> $TARGET_FILE << EOF
-  subroutine etsf_io_low_write_att_${type}_1D(ncid, ncvarid, attname, att, &
+  subroutine write_att_${type}_1D(ncid, ncvarid, attname, att, &
                                         & lstat, error_data)
     integer, intent(in)                            :: ncid
     integer, intent(in)                            :: ncvarid
@@ -199,11 +171,11 @@ for ((i=0;i<4;i++)) ; do
       return
     end if
     lstat = .true.
-  end subroutine etsf_io_low_write_att_${type}_1D
+  end subroutine write_att_${type}_1D
 EOF
   if test $type != "character" ; then
     cat >> $TARGET_FILE << EOF
-  subroutine etsf_io_low_write_att_${type}(ncid, ncvarid, attname, att, &
+  subroutine write_att_${type}(ncid, ncvarid, attname, att, &
                                         & lstat, error_data)
     integer, intent(in)                            :: ncid
     integer, intent(in)                            :: ncvarid
@@ -226,7 +198,7 @@ EOF
       return
     end if
     lstat = .true.
-  end subroutine etsf_io_low_write_att_${type}
+  end subroutine write_att_${type}
 EOF
   fi
 done

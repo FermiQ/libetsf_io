@@ -7,9 +7,9 @@
   !!  and its value.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006 - (DC)
+  !!  Copyright (C) 2006
   !!  This file is distributed under the terms of the
-  !!  GNU Lesser General Public License, see COPYING
+  !!  GNU General Public License, see ~abinit/COPYING
   !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
@@ -60,59 +60,48 @@
   end subroutine etsf_io_low_read_dim
   !!***
   
-  !!****m* etsf_io_low_level/etsf_io_low_check_var
+  !!****m* etsf_io_low_level/etsf_io_low_read_var_infos
   !! NAME
-  !!  etsf_io_low_check_var
+  !!  etsf_io_low_read_var_infos
   !!
   !! FUNCTION
-  !!  This method is used to check that a variable:
-  !!   * exists in the read NetCDF file ;
-  !!   * has the right type ;
-  !!   * has the right shape and the right dimensions.
+  !!  This method is used to retrieve informations about a variable:
+  !!   * its NetCDF id ;
+  !!   * its type (see #constants) ;
+  !!   * its shape and length for each dimension.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006 - (DC)
+  !!  Copyright (C) 2006
   !!  This file is distributed under the terms of the
-  !!  GNU Lesser General Public License, see COPYING
+  !!  GNU General Public License, see ~abinit/COPYING
   !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with read access.
   !!  * varname = a string identifying a variable.
-  !!  * vartype = an integer identifying the type (see #constants).
-  !!  * vardims = an array with sizes for every dimension. This argument is
-  !!              used when @nbvardims is null, which denotes a scalar variable.
-  !!  * nbvardims = the number of dimensions for the variable (0 if scalar).
   !!
   !! OUTPUT
-  !!  * ncvarid = the id used by NetCDF to identify the checked variable.
+  !!  * var_infos <type(etsf_io_low_var_infos)> = store, type, shape, dimensions and NetCDF id.
   !!  * lstat = .true. if operation succeed.
   !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
   !!
-  !! ERRORS
-  !!  * ERROR_MODE_INQ & ERROR_TYPE_VAR: when the variable doesn't exist.
-  !!  * ERROR_MODE_SPEC & ERROR_TYPE_VAR: when the variable has a wrong type or shape.
-  !!
   !! SOURCE
-  subroutine etsf_io_low_check_var(ncid, ncvarid, varname, vartype, vardims, &
-                                 & nbvardims, lstat, error_data)
+  subroutine etsf_io_low_read_var_infos(ncid, varname, var_infos, lstat, error_data)
     integer, intent(in)                            :: ncid
-    integer, intent(out)                           :: ncvarid
     character(len = *), intent(in)                 :: varname
-    integer, intent(in)                            :: vartype, nbvardims
-    integer, intent(in)                            :: vardims(1:nbvardims)
+    type(etsf_io_low_var_infos), intent(out)       :: var_infos
     logical, intent(out)                           :: lstat
     type(etsf_io_low_error), intent(out), optional :: error_data
 
     !Local
-    character(len = *), parameter :: me = "etsf_io_low_check_var"
-    character(len = 80) :: err
-    integer :: i, s, nctype, ncdims, dimvalue
+    character(len = *), parameter :: me = "etsf_io_low_read_var_infos"
+    integer :: i, s
     integer, allocatable :: ncdimids(:)
     
     lstat = .false.
+    var_infos%name = varname(1:min(80, len(varname)))
     ! will inq_varid()
-    s = nf90_inq_varid(ncid, varname, ncvarid)
+    s = nf90_inq_varid(ncid, varname, var_infos%ncid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
         call set_error(error_data, ERROR_MODE_INQ, ERROR_TYPE_VID, me, tgtname = varname, &
@@ -122,49 +111,30 @@
     end if
     ! will inq_vartype()
     ! will inq_varndims()
-    s = nf90_inquire_variable(ncid, ncvarid, xtype = nctype, ndims = ncdims)
+    s = nf90_inquire_variable(ncid, var_infos%ncid, xtype = var_infos%nctype, &
+                            & ndims = var_infos%ncshape)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
         call set_error(error_data, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, tgtname = varname, &
-                     & tgtid = ncvarid, errid = s, errmess = nf90_strerror(s))
+                     & tgtid = var_infos%ncid, errid = s, errmess = nf90_strerror(s))
       end if
       return
     end if
-    ! Check the type
-    if (nctype /= vartype) then
-      write(err, "(A,I5,A,I5,A)") "wrong type (read = ", nctype, &
-                                & ", awaited = ", vartype, ")"
-      if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, tgtname = varname, &
-                     & tgtid = ncvarid, errmess = err)
-      end if
-      return
-    end if
-    ! Check the dimensions
-    if (ncdims /= nbvardims) then
-      write(err, "(A,I5,A,I5,A)") "wrong number of dimensions (read = ", ncdims, &
-                                & ", awaited = ", nbvardims, ")"
-      if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, tgtname = varname, &
-                     & tgtid = ncvarid, errmess = err)
-      end if
-      return
-    end if
-    if (ncdims > 0) then
+    if (var_infos%ncshape > 0) then
       ! will inq_vardimid()
-      allocate(ncdimids(1:nbvardims))
-      s = nf90_inquire_variable(ncid, ncvarid, dimids = ncdimids)
+      allocate(ncdimids(1:var_infos%ncshape))
+      s = nf90_inquire_variable(ncid, var_infos%ncid, dimids = ncdimids)
       if (s /= nf90_noerr) then
         if (present(error_data)) then
           call set_error(error_data, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, tgtname = varname, &
-                       & tgtid = ncvarid, errid = s, errmess = nf90_strerror(s))
+                       & tgtid = var_infos%ncid, errid = s, errmess = nf90_strerror(s))
         end if
         deallocate(ncdimids)
         return
       end if
-      do i = 1, nbvardims, 1
+      do i = 1, var_infos%ncshape, 1
         ! will inq_dimlen()
-        s = nf90_inquire_dimension(ncid, ncdimids(i), len = dimvalue)
+        s = nf90_inquire_dimension(ncid, ncdimids(i), len = var_infos%ncdims(i))
         if (s /= nf90_noerr) then
           if (present(error_data)) then
             call set_error(error_data, ERROR_MODE_INQ, ERROR_TYPE_DIM, me, &
@@ -173,20 +143,111 @@
           deallocate(ncdimids)
           return
         end if
+      end do
+      deallocate(ncdimids)
+    end if
+    lstat = .true.
+  end subroutine etsf_io_low_read_var_infos
+  !!***
+  
+  !!****m* etsf_io_low_level/etsf_io_low_check_var
+  !! NAME
+  !!  etsf_io_low_check_var
+  !!
+  !! FUNCTION
+  !!  This method is used to compare the informations (type, shape...) of two
+  !!  given variables. It returns .true. if the variables are compatible (data
+  !!  from one can be transfered to the other). It can also say if the match 
+  !!  is perfect or if the transfer requires convertion (type or shape).
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
+  !!
+  !! INPUTS
+  !!  * var_from <type(etsf_io_low_var_infos)> = store, type, shape, dimensions and NetCDF id.
+  !!  * var_to <type(etsf_io_low_var_infos)> = store, type, shape, dimensions and NetCDF id.
+  !!
+  !! OUTPUT
+  !!  * lstat = .true. if the two variable definitions are compatible.
+  !!  * level = (optional) when variables are compatibles (lstat = .true.),
+  !!            this flag gives information on matching (see #matching_flags).
+  !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!
+  !! SOURCE
+  subroutine etsf_io_low_check_var(var_from, var_to, lstat, level, error_data)
+    type(etsf_io_low_var_infos), intent(in)        :: var_from
+    type(etsf_io_low_var_infos), intent(in)        :: var_to
+    logical, intent(out)                           :: lstat
+    integer, intent(out), optional                 :: level
+    type(etsf_io_low_error), intent(out), optional :: error_data
+
+    !Local
+    character(len = *), parameter :: me = "etsf_io_low_check_var"
+    character(len = 80) :: err
+    integer :: i, s, lvl, nb_ele_from, nb_ele_to
+    integer :: nclendims(1:7)
+    logical :: stat
+    
+    lstat = .false.
+    lvl = etsf_io_low_var_match
+    ! Check the type, if both numeric or both strings, vars are compatible.
+    if ((var_from%nctype == NF90_CHAR .and. var_to%nctype /= NF90_CHAR) .or. &
+      & (var_from%nctype /= NF90_CHAR .and. var_to%nctype == NF90_CHAR)) then
+      write(err, "(A)") "incompatible type, both must be either numeric or character."
+      if (present(error_data)) then
+        call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
+                     & errmess = err)
+      end if
+      return
+    end if
+    if (var_from%nctype /= var_to%nctype) then
+      lvl = lvl + etsf_io_low_var_type_dif
+    end if
+    ! Check the shape
+    if (var_from%ncshape == var_to%ncshape) then
+      ! In the case when shapes are identical, one must check all dimensions
+      do i = 1, var_from%ncshape, 1
         ! Test the dimensions
-        if (dimvalue /= vardims(i)) then
+        if (var_from%ncdims(i) /= var_to%ncdims(i)) then
           write(err, "(A,I0,A,I5,A,I5,A)") "wrong dimension length for index ", i, &
-                                         & " (read = ", dimvalue, &
-                                         & ", awaited = ", vardims(i), ")"
+                                          & " (var_from = ", var_from%ncdims(i), &
+                                          & ", var_to = ", var_to%ncdims(i), ")"
           if (present(error_data)) then
-            call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, tgtname = varname, &
-                         & tgtid = ncvarid, errmess = err)
+            call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
+                         & errmess = err)
           end if
-          deallocate(ncdimids)
           return
         end if
       end do
-      deallocate(ncdimids)
+    else
+      ! The argument has a different shape that the store variable.
+      ! We check the compatibility, product(var_to%ncdims) == product(var_from%ncdims)
+      lvl = lvl + etsf_io_low_var_shape_dif
+      if (var_from%ncshape == 0) then
+        nb_ele_from = 1
+      else
+        nb_ele_from = product(var_from%ncdims(1:var_from%ncshape))
+      end if
+      if (var_to%ncshape == 0) then
+        nb_ele_to = 1
+      else
+        nb_ele_to = product(var_to%ncdims(1:var_to%ncshape))
+      end if
+      if (nb_ele_from /= nb_ele_to) then
+        write(err, "(A,I5,A,I5,A)") "incompatible number of data (var_from = ", &
+                                  & nb_ele_from, ", var_to = ", nb_ele_to, ")"
+        if (present(error_data)) then
+          call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
+                       & errmess = err)
+        end if
+        return
+      end if
+    end if
+    if (present(level)) then
+      level = lvl
     end if
     lstat = .true.
   end subroutine etsf_io_low_check_var
@@ -203,9 +264,9 @@
   !!   * has the right length (1 for scalar, > 1 for arrays).
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006 - (DC)
+  !!  Copyright (C) 2006
   !!  This file is distributed under the terms of the
-  !!  GNU Lesser General Public License, see COPYING
+  !!  GNU General Public License, see ~abinit/COPYING
   !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
@@ -286,9 +347,9 @@
   !!  file_format_version to ensure high enough value.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006 - (DC)
+  !!  Copyright (C) 2006
   !!  This file is distributed under the terms of the
-  !!  GNU Lesser General Public License, see COPYING
+  !!  GNU General Public License, see ~abinit/COPYING
   !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
@@ -386,9 +447,9 @@
   !!  specifications (see etsf_io_low_check_header()).
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006 - (DC)
+  !!  Copyright (C) 2006
   !!  This file is distributed under the terms of the
-  !!  GNU Lesser General Public License, see COPYING
+  !!  GNU General Public License, see ~abinit/COPYING
   !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS

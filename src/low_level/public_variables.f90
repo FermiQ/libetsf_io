@@ -60,7 +60,7 @@
   integer, parameter :: etsf_io_low_character  = NF90_CHAR
   !!***
 
-  !!****d* etsf_io_low_level/etsf_io_low_error
+  !!****s* etsf_io_low_level/etsf_io_low_error
   !! NAME
   !!  etsf_io_low_error
   !!
@@ -89,4 +89,41 @@
     integer :: error_id
     character(len = 256) :: error_message
   end type etsf_io_low_error
+  !!***
+
+  !!****s* etsf_io_low_level/etsf_io_low_var_infos
+  !! NAME
+  !!  etsf_io_low_var_infos
+  !!
+  !! FUNCTION
+  !!  This structure is used to store variable informations, such as
+  !!  name, NetCDF id, type, shape and dimensions.
+  !!
+  !! SOURCE
+  type etsf_io_low_var_infos
+    character(len = 80) :: name
+    
+    integer :: ncid
+    integer :: nctype
+    integer :: ncshape
+    integer :: ncdims(1:7)
+  end type etsf_io_low_var_infos
+  !!***
+  
+  !!****d* etsf_io_low_level/matching_flags
+  !! NAME
+  !!  matching_flags
+  !!
+  !! FUNCTION
+  !!  These flags are used when comparing to variables (see etsf_io_low_check_var()).
+  !!   * etsf_io_low_var_match: is used when two variables have the same type,
+  !!                            shape and dimensions.
+  !!   * etsf_io_low_var_type_dif: is used when the type is compatible but conversions
+  !!                               will be done (between numerical values for instance).
+  !!   * etsf_io_low_var_shape_dif: is used when the shape is different but the number
+  !!                                of elements is still compatible.
+  !!
+  !! SOURCE
+  integer, parameter :: etsf_io_low_var_match = 0, etsf_io_low_var_type_dif = 1, &
+                      & etsf_io_low_var_shape_dif = 2
   !!***

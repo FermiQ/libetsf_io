@@ -16,6 +16,7 @@ program tests_read
 
   call tests_read_open(trim(path))
   call tests_read_dim(trim(path))
+  call tests_read_var_infos(trim(path))
   call tests_check_var(trim(path))
   call tests_check_att(trim(path))
   call tests_read_var_integer(trim(path))
@@ -105,15 +106,16 @@ contains
     write(*,*) 
   end subroutine tests_read_dim
 
-  subroutine tests_check_var(path)
+  subroutine tests_read_var_infos(path)
     character(len = *), intent(in) :: path
     integer :: ncid, ncvarid, vartype, vardims(2)
     logical :: lstat
     type(etsf_io_low_error) :: error
+    type(etsf_io_low_var_infos) :: var_infos
     
     write(*,*)
-    write(*,*) "Testing etsf_io_low_check_var()..."
-    call etsf_io_low_check_var(0, ncvarid, "", vartype, vardims, 2, lstat, error_data = error)
+    write(*,*) "Testing etsf_io_low_read_var_infos()..."
+    call etsf_io_low_read_var_infos(0, "", var_infos, lstat, error_data = error)
     call tests_read_status("argument ncid: wrong value", (.not. lstat), error)
     
     call etsf_io_low_open_read(ncid, path//"/check_var_t01.nc", lstat)
@@ -122,47 +124,101 @@ contains
       return
     end if
 
-    call etsf_io_low_check_var(ncid, ncvarid, "pouet", vartype, vardims, 2, lstat, error_data = error)
+    call etsf_io_low_read_var_infos(ncid, "pouet", var_infos, lstat, error_data = error)
     call tests_read_status("argument varname: wrong value", (.not. lstat), error)
 
-    vartype = NF90_DOUBLE
-    vardims(1) = 5
-    call etsf_io_low_check_var(ncid, ncvarid, "atom_species", vartype, vardims(1:1), &
-                             & 1, lstat, error_data = error)
-    call tests_read_status("argument vartype: wrong value", (.not. lstat), error)
-    vartype = NF90_INT
-    vardims(1) = 5
-    call etsf_io_low_check_var(ncid, ncvarid, "atom_species", vartype, vardims(1:1), &
-                             & 1, lstat, error_data = error)
-    call tests_read_status("argument vartype: good value", lstat, error)
-
-    vartype = NF90_INT
-    vardims(:) = (/ 5, 3 /)
-    call etsf_io_low_check_var(ncid, ncvarid, "atom_species", vartype, vardims, &
-                             & 2, lstat, error_data = error)
-    call tests_read_status("argument vardims: wrong dimension", (.not. lstat), error)
-    vartype = NF90_INT
-    vardims(1) = 10
-    call etsf_io_low_check_var(ncid, ncvarid, "atom_species", vartype, vardims(1:1), &
-                             & 1, lstat, error_data = error)
-    call tests_read_status("argument vardims: wrong values", (.not. lstat), error)
-    vartype = NF90_DOUBLE
-    vardims = (/ 3, 5 /)
-    call etsf_io_low_check_var(ncid, ncvarid, "reduced_atom_positions", &
-                             & vartype, vardims, 2, lstat, error_data = error)
-    call tests_read_status("argument vardims: good values", lstat, error)
+    call etsf_io_low_read_var_infos(ncid, "atom_species", var_infos, lstat, error_data = error)
+    call tests_read_status("argument varname: good value", lstat, error)
+    if (.not. (var_infos%nctype == etsf_io_low_integer)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_VAR
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_read_status(" | checking type value", lstat, error)
+    if (.not. (var_infos%ncshape == 1)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_VAR
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_read_status(" | checking shape value", lstat, error)
+    if (.not. (var_infos%ncdims(1) == 5)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_VAR
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_read_status(" | checking dimension values", lstat, error)
     
     call etsf_io_low_close(ncid, lstat)
     
+    write(*,*) 
+  end subroutine tests_read_var_infos
+
+  subroutine tests_check_var(path)
+    character(len = *), intent(in) :: path
+    logical :: lstat
+    integer :: level
+    type(etsf_io_low_error) :: error
+    type(etsf_io_low_var_infos) :: var_from, var_to
+    
+    write(*,*)
+    write(*,*) "Testing etsf_io_low_check_var()..."
+    var_from%nctype = etsf_io_low_character
+    var_to%nctype = etsf_io_low_double
+    call etsf_io_low_check_var(var_from, var_to, lstat, level = level, error_data = error)
+    call tests_read_status("field nctype: incompatible values", (.not. lstat), error)
+    
+    var_from%ncshape = 0
+    var_to%ncshape = 0
+    
+    var_from%nctype = etsf_io_low_integer
+    var_to%nctype = etsf_io_low_double
+    call etsf_io_low_check_var(var_from, var_to, lstat, level = level, error_data = error)
+    call tests_read_status("field nctype: compatible values", (lstat .and. &
+                         & modulo(level / etsf_io_low_var_type_dif, 2) == 1), error)
+                         
+    var_from%nctype = etsf_io_low_double
+    var_to%nctype = etsf_io_low_double
+    call etsf_io_low_check_var(var_from, var_to, lstat, level = level, error_data = error)
+    call tests_read_status("field nctype: matching values", (lstat .and. &
+                         & modulo(level / etsf_io_low_var_type_dif, 2) == 0), error)
+                         
+    call etsf_io_low_check_var(var_from, var_to, lstat, level = level, error_data = error)
+    call tests_read_status("field ncshape (0D): matching values", (lstat .and. &
+                         & modulo(level / etsf_io_low_var_shape_dif, 2) == 0), error)
+                         
+    var_from%ncshape = 4
+    var_to%ncshape = 2
+    var_from%ncdims(1:4) = (/ 3, 3, 3, 2 /)
+    var_to%ncdims(1:2) = (/ 25, 2 /)
+    call etsf_io_low_check_var(var_from, var_to, lstat, level = level, error_data = error)
+    call tests_read_status("field ncshape: uncompatible values", (.not. lstat), error)
+
+    var_from%ncdims(1:4) = (/ 3, 3, 3, 2 /)
+    var_to%ncdims(1:2) = (/ 27, 2 /)
+    call etsf_io_low_check_var(var_from, var_to, lstat, level = level, error_data = error)
+    call tests_read_status("field ncshape: compatible values", (lstat .and. &
+                         & modulo(level / etsf_io_low_var_shape_dif, 2) == 1), error)
+                         
+    var_from%ncshape = 4
+    var_to%ncshape = 4
+    var_from%ncdims(1:4) = (/ 3, 3, 3, 2 /)
+    var_to%ncdims(1:4) = (/ 3, 3, 3, 2 /)
+    call etsf_io_low_check_var(var_from, var_to, lstat, level = level, error_data = error)
+    call tests_read_status("field ncshape (nD): matching values", (lstat .and. level == 0), error)
+
     write(*,*) 
   end subroutine tests_check_var
 
   subroutine tests_check_att(path)
     character(len = *), intent(in) :: path
-    integer :: ncid, atttype, attlen, ncvarid
+    integer :: ncid, atttype, attlen
     logical :: lstat
     type(etsf_io_low_error) :: error
-    
+    type(etsf_io_low_var_infos) :: var_infos
+        
     write(*,*)
     write(*,*) "Testing etsf_io_low_check_att()..."
     call etsf_io_low_check_att(0, etsf_io_low_global_att, "", atttype, attlen, lstat, error_data = error)
@@ -173,8 +229,7 @@ contains
       write(*,*) "Abort, can't open file"
       return
     end if
-    call etsf_io_low_check_var(ncid, ncvarid, "atom_species", NF90_INT, (/ 5 /), &
-                             & 1, lstat, error_data = error)
+    call etsf_io_low_read_var_infos(ncid, "atom_species", var_infos, lstat)
     if (.not. lstat) then
       write(*,*) "Abort, can't get variable"
       call etsf_io_low_close(ncid, lstat)
@@ -188,11 +243,11 @@ contains
     call etsf_io_low_check_att(ncid, 0, "comment", NF90_CHAR, 80, lstat, error_data = error)
     call tests_read_status("argument ncvarid: wrong value", (.not. lstat), error)
 
-    call etsf_io_low_check_att(ncid, ncvarid, "mass", NF90_FLOAT, 1, lstat, &
+    call etsf_io_low_check_att(ncid, var_infos%ncid, "mass", NF90_FLOAT, 1, lstat, &
                              & error_data = error)
     call tests_read_status("argument ncvarid: valid variable attribute (0D)", lstat, error)
 
-    call etsf_io_low_check_att(ncid, ncvarid, "comment", NF90_CHAR, 80, lstat, &
+    call etsf_io_low_check_att(ncid, var_infos%ncid, "comment", NF90_CHAR, 80, lstat, &
                              & error_data = error)
     call tests_read_status("argument ncvarid: valid variable attribute (1D)", lstat, error)
 
@@ -215,14 +270,14 @@ contains
   subroutine tests_read_var_integer(path)
     character(len = *), intent(in) :: path
     integer :: ncid, ncvarid
-    integer :: var(5), var2d(2, 2)
-    double precision :: vard(5)
+    integer :: var(5), var2d(2, 2), bigvar(4)
+    character(len = 5) :: varc
     logical :: lstat
     type(etsf_io_low_error) :: error
     
     write(*,*)
     write(*,*) "Testing etsf_io_low_read_var_integer()..."
-    call etsf_io_low_read_var(0, "atom_species", (/ 5 /), var, lstat, error_data = error)
+    call etsf_io_low_read_var(0, "atom_species", var, lstat, error_data = error)
     call tests_read_status("argument ncid: wrong value", (.not. lstat .and. &
       & error%access_mode_id == ERROR_MODE_INQ), error)
     
@@ -232,17 +287,17 @@ contains
       return
     end if
 
-    call etsf_io_low_read_var(ncid, "pouet", (/ 5 /), var, lstat, error_data = error)
+    call etsf_io_low_read_var(ncid, "pouet", var, lstat, error_data = error)
     call tests_read_status("argument varname: wrong value", (.not. lstat .and. &
       & error%access_mode_id == ERROR_MODE_INQ .and. error%target_type_id == ERROR_TYPE_VID), &
       & error)
 
-    call etsf_io_low_read_var(ncid, "atom_species", (/ 5 /), vard, lstat, error_data = error)
+    call etsf_io_low_read_var(ncid, "atom_species", varc, 5, lstat, error_data = error)
     call tests_read_status("argument var: wrong type", (.not. lstat .and. &
       & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
       & error)
 
-    call etsf_io_low_read_var(ncid, "atom_species", (/ 4 /), var(1:4), lstat, error_data = error)
+    call etsf_io_low_read_var(ncid, "atom_species", var(1:4), lstat, error_data = error)
     call tests_read_status("argument var: wrong dimensions", (.not. lstat .and. &
       & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
       & error)
@@ -251,16 +306,26 @@ contains
     call tests_read_status("argument var: good value (0D)", (lstat .and. &
                          & var(1) == 1), error)
 
-    call etsf_io_low_read_var(ncid, "atom_species", (/ 5 /), var, lstat, error_data = error)
+    call etsf_io_low_read_var(ncid, "atom_species", var, lstat, error_data = error)
     call tests_read_status("argument var: good value (1D)", (lstat .and. &
                          & var(1) == 1 .and. var(2) == 2 .and. var(3) == 2 .and. &
                          & var(4) == 2 .and. var(5) == 2), error)
 
-    call etsf_io_low_read_var(ncid, "test_integer_2d", (/ 2, 2 /), var2d, &
+    call etsf_io_low_read_var(ncid, "test_integer_2d", var2d, &
                             & lstat, error_data = error)
     call tests_read_status("argument var: good value (2D)", (lstat .and. &
                          & var2d(1, 1) == 1 .and. var2d(2, 1) == 2 .and. &
                          & var2d(1, 2) == 3 .and. var2d(2, 2) == 4), error)
+
+    call etsf_io_low_read_var(ncid, "test_integer_2d", bigvar(1:3), &
+                            & lstat, error_data = error)
+    call tests_read_status("argument var: wrong matching (2D <-> 1D)", (.not. lstat), error)
+
+    call etsf_io_low_read_var(ncid, "test_integer_2d", bigvar, &
+                            & lstat, error_data = error)
+    call tests_read_status("argument var: good matching (2D <-> 1D)", (lstat .and. &
+                         & bigvar(1) == 1 .and. bigvar(2) == 2 .and. &
+                         & bigvar(3) == 3 .and. bigvar(4) == 4), error)
 
     call etsf_io_low_close(ncid, lstat)
     
@@ -270,14 +335,14 @@ contains
   subroutine tests_read_var_double(path)
     character(len = *), intent(in) :: path
     integer :: ncid, ncvarid
-    double precision :: var(3), var2d(3, 3)
-    integer :: vari(5)
+    double precision :: var(3), var2d(3, 3), bigvar(15)
+    character(len = 3) :: varc
     logical :: lstat
     type(etsf_io_low_error) :: error
     
     write(*,*)
     write(*,*) "Testing etsf_io_low_read_var_double()..."
-    call etsf_io_low_read_var(0, "test_double_1d", (/ 3 /), var, lstat, error_data = error)
+    call etsf_io_low_read_var(0, "test_double_1d", var, lstat, error_data = error)
     call tests_read_status("argument ncid: wrong value", (.not. lstat .and. &
       & error%access_mode_id == ERROR_MODE_INQ), error)
     
@@ -287,17 +352,17 @@ contains
       return
     end if
 
-    call etsf_io_low_read_var(ncid, "pouet", (/ 5 /), var, lstat, error_data = error)
+    call etsf_io_low_read_var(ncid, "pouet", var, lstat, error_data = error)
     call tests_read_status("argument varname: wrong value", (.not. lstat .and. &
       & error%access_mode_id == ERROR_MODE_INQ .and. error%target_type_id == ERROR_TYPE_VID), &
       & error)
 
-    call etsf_io_low_read_var(ncid, "test_double_1d", (/ 5 /), vari, lstat, error_data = error)
+    call etsf_io_low_read_var(ncid, "test_double_1d", varc, 3, lstat, error_data = error)
     call tests_read_status("argument var: wrong type", (.not. lstat .and. &
       & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
       & error)
 
-    call etsf_io_low_read_var(ncid, "test_double_1d", (/ 2 /), var(1:2), lstat, error_data = error)
+    call etsf_io_low_read_var(ncid, "test_double_1d", var(1:2), lstat, error_data = error)
     call tests_read_status("argument var: wrong dimensions", (.not. lstat .and. &
       & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
       & error)
@@ -306,11 +371,11 @@ contains
     call tests_read_status("argument var: good value (0D)", (lstat .and. &
                          & var(1) == 3.14d0), error)
 
-    call etsf_io_low_read_var(ncid, "test_double_1d", (/ 3 /), var, lstat, error_data = error)
+    call etsf_io_low_read_var(ncid, "test_double_1d", var, lstat, error_data = error)
     call tests_read_status("argument var: good value (1D)", (lstat .and. &
                          & var(1) == 1. .and. var(2) == 2. .and. var(3) == 3.), error)
 
-    call etsf_io_low_read_var(ncid, "primitive_vectors", (/ 3, 3 /), var2d, &
+    call etsf_io_low_read_var(ncid, "primitive_vectors", var2d, &
                             & lstat, error_data = error)
     call tests_read_status("argument var: good value (2D)", (lstat .and. &
                          & var2d(1, 1) == 10. .and. var2d(2, 1) == 0. .and. &
@@ -318,6 +383,17 @@ contains
                          & var2d(2, 2) == 10. .and. var2d(3, 2) == 0. .and. &
                          & var2d(1, 3) == 0. .and. var2d(2, 3) == 0. .and. &
                          & var2d(3, 3) == 10.), error)
+
+    call etsf_io_low_read_var(ncid, "reduced_atom_positions", bigvar(1:10), &
+                            & lstat, error_data = error)
+    call tests_read_status("argument var: wrong matching (2D <-> 1D)", (.not. lstat), error)
+
+    call etsf_io_low_read_var(ncid, "reduced_atom_positions", bigvar, &
+                            & lstat, error_data = error)
+    call tests_read_status("argument var: good matching (2D <-> 1D)", (lstat .and. &
+                         & bigvar(1) == 0.5d0 .and. bigvar(2) == 0.5d0 .and. &
+                         & bigvar(3) == 0.5d0 .and. bigvar(4) == 0.6d0), error)
+
 
     call etsf_io_low_close(ncid, lstat)
     
@@ -334,7 +410,7 @@ contains
     
     write(*,*)
     write(*,*) "Testing etsf_io_low_read_var_character()..."
-    call etsf_io_low_read_var(0, "atom_species_names", (/ 2, 80 /), var, lstat, error_data = error)
+    call etsf_io_low_read_var(0, "atom_species_names", var, 80, lstat, error_data = error)
     call tests_read_status("argument ncid: wrong value", (.not. lstat .and. &
       & error%access_mode_id == ERROR_MODE_INQ), error)
     
@@ -344,22 +420,22 @@ contains
       return
     end if
 
-    call etsf_io_low_read_var(ncid, "pouet", (/ 2, 80 /), var, lstat, error_data = error)
+    call etsf_io_low_read_var(ncid, "pouet", var, 80, lstat, error_data = error)
     call tests_read_status("argument varname: wrong value", (.not. lstat .and. &
       & error%access_mode_id == ERROR_MODE_INQ .and. error%target_type_id == ERROR_TYPE_VID), &
       & error)
 
-    call etsf_io_low_read_var(ncid, "atom_species_names", (/ 5 /), vari, lstat, error_data = error)
+    call etsf_io_low_read_var(ncid, "atom_species_names", vari, lstat, error_data = error)
     call tests_read_status("argument var: wrong type", (.not. lstat .and. &
       & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
       & error)
 
-    call etsf_io_low_read_var(ncid, "atom_species_names", (/ 1, 80 /), var(1:1), lstat, error_data = error)
+    call etsf_io_low_read_var(ncid, "atom_species_names", var(1:1), 80, lstat, error_data = error)
     call tests_read_status("argument var: wrong dimensions", (.not. lstat .and. &
       & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
       & error)
 
-    call etsf_io_low_read_var(ncid, "atom_species_names", (/ 80, 2 /), var, lstat, error_data = error)
+    call etsf_io_low_read_var(ncid, "atom_species_names", var, 80, lstat, error_data = error)
     call tests_read_status("argument var: good value (1D)", (lstat .and. &
                          & var(1)(1:2) == "Si" .and. var(2)(1:1) == "H"), error)
 

@@ -527,6 +527,7 @@ contains
     logical :: lstat
     integer :: ncid, value, ncvarid, vardims(1)
     type(etsf_io_low_error) :: error
+    type(etsf_io_low_var_infos) :: infos
     
     write(*,*)
     write(*,*) "Testing etsf_io_low_def_var()..."
@@ -552,9 +553,16 @@ contains
     call etsf_io_low_def_var(ncid, "number_of_electrons", NF90_DOUBLE, lstat, error_data = error)
     call tests_write_status("single value: overwriting (should fail)", (.not. lstat), error)
     ! We check the definition.
-    call etsf_io_low_check_var(ncid, ncvarid, "number_of_electrons", NF90_INT, &
-                             & (/ 0 /), 0, lstat, error_data = error)
-    call tests_write_status("single value: check definition", lstat, error)
+    call etsf_io_low_read_var_infos(ncid, "number_of_electrons", infos, lstat, error_data = error)
+    call tests_write_status("single value: read definition", lstat, error)
+    if (.not. (infos%nctype == etsf_io_low_integer .and. infos%ncshape == 0)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_VAR
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | check definition", lstat, error)
+    
 
     ! We add an array as variable, but wrong type
     call etsf_io_low_def_var(ncid, "atom_species", -2, lstat, error_data = error)
@@ -571,18 +579,32 @@ contains
     call etsf_io_low_def_var(ncid, "atom_species", NF90_INT, lstat, error_data = error)
     call tests_write_status("1D array: overwriting (should fail)", (.not. lstat), error)
     ! We check the definition.
-    call etsf_io_low_check_var(ncid, ncvarid, "atom_species", NF90_INT, &
-                             & (/ 4 /), 1, lstat, error_data = error)
-    call tests_write_status("1D array: check definition", lstat, error)
+    call etsf_io_low_read_var_infos(ncid, "atom_species", infos, lstat, error_data = error)
+    call tests_write_status("1D array: read definition", lstat, error)
+    if (.not. (infos%nctype == etsf_io_low_integer .and. &
+             & infos%ncshape == 1 .and. infos%ncdims(1) == 4)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_VAR
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | check definition", lstat, error)
 
     ! We add a string as variable
     call etsf_io_low_def_var(ncid, "exchange_functional", NF90_CHAR, &
                            & (/ "character_string_length" /), lstat, error_data = error)
     call tests_write_status("string: adding a new variable", lstat, error)
     ! We check the definition.
-    call etsf_io_low_check_var(ncid, ncvarid, "exchange_functional", NF90_CHAR, &
-                             & (/ 80 /), 1, lstat, error_data = error)
-    call tests_write_status("string: check definition", lstat, error)
+    call etsf_io_low_read_var_infos(ncid, "exchange_functional", infos, lstat, error_data = error)
+    call tests_write_status("string: read definition", lstat, error)
+    if (.not. (infos%nctype == etsf_io_low_character .and. &
+             & infos%ncshape == 1 .and. infos%ncdims(1) == 80)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_VAR
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | check definition", lstat, error)
 
     call etsf_io_low_write_dim(ncid, "number_of_reduced_dimensions", 3, lstat, error_data = error)
     ! We add a 2D array as variable
@@ -591,9 +613,17 @@ contains
                            & lstat, error_data = error)
     call tests_write_status("2D array: adding a new variable", lstat, error)
     ! We check the definition.
-    call etsf_io_low_check_var(ncid, ncvarid, "reduced_atom_positions", NF90_DOUBLE, &
-                             & (/ 3, 4 /), 2, lstat, error_data = error)
-    call tests_write_status("2D array: check definition", lstat, error)
+    call etsf_io_low_read_var_infos(ncid, "reduced_atom_positions", infos, lstat, error_data = error)
+    call tests_write_status("2D array: read definition", lstat, error)
+    if (.not. (infos%nctype == etsf_io_low_double .and. &
+             & infos%ncshape == 2 .and. infos%ncdims(1) == 3 .and. &
+             & infos%ncdims(2) == 4)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_VAR
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | check definition", lstat, error)
 
     call etsf_io_low_close(ncid, lstat)
     if (.not. lstat) then
@@ -607,8 +637,8 @@ contains
   subroutine tests_write_var_integer(path)
     character(len = *), intent(in) :: path
     integer :: ncid, ncvarid
-    integer :: var(4)
-    double precision :: vard(4)
+    integer :: var(4), var2d(2,2)
+    character(len = 4) :: varc
     logical :: lstat
     type(etsf_io_low_error) :: error
     
@@ -634,7 +664,7 @@ contains
       & error%access_mode_id == ERROR_MODE_INQ .and. error%target_type_id == ERROR_TYPE_VID), &
       & error)
 
-    call etsf_io_low_write_var(ncid, "atom_species", vard, lstat, error_data = error)
+    call etsf_io_low_write_var(ncid, "atom_species", varc, 4, lstat, error_data = error)
     call tests_write_status("argument var: wrong type", (.not. lstat .and. &
       & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
       & error)
@@ -659,7 +689,7 @@ contains
     var(:) = (/ 1, 2, 3, 4 /)
     call etsf_io_low_write_var(ncid, "atom_species", var, lstat, error_data = error)
     call tests_write_status("argument var: good value (1D)", lstat, error)
-    call etsf_io_low_read_var(ncid, "atom_species", (/ 4 /), var, lstat, error_data = error)
+    call etsf_io_low_read_var(ncid, "atom_species", var, lstat, error_data = error)
     call tests_write_status(" | reading variable", lstat, error)
     if (.not. (var(1) == 1 .and. var(2) == 2 .and. var(3) == 3 .and. var(4) == 4)) then
       error%access_mode_id = ERROR_MODE_SPEC
@@ -668,6 +698,26 @@ contains
       lstat = .false.
     end if
     call tests_write_status(" | checking values", lstat, error)
+
+
+    var2d = reshape((/ 4, 5, 6, 7 /), (/ 2, 2/))
+    call etsf_io_low_write_var(ncid, "atom_species", var2d(1:1, :), &
+                            & lstat, error_data = error)
+    call tests_write_status("argument var: wrong matching (2D <-> 1D)", (.not. lstat), error)
+
+    call etsf_io_low_write_var(ncid, "atom_species", var2d, &
+                            & lstat, error_data = error)
+    call tests_write_status("argument var: good matching (2D <-> 1D)", lstat, error)
+    call etsf_io_low_read_var(ncid, "atom_species", var, lstat, error_data = error)
+    call tests_write_status(" | reading variable", lstat, error)
+    if (.not. (var(1) == 4 .and. var(2) == 5 .and. var(3) == 6 .and. var(4) == 7)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | checking values", lstat, error)
+
 
     call etsf_io_low_close(ncid, lstat)
     if (.not. lstat) then
@@ -681,8 +731,8 @@ contains
   subroutine tests_write_var_double(path)
     character(len = *), intent(in) :: path
     integer :: ncid, ncvarid
-    double precision :: var(3, 4)
-    integer :: vari(3, 4)
+    double precision :: var(3, 4), bigvar(12)
+    character(len = 3) :: varc(4)
     logical :: lstat
     type(etsf_io_low_error) :: error
     
@@ -708,7 +758,7 @@ contains
       & error%access_mode_id == ERROR_MODE_INQ .and. error%target_type_id == ERROR_TYPE_VID), &
       & error)
 
-    call etsf_io_low_write_var(ncid, "reduced_atom_positions", vari, lstat, error_data = error)
+    call etsf_io_low_write_var(ncid, "reduced_atom_positions", varc, 3, lstat, error_data = error)
     call tests_write_status("argument var: wrong type", (.not. lstat .and. &
       & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
       & error)
@@ -721,7 +771,7 @@ contains
     var = reshape((/ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 /), (/ 3, 4 /))
     call etsf_io_low_write_var(ncid, "reduced_atom_positions", var, lstat, error_data = error)
     call tests_write_status("argument var: good value (2D)", lstat, error)
-    call etsf_io_low_read_var(ncid, "reduced_atom_positions", (/ 3, 4 /), var, lstat, error_data = error)
+    call etsf_io_low_read_var(ncid, "reduced_atom_positions", var, lstat, error_data = error)
     call tests_write_status(" | reading variable", lstat, error)
     if (.not. (var(1, 1) == 1 .and. var(2, 1) == 2 .and. var(3, 1) == 3 .and. &
       & var(1, 2) == 4 .and. var(2, 2) == 5 .and. var(3, 2) == 6 .and. &
@@ -733,6 +783,28 @@ contains
       lstat = .false.
     end if
     call tests_write_status(" | checking values", lstat, error)
+
+    bigvar = (/ 1d0, 2d0, 3d0, 4d0, 5d0, 6d0, 7d0, 8d0, 9d0, 10d0, 11d0, 0.5d0 /)
+    call etsf_io_low_write_var(ncid, "reduced_atom_positions", bigvar(1:10), &
+                            & lstat, error_data = error)
+    call tests_write_status("argument var: wrong matching (2D <-> 1D)", (.not. lstat), error)
+
+    call etsf_io_low_write_var(ncid, "reduced_atom_positions", bigvar, &
+                            & lstat, error_data = error)
+    call tests_write_status("argument var: good matching (2D <-> 1D)", lstat, error)
+    call etsf_io_low_read_var(ncid, "reduced_atom_positions", var, lstat, error_data = error)
+    call tests_write_status(" | reading variable", lstat, error)
+    if (.not. (var(1, 1) == 1 .and. var(2, 1) == 2 .and. var(3, 1) == 3 .and. &
+      & var(1, 2) == 4 .and. var(2, 2) == 5 .and. var(3, 2) == 6 .and. &
+      & var(1, 3) == 7 .and. var(2, 3) == 8 .and. var(3, 3) == 9 .and. &
+      & var(1, 4) == 10 .and. var(2, 4) == 11 .and. var(3, 4) == 0.5d0) ) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | checking values", lstat, error)
+
 
     call etsf_io_low_close(ncid, lstat)
     
@@ -782,7 +854,7 @@ contains
     write(var, "(A)") "This is a wonderful functional"
     call etsf_io_low_write_var(ncid, "exchange_functional", var, 80, lstat, error_data = error)
     call tests_write_status("argument var: good value (one string)", lstat, error)
-    call etsf_io_low_read_var(ncid, "exchange_functional", (/ 80 /), var, lstat, error_data = error)
+    call etsf_io_low_read_var(ncid, "exchange_functional", var, 80, lstat, error_data = error)
     call tests_write_status(" | reading variable", lstat, error)
     pos = index(var, char(0))
     if (pos > 0) then

@@ -18,10 +18,10 @@
 !!  guaranteed.
 !!
 !! COPYRIGHT
-!!  Copyright (C) 2006 - (DC)
+!!  Copyright (C) 2006
 !!  This file is distributed under the terms of the
-!!  GNU Lesser General Public License, see COPYING
-!!  or http://www.gnu.org/copyleft/lesser.txt .
+!!  GNU General Public License, see ~abinit/COPYING
+!!  or http://www.gnu.org/copyleft/gpl.txt .
 !!
 !!***
 module etsf_io_low_level
@@ -65,33 +65,35 @@ module etsf_io_low_level
   !!  etsf_io_low_read_var
   !!
   !! SYNOPSIS
-  !!  call etsf_io_low_read_var(ncid, varname, vardims, var, lstat, ncvarid, error_data)
   !!  call etsf_io_low_read_var(ncid, varname, var, lstat, ncvarid, error_data)
+  !!  call etsf_io_low_read_var(ncid, varname, var, charlen, lstat, ncvarid, error_data)
   !!
   !! FUNCTION
   !!  This is a generic interface to read values of a variables (either integer
   !!  or double or character). Before puting values in the @var argument, the
-  !!  dimensions of the read data are compared with the given dimensions (@vardims).
+  !!  dimensions of the read data are compared with the assumed dimensions of @var.
   !!  The type is also checked, based on the type of the @var argument. Using
   !!  this routine is then a safe way to read data from a NetCDF file. The size and
   !!  shape of @var can be either a scalar, a one dimensional array or a multi
-  !!  dimensional array. Strings are considered to be one dimensional arrays. See
+  !!  dimensional array. Strings should be given with their length. See
   !!  the example below on how to read a string.
+  !!    If the shape of the given storage variable (@var) and the definition of the
+  !!  corresponding NetCDF variable differ ; the read is done only if the number of
+  !!  elements are identical. Number of elements is the product over all dimensions
+  !!  of the size (see example below).
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006 - (DC)
+  !!  Copyright (C) 2006
   !!  This file is distributed under the terms of the
-  !!  GNU Lesser General Public License, see COPYING
-  !!  or http://www.gnu.org/copyleft/lesser.txt .
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with read access.
   !!  * varname = a string identifying a variable.
-  !!  * vardims = a dimension with allocated space for argument @var.
   !!
   !! OUTPUT
-  !!  * var = an allocated array to store the read values. When @vardims is
-  !!          omitted, this argument @var must be a scalar, not an array.
+  !!  * var = an allocated array to store the read values (or a simple scalar).
   !!  * lstat = .true. if operation succeed.
   !!  * ncvarid = (optional) the id used by NetCDF to identify the read variable.
   !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
@@ -99,7 +101,7 @@ module etsf_io_low_level
   !! EXAMPLE
   !!  Read a string stored in "exchange_functional" variable of length 80:
   !!   character(len = 80) :: var
-  !!   call etsf_io_low_read_var(ncid, "exchange_functional", (/ 80 /), var, lstat)
+  !!   call etsf_io_low_read_var(ncid, "exchange_functional", var, 80, lstat)
   !!
   !!  Get one single integer stored in "space_group":
   !!   integer :: sp
@@ -107,33 +109,38 @@ module etsf_io_low_level
   !!
   !!  Get a 2 dimensional array storing reduced atom coordinates:
   !!   double precision :: coord(3, 5)
-  !!   call etsf_io_low_read_var(ncid, "reduced_atom_positions", (/ 3, 5 /), coord, lstat)
+  !!   call etsf_io_low_read_var(ncid, "reduced_atom_positions", coord, lstat)
+  !!
+  !!  Get a 2 dimensional array stored as a four dimensional array:
+  !!   NetCDF def: density(3, 3, 3, 2)
+  !!   double precision :: coord(27, 2)
+  !!   call etsf_io_low_read_var(ncid, "density", coord, lstat)
   !!***
   !Generic interface of the routines etsf_io_low_read_var
   interface etsf_io_low_read_var
-    module procedure etsf_io_low_read_var_integer_0D
-    module procedure etsf_io_low_read_var_integer_1D
-    module procedure etsf_io_low_read_var_integer_2D
-    module procedure etsf_io_low_read_var_integer_3D
-    module procedure etsf_io_low_read_var_integer_4D
-    module procedure etsf_io_low_read_var_integer_5D
-    module procedure etsf_io_low_read_var_integer_6D
-    module procedure etsf_io_low_read_var_integer_7D
-    module procedure etsf_io_low_read_var_double_0D
-    module procedure etsf_io_low_read_var_double_1D
-    module procedure etsf_io_low_read_var_double_2D
-    module procedure etsf_io_low_read_var_double_3D
-    module procedure etsf_io_low_read_var_double_4D
-    module procedure etsf_io_low_read_var_double_5D
-    module procedure etsf_io_low_read_var_double_6D
-    module procedure etsf_io_low_read_var_double_7D
-    module procedure etsf_io_low_read_var_character_1D
-    module procedure etsf_io_low_read_var_character_2D
-    module procedure etsf_io_low_read_var_character_3D
-    module procedure etsf_io_low_read_var_character_4D
-    module procedure etsf_io_low_read_var_character_5D
-    module procedure etsf_io_low_read_var_character_6D
-    module procedure etsf_io_low_read_var_character_7D
+    module procedure read_var_integer_0D
+    module procedure read_var_integer_1D
+    module procedure read_var_integer_2D
+    module procedure read_var_integer_3D
+    module procedure read_var_integer_4D
+    module procedure read_var_integer_5D
+    module procedure read_var_integer_6D
+    module procedure read_var_integer_7D
+    module procedure read_var_double_0D
+    module procedure read_var_double_1D
+    module procedure read_var_double_2D
+    module procedure read_var_double_3D
+    module procedure read_var_double_4D
+    module procedure read_var_double_5D
+    module procedure read_var_double_6D
+    module procedure read_var_double_7D
+    module procedure read_var_character_1D
+    module procedure read_var_character_2D
+    module procedure read_var_character_3D
+    module procedure read_var_character_4D
+    module procedure read_var_character_5D
+    module procedure read_var_character_6D
+    module procedure read_var_character_7D
   end interface etsf_io_low_read_var
   !End of the generic interface of etsf_io_low_read_var
   
@@ -156,10 +163,10 @@ module etsf_io_low_level
   !!  to be one dimensional arrays. See the example below on how to read a string.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006 - (DC)
+  !!  Copyright (C) 2006
   !!  This file is distributed under the terms of the
-  !!  GNU Lesser General Public License, see COPYING
-  !!  or http://www.gnu.org/copyleft/lesser.txt .
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with read access.
@@ -188,13 +195,13 @@ module etsf_io_low_level
   !!***
   !Generic interface of the routines etsf_io_low_read_att
   interface etsf_io_low_read_att
-    module procedure etsf_io_low_read_att_integer
-    module procedure etsf_io_low_read_att_real
-    module procedure etsf_io_low_read_att_double
-    module procedure etsf_io_low_read_att_integer_1D
-    module procedure etsf_io_low_read_att_real_1D
-    module procedure etsf_io_low_read_att_double_1D
-    module procedure etsf_io_low_read_att_character_1D
+    module procedure read_att_integer
+    module procedure read_att_real
+    module procedure read_att_double
+    module procedure read_att_integer_1D
+    module procedure read_att_real_1D
+    module procedure read_att_double_1D
+    module procedure read_att_character_1D
   end interface etsf_io_low_read_att
   !End of the generic interface of etsf_io_low_read_att
 
@@ -214,10 +221,10 @@ module etsf_io_low_level
   !!  to a maximum of 7 dimensions). See the examples below to know how to use such methods.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006 - (DC)
+  !!  Copyright (C) 2006
   !!  This file is distributed under the terms of the
-  !!  GNU Lesser General Public License, see COPYING
-  !!  or http://www.gnu.org/copyleft/lesser.txt .
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with write access (define mode).
@@ -266,10 +273,10 @@ module etsf_io_low_level
   !!  of integer, real or double precision.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006 - (DC)
+  !!  Copyright (C) 2006
   !!  This file is distributed under the terms of the
-  !!  GNU Lesser General Public License, see COPYING
-  !!  or http://www.gnu.org/copyleft/lesser.txt .
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with write access (define mode).
@@ -294,13 +301,13 @@ module etsf_io_low_level
   !!***
   !Generic interface of the routines etsf_io_low_write_att
   interface etsf_io_low_write_att
-    module procedure etsf_io_low_write_att_integer
-    module procedure etsf_io_low_write_att_real
-    module procedure etsf_io_low_write_att_double
-    module procedure etsf_io_low_write_att_integer_1D
-    module procedure etsf_io_low_write_att_real_1D
-    module procedure etsf_io_low_write_att_double_1D
-    module procedure etsf_io_low_write_att_character_1D
+    module procedure write_att_integer
+    module procedure write_att_real
+    module procedure write_att_double
+    module procedure write_att_integer_1D
+    module procedure write_att_real_1D
+    module procedure write_att_double_1D
+    module procedure write_att_character_1D
   end interface etsf_io_low_write_att
   !End of the generic interface of etsf_io_low_write_att
 
@@ -320,14 +327,18 @@ module etsf_io_low_level
   !!  The type is also checked, based on the type of the @var argument. Using
   !!  this routine is then a safe way to write data from a NetCDF file. The size and
   !!  shape of @var can be either a scalar, a one dimensional array or a multi
-  !!  dimensional array. Strings are considered to be one dimensional arrays. See
+  !!  dimensional array. Strings should be given with their length. See
   !!  the example below on how to write a string.
+  !!    If the shape of the input data variable (@var) and the definition of the
+  !!  corresponding NetCDF variable differ ; the write action is performed only if the number of
+  !!  elements are identical. Number of elements is the product over all dimensions
+  !!  of the size (see example below).
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006 - (DC)
+  !!  Copyright (C) 2006
   !!  This file is distributed under the terms of the
-  !!  GNU Lesser General Public License, see COPYING
-  !!  or http://www.gnu.org/copyleft/lesser.txt .
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with read access.
@@ -349,35 +360,39 @@ module etsf_io_low_level
   !!   call etsf_io_low_read_var(ncid, "space_group", 156, lstat)
   !!
   !!  Write a 2 dimensional array storing reduced atom coordinates:
-  !!   double precision :: coord
-  !!   coord = reshape((/ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 /), (/ 3, 4 /))
-  !!   call etsf_io_low_read_var(ncid, "reduced_atom_positions", coord, coord, lstat)
+  !!   double precision :: coord2d(3, 4)
+  !!   coord2d = reshape((/ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 /), (/ 3, 4 /))
+  !!   call etsf_io_low_read_var(ncid, "reduced_atom_positions", coord2d, lstat)
+  !!  or,
+  !!   double precision :: coord(12)
+  !!   coord = (/ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 /)
+  !!   call etsf_io_low_read_var(ncid, "reduced_atom_positions", coord, lstat)
   !!***
   !Generic interface of the routines etsf_io_low_write_var
   interface etsf_io_low_write_var
-    module procedure etsf_io_low_write_var_integer_0D
-    module procedure etsf_io_low_write_var_integer_1D
-    module procedure etsf_io_low_write_var_integer_2D
-    module procedure etsf_io_low_write_var_integer_3D
-    module procedure etsf_io_low_write_var_integer_4D
-    module procedure etsf_io_low_write_var_integer_5D
-    module procedure etsf_io_low_write_var_integer_6D
-    module procedure etsf_io_low_write_var_integer_7D
-    module procedure etsf_io_low_write_var_double_0D
-    module procedure etsf_io_low_write_var_double_1D
-    module procedure etsf_io_low_write_var_double_2D
-    module procedure etsf_io_low_write_var_double_3D
-    module procedure etsf_io_low_write_var_double_4D
-    module procedure etsf_io_low_write_var_double_5D
-    module procedure etsf_io_low_write_var_double_6D
-    module procedure etsf_io_low_write_var_double_7D
-    module procedure etsf_io_low_write_var_character_1D
-    module procedure etsf_io_low_write_var_character_2D
-    module procedure etsf_io_low_write_var_character_3D
-    module procedure etsf_io_low_write_var_character_4D
-    module procedure etsf_io_low_write_var_character_5D
-    module procedure etsf_io_low_write_var_character_6D
-    module procedure etsf_io_low_write_var_character_7D
+    module procedure write_var_integer_0D
+    module procedure write_var_integer_1D
+    module procedure write_var_integer_2D
+    module procedure write_var_integer_3D
+    module procedure write_var_integer_4D
+    module procedure write_var_integer_5D
+    module procedure write_var_integer_6D
+    module procedure write_var_integer_7D
+    module procedure write_var_double_0D
+    module procedure write_var_double_1D
+    module procedure write_var_double_2D
+    module procedure write_var_double_3D
+    module procedure write_var_double_4D
+    module procedure write_var_double_5D
+    module procedure write_var_double_6D
+    module procedure write_var_double_7D
+    module procedure write_var_character_1D
+    module procedure write_var_character_2D
+    module procedure write_var_character_3D
+    module procedure write_var_character_4D
+    module procedure write_var_character_5D
+    module procedure write_var_character_6D
+    module procedure write_var_character_7D
   end interface etsf_io_low_write_var
   !End of the generic interface of etsf_io_low_write_var
   
@@ -440,10 +455,10 @@ contains
   !!  if custom error handling is required.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006 - (DC)
+  !!  Copyright (C) 2006
   !!  This file is distributed under the terms of the
-  !!  GNU Lesser General Public License, see COPYING
-  !!  or http://www.gnu.org/copyleft/lesser.txt .
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
   !!
   !! INPUTS
   !!  * error_data <type(etsf_io_low_error)>=informations about an error.
@@ -485,10 +500,10 @@ contains
   !!  This method is used to close an openend NetCDF file.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006 - (DC)
+  !!  Copyright (C) 2006
   !!  This file is distributed under the terms of the
-  !!  GNU Lesser General Public License, see COPYING
-  !!  or http://www.gnu.org/copyleft/lesser.txt .
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with write access.
@@ -534,10 +549,10 @@ contains
   !!  be in the data mode.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006 - (DC)
+  !!  Copyright (C) 2006
   !!  This file is distributed under the terms of the
-  !!  GNU Lesser General Public License, see COPYING
-  !!  or http://www.gnu.org/copyleft/lesser.txt .
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with write access.
