@@ -177,25 +177,26 @@
   !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
   !!
   !! SOURCE
-  subroutine etsf_io_low_check_var(var_from, var_to, lstat, level, error_data)
-    type(etsf_io_low_var_infos), intent(in)        :: var_from
-    type(etsf_io_low_var_infos), intent(in)        :: var_to
+  subroutine etsf_io_low_check_var(var_ref, var, lstat, sub, level, error_data)
+    type(etsf_io_low_var_infos), intent(in)        :: var_ref
+    type(etsf_io_low_var_infos), intent(in)        :: var
     logical, intent(out)                           :: lstat
+    integer, intent(in), optional                  :: sub
     integer, intent(out), optional                 :: level
     type(etsf_io_low_error), intent(out), optional :: error_data
 
     !Local
     character(len = *), parameter :: me = "etsf_io_low_check_var"
     character(len = 80) :: err
-    integer :: i, s, lvl, nb_ele_from, nb_ele_to
+    integer :: i, s, lvl, nb_ele_ref, nb_ele, sub_shape
     integer :: nclendims(1:7)
     logical :: stat
     
     lstat = .false.
     lvl = etsf_io_low_var_match
     ! Check the type, if both numeric or both strings, vars are compatible.
-    if ((var_from%nctype == NF90_CHAR .and. var_to%nctype /= NF90_CHAR) .or. &
-      & (var_from%nctype /= NF90_CHAR .and. var_to%nctype == NF90_CHAR)) then
+    if ((var_ref%nctype == NF90_CHAR .and. var%nctype /= NF90_CHAR) .or. &
+      & (var_ref%nctype /= NF90_CHAR .and. var%nctype == NF90_CHAR)) then
       write(err, "(A)") "incompatible type, both must be either numeric or character."
       if (present(error_data)) then
         call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
@@ -203,18 +204,35 @@
       end if
       return
     end if
-    if (var_from%nctype /= var_to%nctype) then
+    if (var_ref%nctype /= var%nctype) then
       lvl = lvl + etsf_io_low_var_type_dif
     end if
+
+    ! The sub argument is used to restrain check to lower indices
+    ! in the shape.
+    if (present(sub)) then
+      sub_shape = sub
+    else
+      sub_shape = var_ref%ncshape
+    end if
+    if (sub_shape < 1 .or. sub > var_ref%ncshape) then
+      write(err, "(A)") "wrong sub argument ( 0 < sub <= var_ref%ncshape)."
+      if (present(error_data)) then
+        call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
+                     & errmess = err)
+      end if
+      return
+    end if
+    
     ! Check the shape
-    if (var_from%ncshape == var_to%ncshape) then
+    if (var_ref%ncshape == var%ncshape) then
       ! In the case when shapes are identical, one must check all dimensions
-      do i = 1, var_from%ncshape, 1
+      do i = 1, sub_shape, 1
         ! Test the dimensions
-        if (var_from%ncdims(i) /= var_to%ncdims(i)) then
+        if (var_ref%ncdims(i) /= var%ncdims(i)) then
           write(err, "(A,I0,A,I5,A,I5,A)") "wrong dimension length for index ", i, &
-                                          & " (var_from = ", var_from%ncdims(i), &
-                                          & ", var_to = ", var_to%ncdims(i), ")"
+                                          & " (var_from = ", var_ref%ncdims(i), &
+                                          & ", var_to = ", var%ncdims(i), ")"
           if (present(error_data)) then
             call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
                          & errmess = err)
@@ -226,19 +244,19 @@
       ! The argument has a different shape that the store variable.
       ! We check the compatibility, product(var_to%ncdims) == product(var_from%ncdims)
       lvl = lvl + etsf_io_low_var_shape_dif
-      if (var_from%ncshape == 0) then
-        nb_ele_from = 1
+      if (var_ref%ncshape == 0) then
+        nb_ele_ref = 1
       else
-        nb_ele_from = product(var_from%ncdims(1:var_from%ncshape))
+        nb_ele_ref = product(var_ref%ncdims(1:sub_shape))
       end if
-      if (var_to%ncshape == 0) then
-        nb_ele_to = 1
+      if (var%ncshape == 0) then
+        nb_ele = 1
       else
-        nb_ele_to = product(var_to%ncdims(1:var_to%ncshape))
+        nb_ele = product(var%ncdims(1:var%ncshape))
       end if
-      if (nb_ele_from /= nb_ele_to) then
-        write(err, "(A,I5,A,I5,A)") "incompatible number of data (var_from = ", &
-                                  & nb_ele_from, ", var_to = ", nb_ele_to, ")"
+      if (nb_ele_ref /= nb_ele) then
+        write(err, "(A,I5,A,I5,A)") "incompatible number of data (var_ref = ", &
+                                  & nb_ele_ref, ", var = ", nb_ele, ")"
         if (present(error_data)) then
           call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
                        & errmess = err)
