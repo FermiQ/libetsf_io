@@ -274,10 +274,11 @@ contains
   subroutine tests_read_var_integer(path)
     character(len = *), intent(in) :: path
     integer :: ncid, ncvarid
-    integer :: var(5), var2d(2, 2), bigvar(4)
+    integer, target :: var(5), var2d(2, 2), bigvar(4)
     character(len = 5) :: varc
     logical :: lstat
     type(etsf_io_low_error) :: error
+    type(etsf_io_low_var_integer) :: atom_species
     
     write(*,*)
     write(*,*) "Testing etsf_io_low_read_var_integer()..."
@@ -348,6 +349,25 @@ contains
     call tests_read_status("argument sub: good dimensions", (lstat .and. &
                          & bigvar(1) == 3 .and. bigvar(2) == 4), error)
 
+    atom_species%data1D => var
+    call etsf_io_low_read_var(ncid, "atom_species", atom_species, lstat, error_data = error)
+    call tests_read_status("argument var: generic pointer (1D)", (lstat .and. &
+                         & var(1) == 1 .and. var(2) == 2 .and. var(3) == 2 .and. &
+                         & var(4) == 2 .and. var(5) == 2), error)
+
+    atom_species%data1D => null()
+    atom_species%data2D => var2d
+    call etsf_io_low_read_var(ncid, "test_integer_2d", atom_species, lstat, error_data = error)
+    call tests_read_status("argument var: generic pointer (2D)", (lstat .and. &
+                         & var2d(1, 1) == 1 .and. var2d(2, 1) == 2 .and. &
+                         & var2d(1, 2) == 3 .and. var2d(2, 2) == 4), error)
+
+    atom_species%data1D => var2d(2, :)
+    call etsf_io_low_read_var(ncid, "test_integer_2d", atom_species, &
+                            & lstat, sub = (/ 0, 2 /), error_data = error)
+    call tests_read_status("argument var + sub: generic pointer", (lstat .and. &
+                         & var2d(2, 1) == 3 .and. var2d(2, 2) == 4), error)
+
     call etsf_io_low_close(ncid, lstat)
     
     write(*,*) 
@@ -356,10 +376,11 @@ contains
   subroutine tests_read_var_double(path)
     character(len = *), intent(in) :: path
     integer :: ncid, ncvarid
-    double precision :: var(3), var2d(3, 3), bigvar(15), density(27)
+    double precision, target :: var(3), var2d(3, 3), bigvar(15), density(27)
     character(len = 3) :: varc
     logical :: lstat
     type(etsf_io_low_error) :: error
+    type(etsf_io_low_var_double) :: var_gen
     
     write(*,*)
     write(*,*) "Testing etsf_io_low_read_var_double()..."
@@ -424,6 +445,19 @@ contains
                          & density(7) == -0.d0 .and. density(8) == -1.d0 .and. &
                          & density(9) == -0.d0), error)
 
+    var_gen%data1D => bigvar
+    call etsf_io_low_read_var(ncid, "reduced_atom_positions", var_gen, &
+                            & lstat, error_data = error)
+    call tests_read_status("argument var: generic pointer (1D)", (lstat .and. &
+                         & bigvar(1) == 0.5d0 .and. bigvar(2) == 0.5d0 .and. &
+                         & bigvar(3) == 0.5d0 .and. bigvar(4) == 0.6d0), error)
+
+    var_gen%data1D => var2d(2, :)
+    call etsf_io_low_read_var(ncid, "primitive_vectors", var_gen, &
+                            & lstat, sub = (/ 0, 2 /), error_data = error)
+    call tests_read_status("argument var + sub: generic pointer", (lstat .and. &
+                         & var2d(2, 1) == 0. .and. var2d(2, 2) == 10. .and. &
+                         & var2d(2, 3) == 0.), error)
 
     call etsf_io_low_close(ncid, lstat)
     

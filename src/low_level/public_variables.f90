@@ -128,3 +128,47 @@
   integer, parameter :: etsf_io_low_var_match = 0, etsf_io_low_var_type_dif = 1, &
                       & etsf_io_low_var_shape_dif = 2
   !!***
+
+  !!****d* etsf_io_low_level/etsf_io_low_var_double
+  !! NAME
+  !!  etsf_io_low_var_double
+  !!
+  !! FUNCTION
+  !!  This structure is used as an abstraction on a storage for a variable. Only
+  !!  one pointer can be associated at a time.  The shape of the stored data is
+  !!  then defined by the associated pointer. This structure is used to read or
+  !!  write data when the storage area in memory can have different shapes.
+  !!
+  !! SOURCE
+  type etsf_io_low_var_double
+    double precision, pointer :: data1D(:) => null()
+    double precision, pointer :: data2D(:, :) => null()
+    double precision, pointer :: data3D(:, :, :) => null()
+    double precision, pointer :: data4D(:, :, :, :) => null()
+    double precision, pointer :: data5D(:, :, :, :, :) => null()
+    double precision, pointer :: data6D(:, :, :, :, :, :) => null()
+    double precision, pointer :: data7D(:, :, :, :, :, :, :) => null()
+  end type etsf_io_low_var_double
+  !!***
+  
+  !!****d* etsf_io_low_level/etsf_io_low_var_integer
+  !! NAME
+  !!  etsf_io_low_var_integer
+  !!
+  !! FUNCTION
+  !!  This structure is used as an abstraction on a storage for a variable. Only
+  !!  one pointer can be associated at a time.  The shape of the stored data is
+  !!  then defined by the associated pointer. This structure is used to read or
+  !!  write data when the storage area in memory can have different shapes.
+  !!
+  !! SOURCE
+  type etsf_io_low_var_integer
+    integer, pointer :: data1D(:) => null()
+    integer, pointer :: data2D(:, :) => null()
+    integer, pointer :: data3D(:, :, :) => null()
+    integer, pointer :: data4D(:, :, :, :) => null()
+    integer, pointer :: data5D(:, :, :, :, :) => null()
+    integer, pointer :: data6D(:, :, :, :, :, :) => null()
+    integer, pointer :: data7D(:, :, :, :, :, :, :) => null()
+  end type etsf_io_low_var_integer
+  !!***

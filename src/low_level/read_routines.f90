@@ -169,6 +169,7 @@
   !! INPUTS
   !!  * var_ref <type(etsf_io_low_var_infos)> = store, type, shape, dimensions and NetCDF id.
   !!  * var <type(etsf_io_low_var_infos)> = store, type, shape, dimensions and NetCDF id.
+  !!  * sub = (optional) restrict the check to the lower dimensions (0 < sub <= var_ref%ncshape).
   !!
   !! OUTPUT
   !!  * lstat = .true. if the two variable definitions are compatible.
@@ -521,3 +522,175 @@
     end if
   end subroutine etsf_io_low_open_read
   !!***
+
+  ! Generic routine, documented in the module file.
+  subroutine read_var_double_var(ncid, varname, var, lstat, sub, ncvarid, error_data)
+    integer, intent(in)                            :: ncid
+    character(len = *), intent(in)                 :: varname
+    type(etsf_io_low_var_double), intent(inout)      :: var
+    logical, intent(out)                           :: lstat
+    integer, intent(in), optional                  :: sub(:)
+    integer, intent(out), optional                 :: ncvarid
+    type(etsf_io_low_error), intent(out), optional :: error_data
+
+    !Local
+    character(len = *), parameter :: me = "read_var_double_var"
+    character(len = 80) :: err
+    integer :: varid
+    type(etsf_io_low_error) :: error
+    
+    if (associated(var%data1D)) then
+      if (present(sub)) then
+        call read_var_double_1D(ncid, varname, var%data1D, lstat, &
+                              & sub = sub, ncvarid = varid, error_data = error)
+      else
+        call read_var_double_1D(ncid, varname, var%data1D, lstat, &
+                              & ncvarid = varid, error_data = error)
+      end if
+    else if (associated(var%data2D)) then
+      if (present(sub)) then
+        call read_var_double_2D(ncid, varname, var%data2D, lstat, &
+                              & sub = sub, ncvarid = varid, error_data = error)
+      else
+        call read_var_double_2D(ncid, varname, var%data2D, lstat, &
+                              & ncvarid = varid, error_data = error)
+      end if
+    else if (associated(var%data3D)) then
+      if (present(sub)) then
+        call read_var_double_3D(ncid, varname, var%data3D, lstat, &
+                              & sub = sub, ncvarid = varid, error_data = error)
+      else
+        call read_var_double_3D(ncid, varname, var%data3D, lstat, &
+                              & ncvarid = varid, error_data = error)
+      end if
+    else if (associated(var%data4D)) then
+      if (present(sub)) then
+        call read_var_double_4D(ncid, varname, var%data4D, lstat, &
+                              & sub = sub, ncvarid = varid, error_data = error)
+      else
+        call read_var_double_4D(ncid, varname, var%data4D, lstat, &
+                              & ncvarid = varid, error_data = error)
+      end if
+    else if (associated(var%data5D)) then
+      if (present(sub)) then
+        call read_var_double_5D(ncid, varname, var%data5D, lstat, &
+                              & sub = sub, ncvarid = varid, error_data = error)
+      else
+        call read_var_double_5D(ncid, varname, var%data5D, lstat, &
+                              & ncvarid = varid, error_data = error)
+      end if
+    else if (associated(var%data6D)) then
+      if (present(sub)) then
+        call read_var_double_6D(ncid, varname, var%data6D, lstat, &
+                              & sub = sub, ncvarid = varid, error_data = error)
+      else
+        call read_var_double_6D(ncid, varname, var%data6D, lstat, &
+                              & ncvarid = varid, error_data = error)
+      end if
+    else if (associated(var%data7D)) then
+      if (present(sub)) then
+        call read_var_double_7D(ncid, varname, var%data7D, lstat, &
+                              & sub = sub, ncvarid = varid, error_data = error)
+      else
+        call read_var_double_7D(ncid, varname, var%data7D, lstat, &
+                              & ncvarid = varid, error_data = error)
+      end if
+    else
+      write(err, "(A,F10.5)") "no data array associated"
+      call set_error(error, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+                   & tgtname = "var", errmess = err)
+      lstat = .false.
+    end if
+    if (present(error_data)) then
+      error_data = error
+    end if
+    if (present(ncvarid)) then
+      ncvarid = varid
+    end if
+  end subroutine read_var_double_var
+  
+  ! Generic routine, documented in the module file.
+  subroutine read_var_integer_var(ncid, varname, var, lstat, sub, ncvarid, error_data)
+    integer, intent(in)                            :: ncid
+    character(len = *), intent(in)                 :: varname
+    type(etsf_io_low_var_integer), intent(inout)   :: var
+    logical, intent(out)                           :: lstat
+    integer, intent(in), optional                  :: sub(:)
+    integer, intent(out), optional                 :: ncvarid
+    type(etsf_io_low_error), intent(out), optional :: error_data
+
+    !Local
+    character(len = *), parameter :: me = "read_var_integer_var"
+    character(len = 80) :: err
+    integer :: varid
+    type(etsf_io_low_error) :: error
+    
+    if (associated(var%data1D)) then
+      if (present(sub)) then
+        call read_var_integer_1D(ncid, varname, var%data1D, lstat, &
+                               & sub = sub, ncvarid = varid, error_data = error)
+      else
+        call read_var_integer_1D(ncid, varname, var%data1D, lstat, &
+                               & ncvarid = varid, error_data = error)
+      end if
+    else if (associated(var%data2D)) then
+      if (present(sub)) then
+        call read_var_integer_2D(ncid, varname, var%data2D, lstat, &
+                               & sub = sub, ncvarid = varid, error_data = error)
+      else
+        call read_var_integer_2D(ncid, varname, var%data2D, lstat, &
+                               & ncvarid = varid, error_data = error)
+      end if
+    else if (associated(var%data3D)) then
+      if (present(sub)) then
+        call read_var_integer_3D(ncid, varname, var%data3D, lstat, &
+                               & sub = sub, ncvarid = varid, error_data = error)
+      else
+        call read_var_integer_3D(ncid, varname, var%data3D, lstat, &
+                               & ncvarid = varid, error_data = error)
+      end if
+    else if (associated(var%data4D)) then
+      if (present(sub)) then
+        call read_var_integer_4D(ncid, varname, var%data4D, lstat, &
+                               & sub = sub, ncvarid = varid, error_data = error)
+      else
+        call read_var_integer_4D(ncid, varname, var%data4D, lstat, &
+                               & ncvarid = varid, error_data = error)
+      end if
+    else if (associated(var%data5D)) then
+      if (present(sub)) then
+        call read_var_integer_5D(ncid, varname, var%data5D, lstat, &
+                               & sub = sub, ncvarid = varid, error_data = error)
+      else
+        call read_var_integer_5D(ncid, varname, var%data5D, lstat, &
+                               & ncvarid = varid, error_data = error)
+      end if
+    else if (associated(var%data6D)) then
+      if (present(sub)) then
+        call read_var_integer_6D(ncid, varname, var%data6D, lstat, &
+                               & sub = sub, ncvarid = varid, error_data = error)
+      else
+        call read_var_integer_6D(ncid, varname, var%data6D, lstat, &
+                               & ncvarid = varid, error_data = error)
+      end if
+    else if (associated(var%data7D)) then
+      if (present(sub)) then
+        call read_var_integer_7D(ncid, varname, var%data7D, lstat, &
+                               & sub = sub, ncvarid = varid, error_data = error)
+      else
+        call read_var_integer_7D(ncid, varname, var%data7D, lstat, &
+                               & ncvarid = varid, error_data = error)
+      end if
+    else
+      write(err, "(A,F10.5)") "no data array associated"
+      call set_error(error, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+                   & tgtname = "var", errmess = err)
+      lstat = .false.
+    end if
+    if (present(error_data)) then
+      error_data = error
+    end if
+    if (present(ncvarid)) then
+      ncvarid = varid
+    end if
+  end subroutine read_var_integer_var

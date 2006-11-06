@@ -100,6 +100,7 @@ for ((i=0;i<3;i++)) ; do
       end if
       ! Build the start and count argument for the nf90_get_var() routine
       do i = 1, var_nc%ncshape, 1
+        sub_value = var_nc%ncshape
         if (sub(i) == 0) then
           start(i) = 1
           count(i) = var_nc%ncdims(i)

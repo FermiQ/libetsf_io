@@ -76,7 +76,9 @@ module etsf_io_low_level
   !!  this routine is then a safe way to read data from a NetCDF file. The size and
   !!  shape of @var can be either a scalar, a one dimensional array or a multi
   !!  dimensional array. Strings should be given with their length. See
-  !!  the example below on how to read a string.
+  !!  the example below on how to read a string. @var can also be a #etsf_io_low_var_double,
+  !!  or a #etsf_io_low_var_integer. In this case, the associated pointer is used
+  !!  as the storage area for the read values.
   !!    If the shape of the given storage variable (@var) and the definition of the
   !!  corresponding NetCDF variable differ ; the read is done only if the number of
   !!  elements are identical. Number of elements is the product over all dimensions
@@ -141,6 +143,7 @@ module etsf_io_low_level
   !!***
   !Generic interface of the routines etsf_io_low_read_var
   interface etsf_io_low_read_var
+    module procedure read_var_integer_var
     module procedure read_var_integer_0D
     module procedure read_var_integer_1D
     module procedure read_var_integer_2D
@@ -149,6 +152,7 @@ module etsf_io_low_level
     module procedure read_var_integer_5D
     module procedure read_var_integer_6D
     module procedure read_var_integer_7D
+    module procedure read_var_double_var
     module procedure read_var_double_0D
     module procedure read_var_double_1D
     module procedure read_var_double_2D
@@ -351,7 +355,9 @@ module etsf_io_low_level
   !!  this routine is then a safe way to write data from a NetCDF file. The size and
   !!  shape of @var can be either a scalar, a one dimensional array or a multi
   !!  dimensional array. Strings should be given with their length. See
-  !!  the example below on how to write a string.
+  !!  the example below on how to write a string. @var can also be a #etsf_io_low_var_double,
+  !!  or a #etsf_io_low_var_integer. In this case, the associated pointer is used
+  !!  as the storage area for the written values.
   !!    If the shape of the input data variable (@var) and the definition of the
   !!  corresponding NetCDF variable differ ; the write action is performed only if the number of
   !!  elements are identical. Number of elements is the product over all dimensions
@@ -415,6 +421,7 @@ module etsf_io_low_level
   !!***
   !Generic interface of the routines etsf_io_low_write_var
   interface etsf_io_low_write_var
+    module procedure write_var_integer_var
     module procedure write_var_integer_0D
     module procedure write_var_integer_1D
     module procedure write_var_integer_2D
@@ -423,6 +430,7 @@ module etsf_io_low_level
     module procedure write_var_integer_5D
     module procedure write_var_integer_6D
     module procedure write_var_integer_7D
+    module procedure write_var_double_var
     module procedure write_var_double_0D
     module procedure write_var_double_1D
     module procedure write_var_double_2D

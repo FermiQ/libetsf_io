@@ -650,10 +650,11 @@ contains
   subroutine tests_write_var_integer(path)
     character(len = *), intent(in) :: path
     integer :: ncid, ncvarid
-    integer :: var(4), var2d(2, 2)
+    integer, target :: var(4), var2d(2, 2)
     character(len = 4) :: varc
     logical :: lstat
     type(etsf_io_low_error) :: error
+    type(etsf_io_low_var_integer) :: var_gen
     
     write(*,*)
     write(*,*) "Testing etsf_io_low_write_var_integer()..."
@@ -757,6 +758,20 @@ contains
     end if
     call tests_write_status(" | checking values", lstat, error)
 
+    var = (/ 1, 2, 3, 4 /)
+    var_gen%data1D => var
+    call etsf_io_low_write_var(ncid, "atom_species", var_gen, lstat, error_data = error)
+    call tests_write_status("argument var: generic pointer (1D)", lstat, error)
+    var(:) = 0
+    call etsf_io_low_read_var(ncid, "atom_species", var_gen, lstat, error_data = error)
+    call tests_write_status(" | reading variable", lstat, error)
+    if (.not. (var(1) == 1 .and. var(2) == 2 .and. var(3) == 3 .and. var(4) == 4)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | checking values", lstat, error)
 
     call etsf_io_low_close(ncid, lstat)
     if (.not. lstat) then
@@ -770,10 +785,11 @@ contains
   subroutine tests_write_var_double(path)
     character(len = *), intent(in) :: path
     integer :: ncid, ncvarid, i
-    double precision :: var(3, 4), bigvar(12), density(27)
+    double precision, target :: var(3, 4), bigvar(12), density(27)
     character(len = 3) :: varc(4)
     logical :: lstat
     type(etsf_io_low_error) :: error
+    type(etsf_io_low_var_double) :: var_gen
     
     write(*,*)
     write(*,*) "Testing etsf_io_low_write_var_double()..."
@@ -851,6 +867,24 @@ contains
     call etsf_io_low_read_var(ncid, "density", density, lstat, sub = (/ 0, 0, 0, 2 /), error_data = error)
     call tests_write_status(" | reading variable", lstat, error)
     if (.not. (density(1) == -0.5d0 .and. density(2) == -1.d0 .and. density(3) == -1.5d0) ) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | checking values", lstat, error)
+
+    var = reshape((/ (real(i) / 2.d0, i = 1, 12) /), (/ 3, 4 /))
+    var_gen%data2D => var
+    call etsf_io_low_write_var(ncid, "reduced_atom_positions", var_gen, lstat, error_data = error)
+    call tests_write_status("argument var: generic pointer (2D)", lstat, error)
+    var(:, :) = 0.d0
+    call etsf_io_low_read_var(ncid, "reduced_atom_positions", var_gen, lstat, error_data = error)
+    call tests_write_status(" | reading variable", lstat, error)
+    if (.not. (var(1, 1) == 0.5d0 .and. var(2, 1) == 1.d0 .and. var(3, 1) == 1.5d0 .and. &
+      & var(1, 2) == 2.d0 .and. var(2, 2) == 2.5d0 .and. var(3, 2) == 3.d0 .and. &
+      & var(1, 3) == 3.5d0 .and. var(2, 3) == 4.d0 .and. var(3, 3) == 4.5d0 .and. &
+      & var(1, 4) == 5.d0 .and. var(2, 4) == 5.5d0 .and. var(3, 4) == 6.d0) ) then
       error%access_mode_id = ERROR_MODE_SPEC
       error%target_type_id = ERROR_TYPE_ATT
       error%error_message = "wrong value"
