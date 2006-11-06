@@ -4,7 +4,7 @@ program tests_write
   
   implicit none
 
-  integer :: nArg
+  integer :: nArg, iargc
   character(len = 256) :: path
   
   nArg = iargc()
@@ -590,6 +590,12 @@ contains
     end if
     call tests_write_status(" | check definition", lstat, error)
 
+    ! We add a 2D integer array for future testing.
+    call etsf_io_low_def_var(ncid, "test_integer_2d", NF90_INT, &
+                           & (/ "number_of_atoms", "number_of_atoms" /), &
+                           & lstat, error_data = error)
+    call tests_write_status("2D array: adding a new variable", lstat, error)
+
     ! We add a string as variable
     call etsf_io_low_def_var(ncid, "exchange_functional", NF90_CHAR, &
                            & (/ "character_string_length" /), lstat, error_data = error)
@@ -609,7 +615,7 @@ contains
     call etsf_io_low_write_dim(ncid, "number_of_reduced_dimensions", 3, lstat, error_data = error)
     ! We add a 2D array as variable
     call etsf_io_low_def_var(ncid, "reduced_atom_positions", NF90_DOUBLE, &
-                           & (/ "number_of_reduced_dimensions", "number_of_atoms" /), &
+                           & (/ pad("number_of_reduced_dimensions"), pad("number_of_atoms") /), &
                            & lstat, error_data = error)
     call tests_write_status("2D array: adding a new variable", lstat, error)
     ! We check the definition.
@@ -625,6 +631,13 @@ contains
     end if
     call tests_write_status(" | check definition", lstat, error)
 
+    ! We add a 4D array for future testing.
+    call etsf_io_low_def_var(ncid, "density", NF90_DOUBLE, &
+                           & (/ "number_of_reduced_dimensions", "number_of_reduced_dimensions", &
+                              & "number_of_reduced_dimensions", "number_of_atoms             " /), &
+                           & lstat, error_data = error)
+    call tests_write_status("4D array: adding a new variable", lstat, error)
+
     call etsf_io_low_close(ncid, lstat)
     if (.not. lstat) then
       write(*,*) "Abort, can't close file"
@@ -637,7 +650,7 @@ contains
   subroutine tests_write_var_integer(path)
     character(len = *), intent(in) :: path
     integer :: ncid, ncvarid
-    integer :: var(4), var2d(2,2)
+    integer :: var(4), var2d(2, 2)
     character(len = 4) :: varc
     logical :: lstat
     type(etsf_io_low_error) :: error
@@ -718,6 +731,32 @@ contains
     end if
     call tests_write_status(" | checking values", lstat, error)
 
+    var = (/ 7, 5, 3, 9 /)
+    call etsf_io_low_write_var(ncid, "test_integer_2d", var, &
+                            & lstat, sub = (/ 0, 2, 3 /), error_data = error)
+    call tests_write_status("argument sub: wrong size", (.not. lstat), error)
+
+    call etsf_io_low_write_var(ncid, "test_integer_2d", var, &
+                            & lstat, sub = (/ 0, 6 /), error_data = error)
+    call tests_write_status("argument sub: out-of-bounds", (.not. lstat), error)
+
+    call etsf_io_low_write_var(ncid, "test_integer_2d", var(1:3), &
+                            & lstat, sub = (/ 0, 2 /), error_data = error)
+    call tests_write_status("argument sub: wrong dimensions", (.not. lstat), error)
+
+    call etsf_io_low_write_var(ncid, "test_integer_2d", var, &
+                            & lstat, sub = (/ 0, 2 /), error_data = error)
+    call tests_write_status("argument sub: good dimensions", lstat, error)
+    call etsf_io_low_read_var(ncid, "test_integer_2d", var, lstat, sub = (/ 0, 2 /), error_data = error)
+    call tests_write_status(" | reading variable", lstat, error)
+    if (.not. (var(1) == 7 .and. var(2) == 5 .and. var(3) == 3 .and. var(4) == 9)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | checking values", lstat, error)
+
 
     call etsf_io_low_close(ncid, lstat)
     if (.not. lstat) then
@@ -730,8 +769,8 @@ contains
 
   subroutine tests_write_var_double(path)
     character(len = *), intent(in) :: path
-    integer :: ncid, ncvarid
-    double precision :: var(3, 4), bigvar(12)
+    integer :: ncid, ncvarid, i
+    double precision :: var(3, 4), bigvar(12), density(27)
     character(len = 3) :: varc(4)
     logical :: lstat
     type(etsf_io_low_error) :: error
@@ -805,6 +844,19 @@ contains
     end if
     call tests_write_status(" | checking values", lstat, error)
 
+    density = (/ (-real(i) / 2.d0, i = 1, 27) /)
+    call etsf_io_low_write_var(ncid, "density", density, &
+                            & lstat, sub = (/ 0, 0, 0, 2 /), error_data = error)
+    call tests_write_status("argument var + sub: good matching (3D <-> 1D)", lstat, error)
+    call etsf_io_low_read_var(ncid, "density", density, lstat, sub = (/ 0, 0, 0, 2 /), error_data = error)
+    call tests_write_status(" | reading variable", lstat, error)
+    if (.not. (density(1) == -0.5d0 .and. density(2) == -1.d0 .and. density(3) == -1.5d0) ) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong value"
+      lstat = .false.
+    end if
+    call tests_write_status(" | checking values", lstat, error)
 
     call etsf_io_low_close(ncid, lstat)
     

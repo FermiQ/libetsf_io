@@ -4,7 +4,7 @@ program tests_read
   
   implicit none
 
-  integer :: nArg
+  integer :: nArg, iargc
   character(len = 256) :: path
   
   nArg = iargc()
@@ -164,6 +164,10 @@ contains
     type(etsf_io_low_var_infos) :: var_from, var_to
     
     write(*,*)
+    error%access_mode_id = ERROR_MODE_SPEC
+    error%target_type_id = ERROR_TYPE_VAR
+    error%error_message = "wrong value"
+    
     write(*,*) "Testing etsf_io_low_check_var()..."
     var_from%nctype = etsf_io_low_character
     var_to%nctype = etsf_io_low_double
@@ -327,6 +331,23 @@ contains
                          & bigvar(1) == 1 .and. bigvar(2) == 2 .and. &
                          & bigvar(3) == 3 .and. bigvar(4) == 4), error)
 
+    call etsf_io_low_read_var(ncid, "test_integer_2d", bigvar(1:2), &
+                            & lstat, sub = (/ 0, 2, 3 /), error_data = error)
+    call tests_read_status("argument sub: wrong size", (.not. lstat), error)
+
+    call etsf_io_low_read_var(ncid, "test_integer_2d", bigvar(1:2), &
+                            & lstat, sub = (/ 0, 3 /), error_data = error)
+    call tests_read_status("argument sub: out-of-bounds", (.not. lstat), error)
+
+    call etsf_io_low_read_var(ncid, "test_integer_2d", bigvar(1:3), &
+                            & lstat, sub = (/ 0, 2 /), error_data = error)
+    call tests_read_status("argument sub: wrong dimensions", (.not. lstat), error)
+
+    call etsf_io_low_read_var(ncid, "test_integer_2d", bigvar(1:2), &
+                            & lstat, sub = (/ 0, 2 /), error_data = error)
+    call tests_read_status("argument sub: good dimensions", (lstat .and. &
+                         & bigvar(1) == 3 .and. bigvar(2) == 4), error)
+
     call etsf_io_low_close(ncid, lstat)
     
     write(*,*) 
@@ -335,7 +356,7 @@ contains
   subroutine tests_read_var_double(path)
     character(len = *), intent(in) :: path
     integer :: ncid, ncvarid
-    double precision :: var(3), var2d(3, 3), bigvar(15)
+    double precision :: var(3), var2d(3, 3), bigvar(15), density(27)
     character(len = 3) :: varc
     logical :: lstat
     type(etsf_io_low_error) :: error
@@ -393,6 +414,15 @@ contains
     call tests_read_status("argument var: good matching (2D <-> 1D)", (lstat .and. &
                          & bigvar(1) == 0.5d0 .and. bigvar(2) == 0.5d0 .and. &
                          & bigvar(3) == 0.5d0 .and. bigvar(4) == 0.6d0), error)
+
+    call etsf_io_low_read_var(ncid, "density", density, &
+                            & lstat, sub = (/ 0, 0, 0, 2 /), error_data = error)
+    call tests_read_status("argument var + sub: good matching (3D <-> 1D)", (lstat .and. &
+                         & density(1) == -0.d0 .and. density(2) == -1.d0 .and. &
+                         & density(3) == -0.d0 .and. density(4) == -1.d0 .and. &
+                         & density(5) == -2.d0 .and. density(6) == -1.d0 .and. &
+                         & density(7) == -0.d0 .and. density(8) == -1.d0 .and. &
+                         & density(9) == -0.d0), error)
 
 
     call etsf_io_low_close(ncid, lstat)

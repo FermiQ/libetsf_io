@@ -167,8 +167,8 @@
   !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
-  !!  * var_from <type(etsf_io_low_var_infos)> = store, type, shape, dimensions and NetCDF id.
-  !!  * var_to <type(etsf_io_low_var_infos)> = store, type, shape, dimensions and NetCDF id.
+  !!  * var_ref <type(etsf_io_low_var_infos)> = store, type, shape, dimensions and NetCDF id.
+  !!  * var <type(etsf_io_low_var_infos)> = store, type, shape, dimensions and NetCDF id.
   !!
   !! OUTPUT
   !!  * lstat = .true. if the two variable definitions are compatible.
@@ -215,11 +215,12 @@
     else
       sub_shape = var_ref%ncshape
     end if
-    if (sub_shape < 1 .or. sub > var_ref%ncshape) then
+    if (.not.((var_ref%ncshape > 0 .and. sub_shape > 0 .and. sub_shape <= var_ref%ncshape) .or. &
+            & (var_ref%ncshape == 0 .and. sub_shape == 0))) then
       write(err, "(A)") "wrong sub argument ( 0 < sub <= var_ref%ncshape)."
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
-                     & errmess = err)
+        call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+                     & tgtname = "sub", errmess = err)
       end if
       return
     end if

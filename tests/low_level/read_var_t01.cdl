@@ -5,6 +5,7 @@ dimensions:
   character_string_length = 80;
   number_of_reduced_dimensions = 3;
   number_of_vectors = 3;
+  number_of_components = 2;
 
 variables:
   char atom_species_names(number_of_atom_species, character_string_length);
@@ -15,6 +16,7 @@ variables:
   double test_double_1d(number_of_vectors);
   double reduced_atom_positions(number_of_atoms, number_of_reduced_dimensions);
   double primitive_vectors(number_of_vectors, number_of_reduced_dimensions);
+  double density(number_of_components, number_of_vectors, number_of_vectors, number_of_vectors);
 
   // Global attributes
   :file_format = "ETSF Nanoquanta";
@@ -31,4 +33,10 @@ data:
   test_double_1d = 1., 2., 3.;
   reduced_atom_positions = 0.5, 0.5, 0.5, 0.6, 0.6, 0.6, 0.4, 0.4, 0.6, 0.6, 0.4, 0.4, 0.4, 0.6, 0.4;
   primitive_vectors = 10., 0., 0., 0., 10., 0., 0., 0., 10.;
+  density = 0., 1., 0., 1., 2., 1., 0., 1., 0.,
+            1., 2., 1., 2., 3., 2., 1., 2., 1.,
+            0., 1., 0., 1., 2., 1., 0., 1., 0.,
+            -0., -1., -0., -1., -2., -1., -0., -1., -0.,
+            -1., -2., -1., -2., -3., -2., -1., -2., -1.,
+            -0., -1., -0., -1., -2., -1., -0., -1., -0.;
 }

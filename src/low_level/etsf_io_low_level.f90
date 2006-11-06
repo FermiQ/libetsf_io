@@ -46,14 +46,14 @@ module etsf_io_low_level
                                 & "put            ", &
                                 & "specifications " /)
 
-  integer, parameter, private :: nb_target_type = 11
+  integer, parameter, private :: nb_target_type = 12
   character(len = 22), dimension(nb_target_type), parameter, private :: &
     & etsf_io_low_error_type = (/ "attribute             ", "dimension ID          ", &
                                 & "dimension             ", "end definitions       ", &
                                 & "define mode           ", "create file           ", &
                                 & "open file for reading ", "open file for writing ", &
                                 & "variable              ", "variable ID           ", &
-                                & "close file            " /)
+                                & "close file            ", "routine argument      " /)
   private :: set_error
 
 
@@ -81,6 +81,13 @@ module etsf_io_low_level
   !!  corresponding NetCDF variable differ ; the read is done only if the number of
   !!  elements are identical. Number of elements is the product over all dimensions
   !!  of the size (see example below).
+  !!    It is also possible to read some particular dimensions of one variable using
+  !!  the optional @sub argument. This is only possible for multi-dimensional variables
+  !!  and is compatible with a shape modification. See the following examples. The @sub
+  !!  argument is an array specifying for each dimension of the NetCDF variable, if
+  !!  all values of that dimension are read or if only one index is accessed. The order
+  !!  of dimensions are given in the Fortran order (inverse of the specification
+  !!  order).
   !!
   !! COPYRIGHT
   !!  Copyright (C) 2006
@@ -95,6 +102,9 @@ module etsf_io_low_level
   !! OUTPUT
   !!  * var = an allocated array to store the read values (or a simple scalar).
   !!  * lstat = .true. if operation succeed.
+  !!  * sub = (optional) an array, with the same size than the shape of the NetCDF
+  !!          variable to be read. When sub(i) == 0, then the data for that dimension
+  !!          are totally read, else for sub(i) > 0, only the data at this index are read.
   !!  * ncvarid = (optional) the id used by NetCDF to identify the read variable.
   !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
   !!
@@ -112,9 +122,22 @@ module etsf_io_low_level
   !!   call etsf_io_low_read_var(ncid, "reduced_atom_positions", coord, lstat)
   !!
   !!  Get a 2 dimensional array stored as a four dimensional array:
-  !!   NetCDF def: density(3, 3, 3, 2)
-  !!   double precision :: coord(27, 2)
-  !!   call etsf_io_low_read_var(ncid, "density", coord, lstat)
+  !!   NetCDF def: density(2, 3, 3, 3) # dimensions in NetCDF are reverted
+  !!                                   # compared to Fortran style
+  !!   double precision :: density(27, 2)
+  !!   call etsf_io_low_read_var(ncid, "density", density, lstat)
+  !!
+  !!  Get the last 3 dimensions of a 4D array:
+  !!   NetCDF def: density(2, 3, 3, 3) # dimensions in NetCDF are reverted
+  !!                                   # compared to Fortran style
+  !!   double precision :: density_down(3, 3, 3)
+  !!   call etsf_io_low_read_var(ncid, "density", density_down, lstat, sub = (/ 0, 0, 0, 2 /))
+  !!
+  !!  Get the last 3 dimensions of a 4D array and store them into a 1D array:
+  !!   NetCDF def: density(2, 3, 3, 3) # dimensions in NetCDF are reverted
+  !!                                   # compared to Fortran style
+  !!   double precision :: density_up(27)
+  !!   call etsf_io_low_read_var(ncid, "density", density_up, lstat, sub = (/ 0, 0, 0, 1 /))
   !!***
   !Generic interface of the routines etsf_io_low_read_var
   interface etsf_io_low_read_var
@@ -333,6 +356,13 @@ module etsf_io_low_level
   !!  corresponding NetCDF variable differ ; the write action is performed only if the number of
   !!  elements are identical. Number of elements is the product over all dimensions
   !!  of the size (see example below).
+  !!    It is also possible to write some particular dimensions of one variable using
+  !!  the optional @sub argument. This is only possible for multi-dimensional variables
+  !!  and is compatible with a shape modification. See the following examples. The @sub
+  !!  argument is an array specifying for each dimension of the NetCDF variable, if
+  !!  all values of that dimension are written or if only one index is accessed. The order
+  !!  of dimensions are given in the Fortran order (inverse of the specification
+  !!  order).
   !!
   !! COPYRIGHT
   !!  Copyright (C) 2006
@@ -349,6 +379,9 @@ module etsf_io_low_level
   !!
   !! OUTPUT
   !!  * lstat = .true. if operation succeed.
+  !!  * sub = (optional) an array, with the same size than the shape of the NetCDF
+  !!          variable to be read. When sub(i) == 0, then the data for that dimension
+  !!          are totally read, else for sub(i) > 0, only the data at this index are read.
   !!  * ncvarid = (optional) the id used by NetCDF to identify the written variable.
   !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
   !!
@@ -367,6 +400,18 @@ module etsf_io_low_level
   !!   double precision :: coord(12)
   !!   coord = (/ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 /)
   !!   call etsf_io_low_read_var(ncid, "reduced_atom_positions", coord, lstat)
+  !!
+  !!  Write the last 3 dimensions of a 4D array:
+  !!   NetCDF def: density(2, 3, 3, 3) # dimensions in NetCDF are reverted
+  !!                                   # compared to Fortran style
+  !!   double precision :: density_down(3, 3, 3)
+  !!   call etsf_io_low_write_var(ncid, "density", density_down, lstat, sub = (/ 0, 0, 0, 2 /))
+  !!
+  !!  Write the last 3 dimensions of a 4D array and read them from a 1D array:
+  !!   NetCDF def: density(2, 3, 3, 3) # dimensions in NetCDF are reverted
+  !!                                   # compared to Fortran style
+  !!   double precision :: density_up(27)
+  !!   call etsf_io_low_write_var(ncid, "density", density_up, lstat, sub = (/ 0, 0, 0, 1 /))
   !!***
   !Generic interface of the routines etsf_io_low_write_var
   interface etsf_io_low_write_var
@@ -583,6 +628,37 @@ contains
     end if
     lstat = .true.
   end subroutine etsf_io_low_write_var_mode
+  !!***
+
+  !!****m* etsf_io_low_level/pad
+  !! NAME
+  !!  pad
+  !!
+  !! FUNCTION
+  !!  Little tool to format chains to constant length (256). This is usefull
+  !!  when calling the etsf_io_low_def_var() routine which takes an array of
+  !!  strings as argument. Since not all compilers like to construct static
+  !!  arrays from strings of different lengths, this function can wrap all
+  !!  strings.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!
+  !! INPUTS
+  !!  * string = the string to convert to character(len = 256).
+  !!
+  !! OUTPUT
+  !!
+  !! SOURCE
+  function pad(string)
+    character(len = *), intent(in) :: string
+    character(len = 256)           :: pad
+    
+    write(pad, "(A)") string(1:min(256, len(string)))
+  end function pad
   !!***
 
   include "read_routines.f90"

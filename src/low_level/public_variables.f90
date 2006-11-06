@@ -36,12 +36,13 @@
   !!   * ERROR_TYPE_VAR = error on variables.
   !!   * ERROR_TYPE_VID = error on variable ids.
   !!   * ERROR_TYPE_CLO = error on closing.
+  !!   * ERROR_TYPE_ARG = error on routine argument.
   !!
   !! SOURCE
-  integer, parameter :: ERROR_TYPE_ATT =  1, ERROR_TYPE_DID =  2, ERROR_TYPE_DIM = 3, &
-                      & ERROR_TYPE_END =  4, ERROR_TYPE_DEF =  5, ERROR_TYPE_OCR = 6, &
-                      & ERROR_TYPE_ORD =  7, ERROR_TYPE_OWR =  8, ERROR_TYPE_VAR = 9, &
-                      & ERROR_TYPE_VID = 10, ERROR_TYPE_CLO = 11
+  integer, parameter :: ERROR_TYPE_ATT =  1, ERROR_TYPE_DID =  2, ERROR_TYPE_DIM =  3, &
+                      & ERROR_TYPE_END =  4, ERROR_TYPE_DEF =  5, ERROR_TYPE_OCR =  6, &
+                      & ERROR_TYPE_ORD =  7, ERROR_TYPE_OWR =  8, ERROR_TYPE_VAR =  9, &
+                      & ERROR_TYPE_VID = 10, ERROR_TYPE_CLO = 11, ERROR_TYPE_ARG = 12
   !!***
 
   !!****d* etsf_io_low_level/constants

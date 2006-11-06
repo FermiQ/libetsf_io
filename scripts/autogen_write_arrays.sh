@@ -63,38 +63,78 @@ for ((i=0;i<3;i++)) ; do
     fi
     cat >> $TARGET_FILE << EOF
   subroutine write_var_${type}_${dim}D(ncid, varname, var${addarg}, &
-                                          & lstat, ncvarid, error_data)
+                                          & lstat, sub, ncvarid, error_data)
     integer, intent(in)                            :: ncid${addarg}
     character(len = *), intent(in)                 :: varname
     ${fortrantype}, intent(in) :: var${vardims}
     logical, intent(out)                           :: lstat
+    integer, intent(in), optional                  :: sub(:)
     integer, intent(out), optional                 :: ncvarid
     type(etsf_io_low_error), intent(out), optional :: error_data
 
     !Local
     character(len = *), parameter :: me = "etsf_io_low_write_var_${type}_${dim}D"
-    type(etsf_io_low_var_infos) :: var_from, var_to
-    integer :: s, lvl, i
+    character(len = 80) :: err
+    type(etsf_io_low_var_infos) :: var_nc, var_user
+    integer :: s, lvl, i, sub_value
+    integer :: start(1:7), count(1:7)
     logical :: stat
 
     lstat = .false.
-    ! We first check the compatibility between the NetCDF var definition and the given data.
+    ! We get the dimensions and shape of the ref variable in the NetCDF file.
     if (present(error_data)) then
-      call etsf_io_low_read_var_infos(ncid, varname, var_to, stat, error_data = error_data)
+      call etsf_io_low_read_var_infos(ncid, varname, var_nc, stat, error_data = error_data)
     else
-      call etsf_io_low_read_var_infos(ncid, varname, var_to, stat)
+      call etsf_io_low_read_var_infos(ncid, varname, var_nc, stat)
     end if
     if (.not. stat) then
       return
     end if
-    var_from%nctype = ${nctype}
-    var_from%ncshape = ${dim}
-    ${addcomment}var_from%ncdims(${start}:${dim}) = shape(var)
-    ${charcomment}var_from%ncdims(1) = charlen
-    if (present(error_data)) then
-      call etsf_io_low_check_var(var_from, var_to, stat, level = lvl, error_data = error_data)
+    ! Consistency checks, when sub is present
+    if (present(sub)) then
+      if (size(sub) /= var_nc%ncshape) then
+        write(err, "(A)") "inconsistent length (must be the shape of the ETSF variable)"
+        if (present(error_data)) then
+          call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+                       & tgtname = "sub", errmess = err)
+        end if
+        return
+      end if
+      ! Build the start and count argument for the nf90_get_var() routine
+      do i = 1, var_nc%ncshape, 1
+        if (sub(i) == 0) then
+          start(i) = 1
+          count(i) = var_nc%ncdims(i)
+        else
+          sub_value = i - 1
+          start(i) = sub(i)
+          count(i) = 1
+          if (sub(i) < 0 .or. sub(i) > var_nc%ncdims(i)) then
+            write(err, "(A,I0,A,I0,A)") "inconsistent value at index ", i, &
+                                      & " (must be within ]0;", var_nc%ncdims(i), "])"
+            if (present(error_data)) then
+              call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+                           & tgtname = "sub", errmess = err)
+            end if
+            return
+          end if
+        end if
+      end do
     else
-      call etsf_io_low_check_var(var_from, var_to, stat, level = lvl)
+      ! Normal case, no sub reading
+      start(:) = 1
+      count = var_nc%ncdims
+      sub_value = var_nc%ncshape
+    end if
+    var_user%nctype = ${nctype}
+    var_user%ncshape = ${dim}
+    ${addcomment}var_user%ncdims(${start}:${dim}) = shape(var)
+    ${charcomment}var_user%ncdims(1) = charlen
+    if (present(error_data)) then
+      call etsf_io_low_check_var(var_nc, var_user, stat, level = lvl, sub = sub_value, &
+                               & error_data = error_data)
+    else
+      call etsf_io_low_check_var(var_nc, var_user, stat, level = lvl, sub = sub_value)
     end if
     if (.not. stat) then
       return
@@ -102,26 +142,27 @@ for ((i=0;i<3;i++)) ; do
 
     ! Now that we are sure that the written var has the same type and dimension
     ! that the argument one, we can do the put action securely.
-    if (modulo(lvl / etsf_io_low_var_shape_dif, 2) == 1) then
+    if (modulo(lvl / etsf_io_low_var_shape_dif, 2) == 1 .or. present(sub)) then
       ! The shape differs but is compatible, we then give the count and ma
       ! arguments.
-      ${addcomment}s = nf90_put_var(ncid, var_to%ncid, values = var, &
-      ${addcomment}                & count = var_to%ncdims(1:var_to%ncshape), &
-      ${addcomment}                & map = (/ 1, (product(var_to%ncdims(:i)), &
-      ${addcomment}                             & i = 1, var_to%ncshape - 1) /))
+      ${addcomment}s = nf90_put_var(ncid, var_nc%ncid, values = var, &
+      ${addcomment}                & start = start(1:var_nc%ncshape), &
+      ${addcomment}                & count = count(1:var_nc%ncshape), &
+      ${addcomment}                & map = (/ 1, (product(var_nc%ncdims(:i)), &
+      ${addcomment}                             & i = 1, var_nc%ncshape - 1) /))
     else
-      s = nf90_put_var(ncid, var_to%ncid, values = var)
+      s = nf90_put_var(ncid, var_nc%ncid, values = var)
     end if
     if (s /= nf90_noerr) then
       if (present(error_data)) then
         call set_error(error_data, ERROR_MODE_PUT, ERROR_TYPE_VAR, me, &
-                     & tgtname = varname, tgtid = var_to%ncid, errid = s, &
+                     & tgtname = varname, tgtid = var_nc%ncid, errid = s, &
                      & errmess = nf90_strerror(s))
       end if
       return
     end if
     if (present(ncvarid)) then
-      ncvarid = var_to%ncid
+      ncvarid = var_nc%ncid
     end if
     lstat = .true.
   end subroutine write_var_${type}_${dim}D

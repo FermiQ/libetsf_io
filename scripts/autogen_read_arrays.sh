@@ -72,6 +72,7 @@ for ((i=0;i<3;i++)) ; do
 
     !Local
     character(len = *), parameter :: me = "etsf_io_low_read_var_${type}_${dim}D"
+    character(len = 80) :: err
     type(etsf_io_low_var_infos) :: var_nc, var_user
     integer :: s, lvl, i, sub_value
     integer :: start(1:7), count(1:7)
@@ -87,17 +88,17 @@ for ((i=0;i<3;i++)) ; do
     if (.not. stat) then
       return
     end if
-    ! Consistency checks
+    ! Consistency checks, when sub is present
     if (present(sub)) then
       if (size(sub) /= var_nc%ncshape) then
-        write(err, "(A)") "wrong sub argument (inconsistent length)"
+        write(err, "(A)") "inconsistent length (must be the shape of the ETSF variable)"
         if (present(error_data)) then
-          call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
-                        & errmess = err)
+          call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+                       & tgtname = "sub", errmess = err)
         end if
         return
       end if
-      
+      ! Build the start and count argument for the nf90_get_var() routine
       do i = 1, var_nc%ncshape, 1
         if (sub(i) == 0) then
           start(i) = 1
@@ -106,12 +107,21 @@ for ((i=0;i<3;i++)) ; do
           sub_value = i - 1
           start(i) = sub(i)
           count(i) = 1
+          if (sub(i) < 0 .or. sub(i) > var_nc%ncdims(i)) then
+            write(err, "(A,I0,A,I0,A)") "inconsistent value at index ", i, &
+                                      & " (must be within ]0;", var_nc%ncdims(i), "])"
+            if (present(error_data)) then
+              call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+                           & tgtname = "sub", errmess = err)
+            end if
+            return
+          end if
         end if
       end do
     else
       ! Normal case, no sub reading
       start(:) = 1
-      count = var_nc%ncdims(i)
+      count = var_nc%ncdims
       sub_value = var_nc%ncshape
     end if
     var_user%nctype = ${nctype}
@@ -133,23 +143,24 @@ for ((i=0;i<3;i++)) ; do
     if (modulo(lvl / etsf_io_low_var_shape_dif, 2) == 1 .or. present(sub)) then
       ! The shapes differ but are compatible, we then give the count and map
       ! arguments.
-      ${addcomment}s = nf90_get_var(ncid, var_from%ncid, values = var, &
-      ${addcomment}                & start = start, count = count, &
-      ${addcomment}                & map = (/ 1, (product(var_from%ncdims(:i)), &
-      ${addcomment}                             & i = 1, var_from%ncshape - 1) /))
+      ${addcomment}s = nf90_get_var(ncid, var_nc%ncid, values = var, &
+      ${addcomment}                & start = start(1:var_nc%ncshape), &
+      ${addcomment}                & count = count(1:var_nc%ncshape), &
+      ${addcomment}                & map = (/ 1, (product(var_nc%ncdims(:i)), &
+      ${addcomment}                             & i = 1, var_nc%ncshape - 1) /))
     else
-      s = nf90_get_var(ncid, var_from%ncid, values = var)
+      s = nf90_get_var(ncid, var_nc%ncid, values = var)
     end if
     if (s /= nf90_noerr) then
       if (present(error_data)) then
         call set_error(error_data, ERROR_MODE_GET, ERROR_TYPE_VAR, me, &
-                     & tgtname = varname, tgtid = var_from%ncid, errid = s, &
+                     & tgtname = varname, tgtid = var_nc%ncid, errid = s, &
                      & errmess = nf90_strerror(s))
       end if
       return
     end if
     if (present(ncvarid)) then
-      ncvarid = var_from%ncid
+      ncvarid = var_nc%ncid
     end if
     lstat = .true.
   end subroutine read_var_${type}_${dim}D
