@@ -85,16 +85,24 @@ source line comments:
     !
 keywords:
     if
-    end if
     do
-    end do
     intent
     integer
     character
-    double precision
+    double
+    precision
     logical
     subroutine
     end
     type
     optional
     call
+    pointer
+    null
+    contains
+    include
+    module
+    use
+    implicit
+    none
+    parameter

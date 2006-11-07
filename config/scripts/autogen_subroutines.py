@@ -72,7 +72,7 @@ call etsf_io_low_open_read(ncid, trim(filename), lstat, error_data = error_data)
 if (.not. lstat) return
 
 ! Get Dimensions
-call etsf_dims_get(ncid, dims, lstat, error_data)
+call etsf_io_dims_get(ncid, dims, lstat, error_data)
 if (.not. lstat) return
 
 """
@@ -138,10 +138,18 @@ def code_data_select(action):
     buf = "call etsf_io_%s_def(ncid, lstat, error_data)\n" % (group)
     buf += "if (.not. lstat) return"
    else:
-    buf = "call etsf_io_%s_%s(ncid, group_folder%%%s, lstat, error_data)\n" % (group, action, group)
+    # Check the association
+    buf = "if (.not. associated(group_folder%%%s)) then\n" % group
+    buf += "  call etsf_io_low_error_set(error_data, ERROR_MODE_%s, ERROR_TYPE_VAR, &\n" % action.upper()
+    buf += "                           & my_name, tgtname = \"%s\", &\n" % group
+    buf += "                           & errmess = \"No data type associated\")\n"
+    buf += "  lstat = .false.\n"
+    buf += "  return\n"
+    buf += "end if\n"
+    buf += "call etsf_io_%s_%s(ncid, group_folder%%%s, lstat, error_data)\n" % (group, action, group)
     buf += "if (.not. lstat) return"
 
-   ret += "\n\n  case (etsf_grp_%s)\n   %s" % (group, indent_code(buf,3))
+   ret += "\n\n  case (etsf_grp_%s)\n%s" % (group, indent_code(buf,3))
 
  ret += "\n\n end select\nend do"
 
@@ -154,6 +162,10 @@ def code_data_write():
 
  ret = """! Open file for writing
 call etsf_io_low_open_modify(ncid, trim(filename), lstat, error_data = error_data)
+if (.not. lstat) return
+
+! We switch to write mode.
+call etsf_io_low_write_var_mode(ncid, lstat, error_data = error_data)
 if (.not. lstat) return
 
 ! Put Data
@@ -278,18 +290,29 @@ def code_group_generic(group,action):
       ret += "    & %s &\n" % dims
     ret += "    & lstat, error_data = error_data)\n" \
          + "  if (.not. lstat) return\n"
-  elif ( action == "put" ):
-    ret += "  call etsf_io_low_write_var(ncid, \"%s\", &\n" % var \
+  else:
+    if ( action == "put" ):
+      action_str = "write"
+    elif ( action == "get" ):
+      action_str = "read"
+    else:
+      raise ValueError
+    
+    # Check the association if required (var is a pointer)
+    if ( (var_desc[0].startswith("string") and len(var_desc) > 2 ) or \
+     (not(var_desc[0].startswith("string")) and len(var_desc) > 1 ) ):
+      ret += "if (.not. associated(folder%%%s)) then\n" % var
+      ret += "  call etsf_io_low_error_set(error_data, ERROR_MODE_%s, ERROR_TYPE_VAR, &\n" % action.upper()
+      ret += "                           & my_name, tgtname = \"%s\", &\n" % var
+      ret += "                           & errmess = \"No data type associated\")\n"
+      ret += "  lstat = .false.\n"
+      ret += "  return\n"
+      ret += "end if\n"
+    
+    ret += "  call etsf_io_low_%s_var(ncid, \"%s\", &\n" % (action_str, var) \
          + "                           & folder%%%s, %s&\n" % (var, char_len) \
          + "                           & lstat, error_data = error_data)\n" \
          + "  if (.not. lstat) return\n"
-  elif ( action == "get" ):
-    ret += "  call etsf_io_low_read_var(ncid, \"%s\", &\n" % var \
-         + "                          & folder%%%s, %s&\n" % (var, char_len) \
-         + "                          & lstat, error_data = error_data)\n" \
-         + "  if (.not. lstat) return\n"
-  else:
-    raise ValueError
 
  return ret
 

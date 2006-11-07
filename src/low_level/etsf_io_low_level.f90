@@ -514,6 +514,53 @@ contains
     end if
   end subroutine set_error
 
+  subroutine etsf_io_low_error_set(error_data, mode, type, parent, tgtid, tgtname, errid, errmess)
+    type(etsf_io_low_error), intent(out)     :: error_data
+    integer, intent(in)                      :: mode, type
+    character(len = *), intent(in)           :: parent
+    integer, intent(in), optional            :: tgtid, errid
+    character(len = *), intent(in), optional :: tgtname, errmess
+
+    ! Consistency checkings    
+    if (mode < 1 .or. mode > nb_access_mode) then
+      write(0, *) "   *** ETSF I/O Internal error ***"
+      write(0, *) "   mode argument out of range: ", mode
+      return
+    end if
+    if (type < 1 .or. type > nb_target_type) then
+      write(0, *) "   *** ETSF I/O Internal error ***"
+      write(0, *) "   type argument out of range: ", type
+      return
+    end if
+    
+    ! Storing informations
+    error_data%parent = parent(1:min(80, len(parent)))
+    error_data%access_mode_id = mode
+    error_data%access_mode_str = etsf_io_low_error_mode(mode)
+    error_data%target_type_id = type
+    error_data%target_type_str = etsf_io_low_error_type(type)
+    if (present(tgtid)) then
+      error_data%target_id = tgtid
+    else
+      error_data%target_id = -1
+    end if
+    if (present(tgtname)) then
+      error_data%target_name = tgtname(1:min(80, len(tgtname)))
+    else
+      error_data%target_name = ""
+    end if
+    if (present(errid)) then
+      error_data%error_id = errid
+    else
+      error_data%error_id = -1
+    end if
+    if (present(errmess)) then
+      error_data%error_message = errmess(1:min(256, len(errmess)))
+    else
+      error_data%error_message = ""
+    end if
+  end subroutine etsf_io_low_error_set
+
   !!****m* etsf_io_low_level/etsf_io_low_error_handle
   !! NAME
   !!  etsf_io_low_error_handle

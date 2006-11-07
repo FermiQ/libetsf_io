@@ -99,18 +99,18 @@ etsf_subs_put_args = {
 # Descriptions of the subprogram arguments for the "init" action
 etsf_subs_init_args = {
    "data":[
-      "filename character(len=132) in",
+      "filename character(len=*) in",
       "main_var integer in",
       "groups integer in",
       "dims type(etsf_dims) inout",
-      "title character(len=etsf_charlen) in",
-      "history character(len=etsf_histlen) in"]
+      "title character(len=*) in",
+      "history character(len=*) in"]
 }
 
 # Descriptions of the subprogram arguments for the "contents" action
 etsf_subs_contents_args = {
    "data":[
-      "filename character(len=132) in",
+      "filename character(len=*) in",
       "dims type(etsf_dims) out",
       "main_var integer out",
       "groups integer out"]
@@ -119,7 +119,7 @@ etsf_subs_contents_args = {
 # Descriptions of the subprogram arguments for the "read" action
 etsf_subs_read_args = {
    "data":[
-      "filename character(len=132) in",
+      "filename character(len=*) in",
       "main_var integer in",
       "groups integer in",
       "main_folder type(etsf_main) inout",
@@ -129,7 +129,7 @@ etsf_subs_read_args = {
 # Descriptions of the subprogram arguments for the "write" action
 etsf_subs_write_args = {
    "data":[
-      "filename character(len=132) in",
+      "filename character(len=*) in",
       "main_var integer in",
       "groups integer in",
       "main_folder type(etsf_main) in",

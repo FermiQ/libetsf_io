@@ -64,18 +64,19 @@ for att in etsf_attributes.keys():
 # Data type for dimensions
 edt = "\n\n ! Data type for dimensions\n type etsf_dims\n"
 for dim in etsf_dimensions:
- edt += "  %s :: %s\n" % (fortran_type(["integer"]),dim)
+ edt += "  %s :: %s = 1\n" % (fortran_type(["integer"]),dim)
 edt += " end type etsf_dims"
 
 # Data structures for each group of variables
 egc = "\n\n ! Constants for groups of variables"
+egc += "\n integer, parameter :: etsf_grp_%-16s = 0" % "none"
 egf = "\n\n ! Folder for the groups of variables\n type etsf_groups"
 egv = 1
 egn = 0
 for grp in etsf_group_list:
  if ( grp != "main" ):
-  egc += "\n integer,parameter :: etsf_grp_%-16s = %d" % (grp,egv)
-  egf += "\n  type(etsf_%s),pointer :: %s" % (grp,grp)
+  egc += "\n integer, parameter :: etsf_grp_%-16s = %d" % (grp,egv)
+  egf += "\n  type(etsf_%s), pointer :: %s => null()" % (grp,grp)
   egv *= 2
   egn += 1
 
@@ -98,7 +99,7 @@ for grp in etsf_group_list:
     for i in range(len(dsc)-dim_offset):
      dim += ",:"
     
-    edt += "  %s, pointer :: %s(%s)\n" % (fortran_type(dsc),var,dim)
+    edt += "  %s, pointer :: %s(%s) => null()\n" % (fortran_type(dsc),var,dim)
    else:
     edt += "  %s :: %s\n" % (fortran_type(dsc),var)
   else:
@@ -109,7 +110,7 @@ for grp in etsf_group_list:
 egf += "\n end type etsf_groups"
 
 # Number of groups
-egc += "\n integer,parameter :: etsf_%-20s = %d" % ("ngroups",egn)
+egc += "\n integer, parameter :: etsf_%-20s = %d" % ("ngroups",egn)
 
 # Main variables
 egc += "\n\n ! Main variables (select only one at a time)"
