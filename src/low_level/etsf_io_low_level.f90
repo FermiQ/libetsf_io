@@ -140,6 +140,14 @@ module etsf_io_low_level
   !!                                   # compared to Fortran style
   !!   double precision :: density_up(27)
   !!   call etsf_io_low_read_var(ncid, "density", density_up, lstat, sub = (/ 0, 0, 0, 1 /))
+  !!
+  !!  Read data to a dimension stored in the main program, without duplication
+  !!  of data in memory:
+  !!   integer, target :: atom_species(number_of_atoms)
+  !!   ...
+  !!   type(etsf_io_low_var_integer) :: var
+  !!   var%data1D => atom_species
+  !!   call etsf_io_low_read_var(ncid, "atom_species", var, lstat)
   !!***
   !Generic interface of the routines etsf_io_low_read_var
   interface etsf_io_low_read_var
@@ -418,6 +426,14 @@ module etsf_io_low_level
   !!                                   # compared to Fortran style
   !!   double precision :: density_up(27)
   !!   call etsf_io_low_write_var(ncid, "density", density_up, lstat, sub = (/ 0, 0, 0, 1 /))
+  !!
+  !!  Write data from a dimension stored in the main program, without duplication
+  !!  of data in memory:
+  !!   integer, target :: atom_species(number_of_atoms)
+  !!   ...
+  !!   type(etsf_io_low_var_integer) :: var
+  !!   var%data1D => atom_species
+  !!   call etsf_io_low_write_var(ncid, "atom_species", var, lstat)
   !!***
   !Generic interface of the routines etsf_io_low_write_var
   interface etsf_io_low_write_var

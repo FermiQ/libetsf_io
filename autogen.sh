@@ -3,9 +3,13 @@
 # Script used to generate configure script from directives.
 echo "== Generate sources =="
 echo "Generates read routines for nDimensional arrays."
-scripts/autogen_read_arrays.sh
+config/scripts/autogen_low_read_var.sh
 echo "Generates write routines for nDimensional arrays."
-scripts/autogen_write_arrays.sh
+config/scripts/autogen_low_write_var.sh
+echo "Generate the group level module."
+config/scripts/autogen_module.py
+echo "Generate the group level subroutines & Makefile.am."
+config/scripts/autogen_subroutines.py
 echo
 
 echo "== Generate documentations =="

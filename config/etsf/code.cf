@@ -1,0 +1,19 @@
+# -*- Python -*-
+#
+# Copyright (c) 2006 The ABINIT Group (Yann Pouillon)
+# All rights reserved.
+#
+# This file is part of the ABINIT software package. For license information,
+# please see the COPYING file in the top-level directory of the ABINIT source
+# distribution.
+#
+
+#
+# ETSF file format specifications for the Fortran library
+#
+# Note: The following statements have to be readable by Python scripts
+#
+
+# File properties
+etsf_file_module = "src/group_level/etsf_io.f90"
+etsf_file_srcdir = "src/group_level"

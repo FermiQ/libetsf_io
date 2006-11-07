@@ -1,0 +1,320 @@
+# -*- Python -*-
+#
+# Copyright (c) 2006 The ABINIT Group (Yann Pouillon)
+# All rights reserved.
+#
+# This file is part of the ABINIT software package. For license information,
+# please see the COPYING file in the top-level directory of the ABINIT source
+# distribution.
+#
+
+#
+# ETSF file format specifications for ABINIT
+#
+# Note: The following statements have to be readable by Python scripts
+#
+
+# ETSF property definitions
+ETSF_PROP_NONE       = 0        # No property
+ETSF_PROP_ATT_GLOBAL = 1        # Attribute is global
+ETSF_PROP_VAR_UNITS  = 2        # Variable has "units" attribute
+ETSF_PROP_VAR_KDEP   = 4        # Variable is k-point dependent
+
+# ETSF constants
+etsf_constants = {
+   "character_string_length":"etsf_charlen",
+   "history_length":"etsf_histlen",
+   "symbol_length":"etsf_chemlen",
+   "three_dimensions":"etsf_3dimlen"}
+
+# ETSF properties
+etsf_properties = {
+   "Conventions":ETSF_PROP_ATT_GLOBAL,
+   "file_format":ETSF_PROP_ATT_GLOBAL,
+   "file_format_version":ETSF_PROP_ATT_GLOBAL,
+   "title":ETSF_PROP_ATT_GLOBAL,
+   "history":ETSF_PROP_ATT_GLOBAL}
+
+# ETSF attributes
+etsf_attributes = {
+   "Conventions":[
+      "string character_string_length",
+      "\"http://www.etsf.eu/fileformats\""],
+   "file_format":[
+      "string character_string_length",
+      "\"ETSF Nanoquanta\""],
+   "file_format_version":[
+      "real single_precision",
+      "1.30"],
+   "history":[
+      "string history_length"],
+   "k_dependent":[
+      "string character_string_length"],
+   "scale_to_atomic_units":[
+      "real double_precision"],
+   "symmorphic":[
+      "string character_string_length"],
+   "title":[
+      "string character_string_length"],
+   "units":[
+      "string character_string_length"]}
+
+# ETSF dimensions
+etsf_dimensions = [
+   "character_string_length",
+   "max_number_of_angular_momenta",
+   "max_number_of_coefficients",
+   "max_number_of_projectors",
+   "max_number_of_states",
+   "number_of_atoms",
+   "number_of_atom_species",
+   "number_of_cartesian_directions",
+   "number_of_components",
+   "number_of_grid_points_vector1",
+   "number_of_grid_points_vector2",
+   "number_of_grid_points_vector3",
+   "number_of_kpoints",
+   "number_of_reduced_dimensions",
+   "number_of_spinor_components",
+   "number_of_spins",
+   "number_of_symmetries",
+   "number_of_symmetry_operations",
+   "number_of_vectors",
+   "real_or_complex",
+   "symbol_length"]
+
+# ETSF variables
+etsf_variables = {
+   "atomic_numbers":[
+      "real double_precision",
+      "number_of_atom_species"],
+   "atom_species":[
+      "integer",
+      "number_of_atoms"],
+   "atom_species_names":[
+      "string",
+      "number_of_atom_species",
+      "character_string_length"],
+   "basis_set":[
+      "string",
+      "character_string_length"],
+   "chemical_symbols":[
+      "string",
+      "number_of_atom_species",
+      "symbol_length"],
+   "coefficients_of_wavefunctions":[
+      "real double_precision unformatted",
+      "number_of_spins",
+      "number_of_kpoints",
+      "max_number_of_states",
+      "number_of_spinor_components",
+      "max_number_of_coefficients",
+      "real_or_complex"],
+   "correlation_functional":[
+      "string",
+      "character_string_length"],
+   "correlation_potential":[
+      "real double_precision unformatted",
+      "number_of_components",
+      "number_of_grid_points_vector3",
+      "number_of_grid_points_vector2",
+      "number_of_grid_points_vector1",
+      "real_or_complex"],
+   "density":[
+      "real double_precision unformatted",
+      "number_of_components",
+      "number_of_grid_points_vector3",
+      "number_of_grid_points_vector2",
+      "number_of_grid_points_vector1",
+      "real_or_complex"],
+   "eigenvalues":[
+      "real double_precision",
+      "number_of_spins",
+      "number_of_kpoints",
+      "max_number_of_states"],
+   "exchange_correlation_potential":[
+      "real double_precision unformatted",
+      "number_of_components",
+      "number_of_grid_points_vector3",
+      "number_of_grid_points_vector2",
+      "number_of_grid_points_vector1",
+      "real_or_complex"],
+   "exchange_functional":[
+      "string",
+      "character_string_length"],
+   "exchange_potential":[
+      "real double_precision unformatted",
+      "number_of_components",
+      "number_of_grid_points_vector3",
+      "number_of_grid_points_vector2",
+      "number_of_grid_points_vector1",
+      "real_or_complex"],
+   "fermi_energy":[
+      "real double_precision"],
+   "gw_corrections":[
+      "real double_precision",
+      "number_of_spins",
+      "number_of_kpoints",
+      "max_number_of_states",
+      "real_or_complex"],
+   "kb_formfactors":[
+      "integer",
+      "number_of_atomic_species",
+      "max_number_of_angular_momenta",
+      "max_number_of_projectors",
+      "number_of_kpoints",
+      "max_number_of_coefficients"],
+   "kb_formfactor_derivative":[
+      "integer",
+      "number_of_atomic_species",
+      "max_number_of_angular_momenta",
+      "max_number_of_projectors",
+      "number_of_kpoints",
+      "max_number_of_coefficients"],
+   "kb_formfactor_sign":[
+      "integer",
+      "number_of_atomic_species",
+      "max_number_of_angular_momenta",
+      "max_number_of_projectors"],
+   "kinetic_energy_cutoff":[
+      "real double_precision"],
+   "kpoint_grid_shift":[
+      "real double_precision",
+      "number_of_reduced_dimensions"],
+   "kpoint_grid_vectors":[
+      "real double_precision",
+      "number_of_vectors",
+      "number_of_reduced_dimensions"],
+   "kpoint_weights":[
+      "real double_precision",
+      "number_of_kpoints"],
+   "monkhorst_pack_folding":[
+      "integer",
+      "number_of_vectors"],
+   "number_of_coefficients":[
+      "integer",
+      "number_of_kpoints"],
+   "number_of_electrons":[
+      "integer"],
+   "number_of_states":[
+      "integer",
+      "number_of_kpoints"],
+   "occupations":[
+      "real double_precision",
+      "number_of_spins",
+      "number_of_kpoints",
+      "max_number_of_states"],
+   "primitive_vectors":[
+      "real double_precision",
+      "number_of_vectors",
+      "number_of_cartesian_directions"],
+   "pseudopotential_types":[
+      "string",
+      "number_of_atom_species",
+      "character_string_length"],
+   "real_space_wavefunctions":[
+      "real double_precision unformatted",
+      "number_of_spins",
+      "number_of_kpoints",
+      "max_number_of_states",
+      "number_of_spinor_components",
+      "number_of_grid_points_vector3",
+      "number_of_grid_points_vector2",
+      "number_of_grid_points_vector1",
+      "real_or_complex"],
+   "reduced_atom_positions":[
+      "real double_precision","number_of_atoms",
+      "number_of_reduced_dimensions"],
+   "reduced_coordinates_of_kpoints":[
+      "real double_precision",
+      "number_of_kpoints",
+      "number_of_reduced_dimensions"],
+   "reduced_coordinates_of_plane_waves":[
+      "integer","number_of_kpoints",
+      "max_number_of_coefficients",
+      "number_of_reduced_directions"],
+   "reduced_symmetry_matrices":[
+      "integer",
+      "number_of_symmetries",
+      "number_of_reduced_dimensions",
+      "number_of_reduced_dimensions"],
+   "reduced_symmetry_translations":[
+      "real double_precision",
+      "number_of_symmetries",
+      "number_of_reduced_dimensions"],
+   "smearing_scheme":[
+      "string",
+      "character_string_length"],
+   "smearing_width":[
+      "real double_precision"],
+   "space_group":[
+      "integer"],
+   "valence_charges":[
+      "real double_precision",
+      "number_of_atom_species"]}
+
+# Variable groups
+etsf_groups = {
+   "geometry":[
+      "space_group",
+      "primitive_vectors",
+      "reduced_symmetry_matrices",
+      "reduced_symmetry_translations",
+      "atom_species",
+      "reduced_atom_positions",
+      "valence_charges",
+      "atomic_numbers",
+      "atom_species_names",
+      "chemical_symbols",
+      "pseudopotential_types"],
+   "electrons":[
+      "number_of_electrons",
+      "exchange_functional",
+      "correlation_functional",
+      "fermi_energy",
+      "smearing_scheme",
+      "smearing_width",
+      "number_of_states",
+      "eigenvalues",
+      "occupations"],
+   "kpoints":[
+      "kinetic_energy_cutoff",
+      "kpoint_grid_shift",
+      "kpoint_grid_vectors",
+      "monkhorst_pack_folding",
+      "reduced_coordinates_of_kpoints",
+      "kpoint_weights"],
+   "wavedata":[
+      "basis_set",
+      "number_of_coefficients",
+      "reduced_coordinates_of_plane_waves"],
+   "gwdata":[
+      "gw_corrections",
+      "kb_formfactor_sign",
+      "kb_formfactors",
+      "kb_formfactor_derivative"],
+   "main":[
+      "coefficients_of_wavefunctions",
+      "real_space_wavefunctions",
+      "density",
+      "exchange_potential",
+      "correlation_potential",
+      "exchange_correlation_potential"]}
+
+# Sorted list of the groups (always keep "main" first)
+etsf_group_list = [
+   "main",
+   "geometry",
+   "electrons",
+   "kpoints",
+   "wavedata",
+   "gwdata"]
+
+# Main variable nicknames
+etsf_main_names = {
+   "coefficients_of_wavefunctions":"wfs_pw",
+   "real_space_wavefunctions":"wfs_rsp",
+   "density":"density",
+   "exchange_potential":"pot_x_only",
+   "correlation_potential":"pot_c_only",
+   "exchange_correlation_potential":"pot_xc"}

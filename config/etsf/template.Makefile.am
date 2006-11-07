@@ -1,0 +1,15 @@
+lib_LIBRARIES = libetsf_io.a
+
+EXTRA_DIST = @INCLUDED_FILES@
+
+
+module_DATA = etsf_io.@MODULE_EXT@
+
+AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(srcdir)
+
+libetsf_io_a_SOURCES = etsf_io.f90
+
+
+
+#dependencies
+etsf_io.o: etsf_io.f90 @INCLUDED_FILES@

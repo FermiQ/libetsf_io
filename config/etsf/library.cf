@@ -1,0 +1,137 @@
+# -*- Python -*-
+#
+# Copyright (c) 2006 The ABINIT Group (Yann Pouillon)
+# All rights reserved.
+#
+# This file is part of the ABINIT software package. For license information,
+# please see the COPYING file in the top-level directory of the ABINIT source
+# distribution.
+#
+
+#
+# Subprograms making up the ETSF file format library
+#
+# Note: The following statements have to be readable by Python scripts
+#
+
+# Subprogram peculiarities
+ETSF_SUBS_PROP_NONE = 0
+
+# Descriptions of the modules
+# <name> : <template>
+etsf_modules = {
+   "etsf_io":"module"
+}
+
+# Descriptions of the subprograms
+# <name> : [ <template>, <info>, <action(s)>, <return type>]
+etsf_subprograms = {
+   "globals":[
+      "low_level",
+      "@ACTION_TEXT@ all ETSF global attributes.",
+      "get put"],
+   "dims":[
+      "low_level",
+      "@ACTION_TEXT@ all ETSF dimensions.",
+      "def get"],
+   "@GROUP@":[
+      "low_level",
+      "@ACTION_TEXT@ ETSF variables for @GROUP@.",
+      "def get put"],
+   "data":[
+      "data",
+      "@ACTION_TEXT@ an ETSF file.",
+      "init contents read write"],
+} 
+
+# Peculiarities
+etsf_subs_properties = {
+}
+
+# All possible actions
+etsf_subs_actions = {
+   "def":"define",
+   "get":"get",
+   "put":"put",
+   "init":"initialize",
+   "read":"read",
+   "write":"write",
+   "contents":"analyze"
+}
+
+# Descriptions of the subprogram arguments for the "def" action
+etsf_subs_def_args = {
+   "dims":[
+      "dims type(etsf_dims) in"],
+   "main":[
+      "main_var integer in"],
+}
+
+# Descriptions of the subprogram arguments for the "get" action
+etsf_subs_get_args = {
+   "globals":[
+      "conventions character(len=etsf_charlen) out",
+      "file_format character(len=etsf_charlen) out",
+      "file_format_version real out",
+      "title character(len=etsf_charlen) out",
+      "history character(len=etsf_histlen) out"],
+   "dims":[
+      "dims type(etsf_dims) out"],
+   "@GROUP@":[
+      "folder type(etsf_@GROUP@) out"],
+   "main":[
+      "main_var integer in",
+      "folder type(etsf_@GROUP@) inout"],
+}
+
+# Descriptions of the subprogram arguments for the "put" action
+etsf_subs_put_args = {
+   "globals":[
+      "title character(len=etsf_charlen) in",
+      "history character(len=etsf_histlen) in"],
+   "@GROUP@":[
+      "folder type(etsf_@GROUP@) in"],
+   "main":[
+      "main_var integer in",
+      "folder type(etsf_@GROUP@) in"],
+}
+
+# Descriptions of the subprogram arguments for the "init" action
+etsf_subs_init_args = {
+   "data":[
+      "filename character(len=132) in",
+      "main_var integer in",
+      "groups integer in",
+      "dims type(etsf_dims) inout",
+      "title character(len=etsf_charlen) in",
+      "history character(len=etsf_histlen) in"]
+}
+
+# Descriptions of the subprogram arguments for the "contents" action
+etsf_subs_contents_args = {
+   "data":[
+      "filename character(len=132) in",
+      "dims type(etsf_dims) out",
+      "main_var integer out",
+      "groups integer out"]
+}
+
+# Descriptions of the subprogram arguments for the "read" action
+etsf_subs_read_args = {
+   "data":[
+      "filename character(len=132) in",
+      "main_var integer in",
+      "groups integer in",
+      "main_folder type(etsf_main) inout",
+      "group_folder type(etsf_groups) inout"]
+}
+
+# Descriptions of the subprogram arguments for the "write" action
+etsf_subs_write_args = {
+   "data":[
+      "filename character(len=132) in",
+      "main_var integer in",
+      "groups integer in",
+      "main_folder type(etsf_main) in",
+      "group_folder type(etsf_groups) in"]
+}

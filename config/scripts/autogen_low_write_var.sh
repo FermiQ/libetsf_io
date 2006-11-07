@@ -12,8 +12,8 @@ ATT_NF90_TYPES=( NF90_INT NF90_FLOAT NF90_DOUBLE NF90_CHAR )
 
 # If
 if [ -f $TARGET_FILE ] ; then
-  echo "WARNING! target file already exists and will be overwritten."
-  echo "         Old version ($TARGET_FILE) is renamed with a '.old' extension."
+  #echo "WARNING! target file already exists and will be overwritten."
+  #echo "         Old version ($TARGET_FILE) is renamed with a '.old' extension."
   \cp $TARGET_FILE ${TARGET_FILE}.old
 fi
 

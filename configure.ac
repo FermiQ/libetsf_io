@@ -111,6 +111,7 @@ dnl Give the name of file.in to transform to file
 AC_CONFIG_FILES([
 Makefile
 src/low_level/Makefile
+src/group_level/Makefile
 tests/low_level/Makefile
 ])
 AC_OUTPUT

@@ -8,4 +8,5 @@ config/install-sh
 *Makefile.in
 src/low_level/read_routines_auto.f90*
 src/low_level/write_routines_auto.f90*
+src/group_level/*
 doc/www*
