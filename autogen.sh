@@ -10,6 +10,8 @@ echo "Generate the group level module."
 config/scripts/autogen_module.py
 echo "Generate the group level subroutines & Makefile.am."
 config/scripts/autogen_subroutines.py
+echo "Generate the group level tests."
+config/scripts/autogen_tests.py
 echo
 
 echo "== Generate documentations =="

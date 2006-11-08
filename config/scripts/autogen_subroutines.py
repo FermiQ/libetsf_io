@@ -49,6 +49,13 @@ call etsf_io_dims_def(ncid, dims, lstat, error_data)
 if (.not. lstat) return
 
 ! Define groups
+! Check consistency.
+if (groups < 0 .or. groups >= 2 ** etsf_ngroups) then
+  call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_ARG, my_name, &
+                           & tgtname = "main_var", errmess = "value out of bounds")
+  lstat = .false.
+  return
+end if
 """
 
  ret += code_data_select("def")
@@ -321,7 +328,17 @@ def code_group_generic(group,action):
 # Code for the main group
 def code_group_main(action,prefix=""):
 
- ret = "select case ( main_var )\n"
+ # Check the value of main_var.
+ ret = """! Check consistency.
+if (main_var < 1 .or. main_var > etsf_main_nvars) then
+  call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_ARG, my_name, &
+                           & tgtname = "main_var", errmess = "value out of bounds")
+  lstat = .false.
+  return
+end if
+"""
+
+ ret += "\nselect case ( main_var )\n"
 
  for var in etsf_groups["main"]:
   var_desc = etsf_variables[var]

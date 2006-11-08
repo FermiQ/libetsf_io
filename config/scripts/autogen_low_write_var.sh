@@ -77,7 +77,7 @@ for ((i=0;i<3;i++)) ; do
     character(len = 80) :: err
     type(etsf_io_low_var_infos) :: var_nc, var_user
     integer :: s, lvl, i, sub_value
-    integer :: start(1:7), count(1:7)
+    integer :: start(1:16), count(1:16)
     logical :: stat
 
     lstat = .false.

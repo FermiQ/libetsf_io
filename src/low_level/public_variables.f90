@@ -107,7 +107,7 @@
     integer :: ncid
     integer :: nctype
     integer :: ncshape
-    integer :: ncdims(1:7)
+    integer :: ncdims(1:16)
   end type etsf_io_low_var_infos
   !!***
   

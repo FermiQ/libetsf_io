@@ -113,6 +113,7 @@ Makefile
 src/low_level/Makefile
 src/group_level/Makefile
 tests/low_level/Makefile
+tests/group_level/Makefile
 ])
 AC_OUTPUT
 

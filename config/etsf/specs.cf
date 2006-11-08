@@ -159,21 +159,21 @@ etsf_variables = {
       "real_or_complex"],
    "kb_formfactors":[
       "integer",
-      "number_of_atomic_species",
+      "number_of_atom_species",
       "max_number_of_angular_momenta",
       "max_number_of_projectors",
       "number_of_kpoints",
       "max_number_of_coefficients"],
    "kb_formfactor_derivative":[
       "integer",
-      "number_of_atomic_species",
+      "number_of_atom_species",
       "max_number_of_angular_momenta",
       "max_number_of_projectors",
       "number_of_kpoints",
       "max_number_of_coefficients"],
    "kb_formfactor_sign":[
       "integer",
-      "number_of_atomic_species",
+      "number_of_atom_species",
       "max_number_of_angular_momenta",
       "max_number_of_projectors"],
    "kinetic_energy_cutoff":[
@@ -232,7 +232,7 @@ etsf_variables = {
    "reduced_coordinates_of_plane_waves":[
       "integer","number_of_kpoints",
       "max_number_of_coefficients",
-      "number_of_reduced_directions"],
+      "number_of_reduced_dimensions"],
    "reduced_symmetry_matrices":[
       "integer",
       "number_of_symmetries",

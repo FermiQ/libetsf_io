@@ -17,3 +17,4 @@
 # File properties
 etsf_file_module = "src/group_level/etsf_io.f90"
 etsf_file_srcdir = "src/group_level"
+etsf_tests_srcdir = "tests/group_level"
