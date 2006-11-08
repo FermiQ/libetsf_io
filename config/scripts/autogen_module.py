@@ -73,14 +73,16 @@ egc += "\n integer, parameter :: etsf_grp_%-16s = 0" % "none"
 egf = "\n\n ! Folder for the groups of variables\n type etsf_groups"
 egv = 1
 egn = 0
+est = ""
+ema = ""
 for grp in etsf_group_list:
  if ( grp != "main" ):
   egc += "\n integer, parameter :: etsf_grp_%-16s = %d" % (grp,egv)
   egf += "\n  type(etsf_%s), pointer :: %s => null()" % (grp,grp)
   egv *= 2
   egn += 1
-
- edt += "\n\n ! Data type for %s\n type etsf_%s\n" % (grp,grp)
+  
+ out_str = "\n\n ! Data type for %s\n type etsf_%s\n" % (grp,grp)
 
  for var in etsf_groups[grp]:
   dsc = etsf_variables[var]
@@ -99,13 +101,29 @@ for grp in etsf_group_list:
     for i in range(len(dsc)-dim_offset):
      dim += ",:"
     
-    edt += "  %s, pointer :: %s(%s) => null()\n" % (fortran_type(dsc),var,dim)
+    out_str += "  %s, pointer :: %s(%s) => null()\n" % (fortran_type(dsc),var,dim)
    else:
-    edt += "  %s :: %s\n" % (fortran_type(dsc),var)
+    out_str += "  %s :: %s\n" % (fortran_type(dsc),var)
   else:
-   edt += "  %s :: %s\n" % (fortran_type(dsc),var)
+   out_str += "  %s :: %s\n" % (fortran_type(dsc),var)
 
- edt += " end type etsf_%s" % (grp)
+ out_str += " end type etsf_%s" % (grp)
+ if ( grp != "main" ):
+  est += """
+  !!****s* etsf_io/etsf_%s
+  !! NAME
+  !!  etsf_%s
+  !!
+  !! FUNCTION
+  !!  This structure is a container that stores variables used in a same context.
+  !!
+  !! SOURCE
+""" % (grp, grp)
+  est += out_str
+  est += """
+  !!***"""
+ else:
+  ema += out_str
 
 egf += "\n end type etsf_groups"
 
@@ -113,22 +131,28 @@ egf += "\n end type etsf_groups"
 egc += "\n integer, parameter :: etsf_%-20s = %d" % ("ngroups",egn)
 
 # Main variables
-egc += "\n\n ! Main variables (select only one at a time)"
+emc = "\n\n ! Main variables (select only one at a time)"
 egv  = 1
 egn  = 0
 for var in etsf_groups["main"]:
- egc += "\n integer,parameter :: etsf_main_%-15s = %d" % \
+ emc += "\n integer,parameter :: etsf_main_%-15s = %d" % \
          (etsf_main_names[var],egv)
  egv += 1
  egn += 1
 
 # Number of main variables
-egc += "\n integer,parameter :: etsf_%-20s = %d" % ("main_nvars",egn)
+emc += "\n integer,parameter :: etsf_%-20s = %d" % ("main_nvars",egn)
 
 # Import template
 src = file("config/etsf/template.%s" % (etsf_modules["etsf_io"]),"r").read()
 src = re.sub("@SCRIPT@",my_name,src)
-src = re.sub("@CODE@",ead+egc+edt+egf,src)
+src = re.sub("@CONSTANTS@",ead,src)
+src = re.sub("@FLAGS_GROUPS@",egc,src)
+src = re.sub("@FLAGS_MAIN@",emc,src)
+src = re.sub("@DIMENSIONS@",edt,src)
+src = re.sub("@STRUCT_MAIN@",ema,src)
+src = re.sub("@STRUCTURES@",est,src)
+src = re.sub("@STRUCT_GROUPS@",egf,src)
 
 # Write module
 mod = file(etsf_file_module,"w")

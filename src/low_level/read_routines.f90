@@ -40,7 +40,7 @@
     s = nf90_inq_dimid(ncid, dimname, dimid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_INQ, ERROR_TYPE_DID, me, tgtname = dimname, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_DID, me, tgtname = dimname, &
                      & errid = s, errmess = nf90_strerror(s))
       end if
       return
@@ -48,7 +48,7 @@
     s = nf90_inquire_dimension(ncid, dimid, len = dimvalue)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_INQ, ERROR_TYPE_DIM, me, tgtname = dimname, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_DIM, me, tgtname = dimname, &
                      & tgtid = dimid, errid = s, errmess = nf90_strerror(s))
       end if
       return
@@ -67,7 +67,7 @@
   !! FUNCTION
   !!  This method is used to retrieve informations about a variable:
   !!   * its NetCDF id ;
-  !!   * its type (see #constants) ;
+  !!   * its type (see #ETSF_IO_LOW_CONSTANTS) ;
   !!   * its shape and length for each dimension.
   !!
   !! COPYRIGHT
@@ -104,7 +104,7 @@
     s = nf90_inq_varid(ncid, varname, var_infos%ncid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_INQ, ERROR_TYPE_VID, me, tgtname = varname, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_VID, me, tgtname = varname, &
                      & errid = s, errmess = nf90_strerror(s))
       end if
       return
@@ -115,7 +115,7 @@
                             & ndims = var_infos%ncshape)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, tgtname = varname, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, tgtname = varname, &
                      & tgtid = var_infos%ncid, errid = s, errmess = nf90_strerror(s))
       end if
       return
@@ -126,7 +126,7 @@
       s = nf90_inquire_variable(ncid, var_infos%ncid, dimids = ncdimids)
       if (s /= nf90_noerr) then
         if (present(error_data)) then
-          call set_error(error_data, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, tgtname = varname, &
+          call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, tgtname = varname, &
                        & tgtid = var_infos%ncid, errid = s, errmess = nf90_strerror(s))
         end if
         deallocate(ncdimids)
@@ -137,7 +137,7 @@
         s = nf90_inquire_dimension(ncid, ncdimids(i), len = var_infos%ncdims(i))
         if (s /= nf90_noerr) then
           if (present(error_data)) then
-            call set_error(error_data, ERROR_MODE_INQ, ERROR_TYPE_DIM, me, &
+            call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_DIM, me, &
                          & tgtid = ncdimids(i), errid = s, errmess = nf90_strerror(s))
           end if
           deallocate(ncdimids)
@@ -174,7 +174,7 @@
   !! OUTPUT
   !!  * lstat = .true. if the two variable definitions are compatible.
   !!  * level = (optional) when variables are compatibles (lstat = .true.),
-  !!            this flag gives information on matching (see #matching_flags).
+  !!            this flag gives information on matching (see #FLAGS_MATCHING).
   !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
   !!
   !! SOURCE
@@ -200,7 +200,7 @@
       & (var_ref%nctype /= NF90_CHAR .and. var%nctype == NF90_CHAR)) then
       write(err, "(A)") "incompatible type, both must be either numeric or character."
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
                      & errmess = err)
       end if
       return
@@ -220,7 +220,7 @@
             & (var_ref%ncshape == 0 .and. sub_shape == 0))) then
       write(err, "(A)") "wrong sub argument ( 0 < sub <= var_ref%ncshape)."
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
                      & tgtname = "sub", errmess = err)
       end if
       return
@@ -236,7 +236,7 @@
                                           & " (var_from = ", var_ref%ncdims(i), &
                                           & ", var_to = ", var%ncdims(i), ")"
           if (present(error_data)) then
-            call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
+            call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
                          & errmess = err)
           end if
           return
@@ -260,7 +260,7 @@
         write(err, "(A,I5,A,I5,A)") "incompatible number of data (var_ref = ", &
                                   & nb_ele_ref, ", var = ", nb_ele, ")"
         if (present(error_data)) then
-          call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
+          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
                        & errmess = err)
         end if
         return
@@ -294,9 +294,9 @@
   !!  * ncvarid = the id of the variable the attribute is attached to.
   !!              in the case of global attributes, use the constance
   !!              NF90_GLOBAL (when linking against NetCDF) or #etsf_io_low_global_att
-  !!              which is a wrapper exported by this module (see #constants).
+  !!              which is a wrapper exported by this module (see #ETSF_IO_LOW_CONSTANTS).
   !!  * attname = a string identifying an attribute.
-  !!  * atttype = an integer identifying the type (see #constants).
+  !!  * atttype = an integer identifying the type (see #ETSF_IO_LOW_CONSTANTS).
   !!  * attlen = the size of the array, or 1 when the attribute is a scalar.
   !!
   !! OUTPUT
@@ -325,7 +325,7 @@
     s = nf90_inquire_attribute(ncid, ncvarid, attname, xtype = nctype, len = nclen) 
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_INQ, ERROR_TYPE_ATT, me, tgtname = attname, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_ATT, me, tgtname = attname, &
                      & errid = s, errmess = nf90_strerror(s))
       end if
       return
@@ -335,7 +335,7 @@
       write(err, "(A,I5,A,I5,A)") "wrong type (read = ", nctype, &
                                 & ", awaited = ", atttype, ")"
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, tgtname = attname, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, tgtname = attname, &
                      & errmess = err)
       end if
       return
@@ -346,7 +346,7 @@
       write(err, "(A,I5,A,I5,A)") "wrong length (read = ", nclen, &
                                 & ", awaited = ", attlen, ")"
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, tgtname = attname, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, tgtname = attname, &
                      & errmess = err)
       end if
       return
@@ -410,7 +410,7 @@
     if (trim(adjustl(format)) /= "ETSF Nanoquanta") then
       write(err, "(A,A,A)") "wrong value: '", trim(adjustl(format(1:60))), "'"
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, tgtname = "file_format", &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, tgtname = "file_format", &
                      & errmess = err)
       end if
       call etsf_io_low_close(ncid, stat)
@@ -436,7 +436,7 @@
     if (.not. stat) then
       write(err, "(A,F10.5)") "wrong value: ", version_real
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, tgtname = "file_format_version", &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, tgtname = "file_format_version", &
                      & errmess = err)
       end if
       call etsf_io_low_close(ncid, stat)
@@ -499,7 +499,7 @@
     s = nf90_open(path = filename, mode = NF90_NOWRITE, ncid = ncid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_IO, ERROR_TYPE_ORD, me, tgtname = filename, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_ORD, me, tgtname = filename, &
                      & errid = s, errmess = nf90_strerror(s))
       end if
       return
@@ -597,7 +597,7 @@
       end if
     else
       write(err, "(A,F10.5)") "no data array associated"
-      call set_error(error, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+      call etsf_io_low_error_set(error, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
                    & tgtname = "var", errmess = err)
       lstat = .false.
     end if
@@ -683,7 +683,7 @@
       end if
     else
       write(err, "(A,F10.5)") "no data array associated"
-      call set_error(error, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+      call etsf_io_low_error_set(error, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
                    & tgtname = "var", errmess = err)
       lstat = .false.
     end if

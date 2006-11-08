@@ -53,7 +53,7 @@
     if (version < 1.0) then
       if (present(error_data)) then
         write(err, "(A,I0,A)") "Wrong version argument (given: ", version, " ; awaited >= 1.0)"
-        call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, &
                      & tgtname = "file_format_version", errmess = err)
       end if
       return
@@ -64,7 +64,7 @@
     s = nf90_create(path = filename, cmode = NF90_NOCLOBBER, ncid = ncid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_IO, ERROR_TYPE_OWR, me, tgtname = filename, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_OWR, me, tgtname = filename, &
                      & errid = s, errmess = nf90_strerror(s))
       end if
       return
@@ -77,7 +77,7 @@
     s = nf90_put_att(ncid, NF90_GLOBAL, "file_format", etsf_io_low_file_format)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, tgtname = "file_format", &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, tgtname = "file_format", &
                      & errid = s, errmess = nf90_strerror(s))
       end if
       call etsf_io_low_close(ncid, stat)
@@ -87,7 +87,7 @@
     s = nf90_put_att(ncid, NF90_GLOBAL, "file_format_version", version)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, &
                      & tgtname = "file_format_version", errid = s, errmess = nf90_strerror(s))
       end if
       call etsf_io_low_close(ncid, stat)
@@ -97,7 +97,7 @@
     s = nf90_put_att(ncid, NF90_GLOBAL, "Conventions", etsf_io_low_conventions)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, tgtname = "Conventions", &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, tgtname = "Conventions", &
                      & errid = s, errmess = nf90_strerror(s))
       end if
       call etsf_io_low_close(ncid, stat)
@@ -108,7 +108,7 @@
       s = nf90_put_att(ncid, NF90_GLOBAL, "title", title(1:min(80, len(title))))
       if (s /= nf90_noerr) then
         if (present(error_data)) then
-          call set_error(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, tgtname = "title", &
+          call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, tgtname = "title", &
                        & errid = s, errmess = nf90_strerror(s))
         end if
         call etsf_io_low_close(ncid, stat)
@@ -120,7 +120,7 @@
       s = nf90_put_att(ncid, NF90_GLOBAL, "history", history(1:min(1024, len(history))))
       if (s /= nf90_noerr) then
         if (present(error_data)) then
-          call set_error(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, tgtname = "history", &
+          call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, tgtname = "history", &
                        & errid = s, errmess = nf90_strerror(s))
         end if
         call etsf_io_low_close(ncid, stat)
@@ -190,7 +190,7 @@
       if (version < 1.0) then
         if (present(error_data)) then
           write(err, "(A,I0,A)") "Wrong version argument (given: ", version, " ; awaited >= 1.0)"
-          call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, &
+          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, &
                        & tgtname = "file_format_version", errmess = err)
         end if
         return
@@ -200,7 +200,7 @@
     s = nf90_open(path = filename, mode = NF90_WRITE, ncid = ncid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_IO, ERROR_TYPE_OWR, me, tgtname = filename, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_OWR, me, tgtname = filename, &
                      & errid = s, errmess = nf90_strerror(s))
       end if
       return
@@ -224,7 +224,7 @@
     s = nf90_redef(ncid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_IO, ERROR_TYPE_DEF, me, tgtid = ncid, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_DEF, me, tgtid = ncid, &
                       & tgtname = filename, errid = s, errmess = nf90_strerror(s))
       end if
       call etsf_io_low_close(ncid, stat)
@@ -236,7 +236,7 @@
       s = nf90_put_att(ncid, NF90_GLOBAL, "title", title(1:min(80, len(title))))
       if (s /= nf90_noerr) then
         if (present(error_data)) then
-          call set_error(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, tgtname = "title", &
+          call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, tgtname = "title", &
                        & errid = s, errmess = nf90_strerror(s))
         end if
         call etsf_io_low_close(ncid, stat)
@@ -248,7 +248,7 @@
       s = nf90_put_att(ncid, NF90_GLOBAL, "file_format_version", version)
       if (s /= nf90_noerr) then
         if (present(error_data)) then
-          call set_error(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, &
+          call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, &
                        & tgtname = "file_format_version", &
                        & errid = s, errmess = nf90_strerror(s))
         end if
@@ -271,7 +271,7 @@
       s = nf90_put_att(ncid, NF90_GLOBAL, "history", current_history)
       if (s /= nf90_noerr) then
         if (present(error_data)) then
-          call set_error(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, &
+          call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, &
                        & tgtname = "history", &
                        & errid = s, errmess = nf90_strerror(s))
         end if
@@ -325,7 +325,7 @@
     s = nf90_def_dim(ncid, dimname, dimvalue, dimid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_DEF, ERROR_TYPE_DIM, me, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_DIM, me, &
                       & tgtname = dimname, errid = s, errmess = nf90_strerror(s))
       end if
       return
@@ -356,7 +356,7 @@
     s = nf90_def_var(ncid, varname, vartype, varid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_DEF, ERROR_TYPE_VAR, me, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_VAR, me, &
                       & tgtname = varname, errid = s, errmess = nf90_strerror(s))
       end if
       return
@@ -402,7 +402,7 @@
     s = nf90_def_var(ncid, varname, vartype, ncdims, varid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_DEF, ERROR_TYPE_VAR, me, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_VAR, me, &
                       & tgtname = varname, errid = s, errmess = nf90_strerror(s))
       end if
       deallocate(ncdims)
@@ -489,7 +489,7 @@
       end if
     else
       write(err, "(A,F10.5)") "no data array associated"
-      call set_error(error, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+      call etsf_io_low_error_set(error, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
                    & tgtname = "var", errmess = err)
       lstat = .false.
     end if
@@ -575,7 +575,7 @@
       end if
     else
       write(err, "(A,F10.5)") "no data array associated"
-      call set_error(error, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+      call etsf_io_low_error_set(error, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
                    & tgtname = "var", errmess = err)
       lstat = .false.
     end if

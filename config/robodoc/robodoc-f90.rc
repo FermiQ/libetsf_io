@@ -106,3 +106,12 @@ keywords:
     implicit
     none
     parameter
+    return
+    present
+    then
+    true
+    false
+    else
+    in
+    out
+    inout

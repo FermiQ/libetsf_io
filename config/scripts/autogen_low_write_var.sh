@@ -95,7 +95,7 @@ for ((i=0;i<3;i++)) ; do
       if (size(sub) /= var_nc%ncshape) then
         write(err, "(A)") "inconsistent length (must be the shape of the ETSF variable)"
         if (present(error_data)) then
-          call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
                        & tgtname = "sub", errmess = err)
         end if
         return
@@ -113,7 +113,7 @@ for ((i=0;i<3;i++)) ; do
             write(err, "(A,I0,A,I0,A)") "inconsistent value at index ", i, &
                                       & " (must be within ]0;", var_nc%ncdims(i), "])"
             if (present(error_data)) then
-              call set_error(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+              call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
                            & tgtname = "sub", errmess = err)
             end if
             return
@@ -155,7 +155,7 @@ for ((i=0;i<3;i++)) ; do
     end if
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_PUT, ERROR_TYPE_VAR, me, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_VAR, me, &
                      & tgtname = varname, tgtid = var_nc%ncid, errid = s, &
                      & errmess = nf90_strerror(s))
       end if
@@ -206,7 +206,7 @@ for ((i=0;i<4;i++)) ; do
     s = nf90_put_att(ncid, ncvarid, attname, att)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, &
                      & tgtname = attname, tgtid = ncvarid, errid = s, errmess = nf90_strerror(s))
       end if
       return
@@ -233,7 +233,7 @@ EOF
     s = nf90_put_att(ncid, ncvarid, attname, att)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, &
                      & tgtname = attname, tgtid = ncvarid, errid = s, errmess = nf90_strerror(s))
       end if
       return

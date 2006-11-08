@@ -54,8 +54,6 @@ module etsf_io_low_level
                                 & "open file for reading ", "open file for writing ", &
                                 & "variable              ", "variable ID           ", &
                                 & "close file            ", "routine argument      " /)
-  private :: set_error
-
 
   
   include "public_variables.f90"
@@ -208,7 +206,7 @@ module etsf_io_low_level
   !!  * ncvarid = the id of the variable the attribute is attached to.
   !!              in the case of global attributes, use the constance
   !!              NF90_GLOBAL (when linking against NetCDF) or #etsf_io_low_global_att
-  !!              which is a wrapper exported by this module (see #constants).
+  !!              which is a wrapper exported by this module (see #ETSF_IO_LOW_CONSTANTS).
   !!  * attname = a string identifying an attribute.
   !!  * attlen = the size of the array @att (when required).
   !!
@@ -264,7 +262,7 @@ module etsf_io_low_level
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with write access (define mode).
   !!  * varname = the name for the new variable.
-  !!  * vartype = the type of the new variable (see #constants).
+  !!  * vartype = the type of the new variable (see #ETSF_IO_LOW_CONSTANTS).
   !!  * vardims = an array with the size for each dimension of the variable.
   !!              Each size is given by the name of its dimension. Thus dimensions
   !!              must already exist (see etsf_io_low_write_dim()).
@@ -318,7 +316,7 @@ module etsf_io_low_level
   !!  * ncvarid = the id of the variable the attribute is attached to.
   !!              in the case of global attributes, use the constance
   !!              NF90_GLOBAL (when linking against NetCDF) or #etsf_io_low_global_att
-  !!              which is a wrapper exported by this module (see #constants).
+  !!              which is a wrapper exported by this module (see #ETSF_IO_LOW_CONSTANTS).
   !!  * attname = the name for the new attribute.
   !!  * att = the value, can be a string a scalar or a one-dimension array.
   !!
@@ -467,53 +465,31 @@ module etsf_io_low_level
   
 contains
 
-  subroutine set_error(error_data, mode, type, parent, tgtid, tgtname, errid, errmess)
-    type(etsf_io_low_error), intent(out)     :: error_data
-    integer, intent(in)                      :: mode, type
-    character(len = *), intent(in)           :: parent
-    integer, intent(in), optional            :: tgtid, errid
-    character(len = *), intent(in), optional :: tgtname, errmess
-
-    ! Consistency checkings    
-    if (mode < 1 .or. mode > nb_access_mode) then
-      write(0, *) "   *** ETSF I/O Internal error ***"
-      write(0, *) "   mode argument out of range: ", mode
-      return
-    end if
-    if (type < 1 .or. type > nb_target_type) then
-      write(0, *) "   *** ETSF I/O Internal error ***"
-      write(0, *) "   type argument out of range: ", type
-      return
-    end if
-    
-    ! Storing informations
-    error_data%parent = parent(1:min(80, len(parent)))
-    error_data%access_mode_id = mode
-    error_data%access_mode_str = etsf_io_low_error_mode(mode)
-    error_data%target_type_id = type
-    error_data%target_type_str = etsf_io_low_error_type(type)
-    if (present(tgtid)) then
-      error_data%target_id = tgtid
-    else
-      error_data%target_id = -1
-    end if
-    if (present(tgtname)) then
-      error_data%target_name = tgtname(1:min(80, len(tgtname)))
-    else
-      error_data%target_name = ""
-    end if
-    if (present(errid)) then
-      error_data%error_id = errid
-    else
-      error_data%error_id = -1
-    end if
-    if (present(errmess)) then
-      error_data%error_message = errmess(1:min(256, len(errmess)))
-    else
-      error_data%error_message = ""
-    end if
-  end subroutine set_error
-
+  !!****m* etsf_io_low_level/etsf_io_low_error_set
+  !! NAME
+  !!  etsf_io_low_error_set
+  !!
+  !! FUNCTION
+  !!  This routine is used to initialise a #etsf_io_low_error object with values.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!
+  !! INPUTS
+  !!  * mode = a value from #ERROR_MODE, specifying the action when the error occurs.
+  !!  * type = a value from #ERROR_TYPE, specifying the kind of target.
+  !!  * parent = the name of the routine in which the error occurs.
+  !!  * tgtid = (optional) an id representing the target (or -1).
+  !!  * tgtname = (optional) a name representing the target (or "").
+  !!  * errmess = (optional) a string with an explanation.
+  !!
+  !! OUTPUT
+  !!  * error_data <type(etsf_io_low_error)> = the error with sensible values in its fields.
+  !!
+  !! SOURCE
   subroutine etsf_io_low_error_set(error_data, mode, type, parent, tgtid, tgtname, errid, errmess)
     type(etsf_io_low_error), intent(out)     :: error_data
     integer, intent(in)                      :: mode, type
@@ -560,6 +536,7 @@ contains
       error_data%error_message = ""
     end if
   end subroutine etsf_io_low_error_set
+  !!***
 
   !!****m* etsf_io_low_level/etsf_io_low_error_handle
   !! NAME
@@ -643,7 +620,7 @@ contains
     s = nf90_close(ncid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_IO, ERROR_TYPE_CLO, me, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_CLO, me, &
                      & errid = s, errmess = nf90_strerror(s))
       end if
       return
@@ -692,7 +669,7 @@ contains
     s = nf90_enddef(ncid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call set_error(error_data, ERROR_MODE_IO, ERROR_TYPE_END, me, &
+        call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_END, me, &
                      & errid = s, errmess = nf90_strerror(s))
       end if
       return

@@ -45,9 +45,9 @@
                       & ERROR_TYPE_VID = 10, ERROR_TYPE_CLO = 11, ERROR_TYPE_ARG = 12
   !!***
 
-  !!****d* etsf_io_low_level/constants
+  !!****d* etsf_io_low_level/ETSF_IO_LOW_CONSTANTS
   !! NAME
-  !!  constants
+  !!  ETSF_IO_LOW_CONSTANTS
   !!
   !! FUNCTION
   !!  These values are identical to the ones defined in NetCDF. They are defined
@@ -111,9 +111,9 @@
   end type etsf_io_low_var_infos
   !!***
   
-  !!****d* etsf_io_low_level/matching_flags
+  !!****d* etsf_io_low_level/FLAGS_MATCHING
   !! NAME
-  !!  matching_flags
+  !!  FLAGS_MATCHING
   !!
   !! FUNCTION
   !!  These flags are used when comparing to variables (see etsf_io_low_check_var()).
@@ -129,7 +129,7 @@
                       & etsf_io_low_var_shape_dif = 2
   !!***
 
-  !!****d* etsf_io_low_level/etsf_io_low_var_double
+  !!****s* etsf_io_low_level/etsf_io_low_var_double
   !! NAME
   !!  etsf_io_low_var_double
   !!
@@ -151,7 +151,7 @@
   end type etsf_io_low_var_double
   !!***
   
-  !!****d* etsf_io_low_level/etsf_io_low_var_integer
+  !!****s* etsf_io_low_level/etsf_io_low_var_integer
   !! NAME
   !!  etsf_io_low_var_integer
   !!
