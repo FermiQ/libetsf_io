@@ -111,8 +111,11 @@ def write_grp(grp_name, grp_id):
   ret += "  type(etsf_groups) :: groups\n"
   ret += "  type(etsf_main) :: main\n"
   ret += "  double precision, target :: density(10)\n"
-  ret += "  integer :: i, length\n"
+  ret += "  integer :: i, length, ncid\n"
   ret += "  logical :: lstat\n"
+  ret += "  integer, allocatable :: test_int_tab(:)\n"
+  ret += "  double precision, allocatable :: test_dbl_tab(:)\n"
+  ret += "  character(len = *), parameter :: me = \"test_write_%s\"\n" % grp_name
   ret += "  type(etsf_io_low_error) :: error_data\n"
   ret += indent_code(create_variables(grp_name, grp_id), 1)
   # We create a file for this group.
@@ -184,6 +187,84 @@ def write_grp(grp_name, grp_id):
                         & main, groups, lstat, error_data)
   call tests_write_status("write data", lstat, error_data)
 """ % (grp_name, grp_id)
+  # We open the file for low level access
+  ret += """
+  ! check informations.    
+  call etsf_io_low_open_read(ncid, "test_write_%s.nc", lstat, error_data = error_data)
+  call tests_write_status(" | opening", lstat, error_data)
+""" % (grp_name)
+  # We call the low level read routines
+  for var in etsf_groups[grp_name]:
+    var_dsc = etsf_variables[var]
+    if (var_dsc[0].startswith("string")):
+      char_len = "dims%%%s, " % var_dsc[-1]
+      stop = -2
+    else:
+      char_len = ""
+      stop = -1
+    if ((var_dsc[0].startswith("string") and len(var_dsc) > 2) or \
+    (not(var_dsc[0].startswith("string")) and len(var_dsc) > 1)):
+      # case of array
+      ret += """
+  call etsf_io_low_read_var(ncid, "%s", %s, &
+                          & %slstat, error_data = error_data)
+  call tests_write_status(" | read '%s' values", lstat, error_data)
+""" % (var, var, char_len, var)
+      if (var_dsc[0].startswith("string")):
+        ret += """
+  lstat = .true.
+  do i = 1, dims%%%s, 1
+    if (index(%s(i), char(0)) > 0) then
+      lstat = (%s(i)(1:index(%s(i), char(0)) - 1) == \"He\") .and. lstat
+    else
+      lstat = (trim(%s(i)) == \"He\") .and. lstat
+    end if
+  end do
+  if (.not. lstat) then
+""" % (var_dsc[1], var, var, var, var)
+      else:
+        ret += "length = &\n"
+        for dim in var_dsc[1:stop]:
+          ret += "  & dims%%%s * &\n" % dim
+        ret += "  & dims%%%s\n" % var_dsc[stop]
+        if (var_dsc[0].startswith("integer")):
+          tab = "int"
+        else:
+          tab = "dbl"
+        ret += "  allocate(test_%s_tab(length))\n" % tab
+        ret += "  test_%s_tab = reshape(%s, (/ length /))\n" % (tab, var)
+        ret += """
+  lstat = .true.
+  do i = 1, length, 1
+    lstat = (int(test_%s_tab(i)) == i) .and. lstat
+  end do
+  deallocate(test_%s_tab)
+  if (.not. lstat) then
+""" % (tab, tab)
+    else:
+      # case of single value
+      ret += """
+  call etsf_io_low_read_var(ncid, "%s", group%%%s, &
+                          & %slstat, error_data = error_data)
+  call tests_write_status(" | read '%s' values", lstat, error_data)
+""" % (var, var, char_len, var)
+      if (var_dsc[0].startswith("string")):
+        ret += "  if (group%%%s(1:index(group%%%s, char(0)) - 1) /= \"He\") then\n" % (var, var)
+      else:
+        ret += "  if (int(group%%%s) /= 456) then\n" % var
+    ret += """
+    call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
+                             & tgtname = "%s", errmess = "wrong values")
+    lstat = .false.
+  end if
+  call tests_write_status(" | check '%s' values", lstat, error_data)
+""" % (var, var)
+  # We close the file
+  ret += """
+  ! close file
+  call etsf_io_low_close(ncid, lstat, error_data = error_data)
+  call tests_write_status(" | closing", lstat, error_data)
+"""
   # We deallocate
   for var in etsf_groups[grp_name]:
     var_dsc = etsf_variables[var]
