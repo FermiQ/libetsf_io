@@ -105,8 +105,9 @@ def create_variables(grp_name, grp_id):
   ret += "\n"
   return ret
   
-def write_grp(grp_name, grp_id):
-  ret = "subroutine test_write_%s()\n" % grp
+def readwrite_grp(grp_name, grp_id, action):
+  """ Action argument is either "write" or "read"."""
+  ret = "subroutine test_%s_%s()\n" % (action, grp)
   ret += "  type(etsf_dims) :: dims\n"
   ret += "  type(etsf_groups) :: groups\n"
   ret += "  type(etsf_main) :: main\n"
@@ -115,7 +116,7 @@ def write_grp(grp_name, grp_id):
   ret += "  logical :: lstat\n"
   ret += "  integer, allocatable :: test_int_tab(:)\n"
   ret += "  double precision, allocatable :: test_dbl_tab(:)\n"
-  ret += "  character(len = *), parameter :: me = \"test_write_%s\"\n" % grp_name
+  ret += "  character(len = *), parameter :: me = \"test_%s_%s\"\n" % (action, grp_name)
   ret += "  type(etsf_io_low_error) :: error_data\n"
   ret += indent_code(create_variables(grp_name, grp_id), 1)
   # We create a file for this group.
@@ -125,7 +126,7 @@ def write_grp(grp_name, grp_id):
   groups%%%s => group
   
   write(*,*)
-  write(*,*) "Testing etsf_io_data_write()..."
+  write(*,*) "Testing etsf_io_data_%s()..."
 
   dims%%number_of_grid_points_vector3 = 5
   dims%%number_of_symmetries = 4
@@ -135,11 +136,11 @@ def write_grp(grp_name, grp_id):
   dims%%number_of_atoms = 4
   dims%%number_of_kpoints = 12
   dims%%number_of_components = 2
-  call etsf_io_data_init("test_write_%s.nc", etsf_main_density, %s, &
+  call etsf_io_data_init("test_%s_%s.nc", etsf_main_density, %s, &
                        & dims, "Fichier de test", "history", lstat, error_data)
-  call tests_write_status("init file with group '%s'", lstat, error_data)
-""" % (grp_name, grp_name, grp_id, grp_name)
-  # We allocate space for the data to be written.
+  call tests_%s_status("init file with group '%s'", lstat, error_data)
+""" % (grp_name, action, action, grp_name, grp_id, action, grp_name)
+  # We allocate space for the data to be written or read.
   for var in etsf_groups[grp_name]:
     var_dsc = etsf_variables[var]
     if ((var_dsc[0].startswith("string") and len(var_dsc) > 2) or \
@@ -181,19 +182,24 @@ def write_grp(grp_name, grp_id):
     (not(var_dsc[0].startswith("string")) and len(var_dsc) > 1)):
       ret += "group%%%s => %s\n" % (var, var)
   ret += "\n"
-  # we call the write routine
+  # we call the write routine (both for testing or to write for future read testing.
   ret += """
-  call etsf_io_data_write("test_write_%s.nc", etsf_main_density, %s, &
+  call etsf_io_data_write("test_%s_%s.nc", etsf_main_density, %s, &
                         & main, groups, lstat, error_data)
-  call tests_write_status("write data", lstat, error_data)
-""" % (grp_name, grp_id)
+  call tests_%s_status("write data", lstat, error_data)
+""" % (action, grp_name, grp_id, action)
   # We open the file for low level access
-  ret += """
-  ! check informations.    
-  call etsf_io_low_open_read(ncid, "test_write_%s.nc", lstat, error_data = error_data)
-  call tests_write_status(" | opening", lstat, error_data)
-""" % (grp_name)
-  # We call the low level read routines
+  ret += "  ! check informations.\n"
+  if (action == "write"):
+    # We check the previous write action with low level reading
+    ret += "  call etsf_io_low_open_read(ncid, \"test_write_%s.nc\", lstat, error_data = error_data)\n" % (grp_name)
+    ret += "  call tests_write_status(\" | opening\", lstat, error_data)\n"
+  else:
+    # we call the read action for testing purpose
+    ret += "  call etsf_io_data_read(\"test_read_%s.nc\", etsf_main_density, %s, &\n" % (grp_name, grp_id)
+    ret += "                       & main, groups, lstat, error_data)\n"
+    ret += "  call tests_read_status(\"read data\", lstat, error_data)\n"
+  # We will check the values
   for var in etsf_groups[grp_name]:
     var_dsc = etsf_variables[var]
     if (var_dsc[0].startswith("string")):
@@ -205,7 +211,8 @@ def write_grp(grp_name, grp_id):
     if ((var_dsc[0].startswith("string") and len(var_dsc) > 2) or \
     (not(var_dsc[0].startswith("string")) and len(var_dsc) > 1)):
       # case of array
-      ret += """
+      if (action == "write"):
+        ret += """
   call etsf_io_low_read_var(ncid, "%s", %s, &
                           & %slstat, error_data = error_data)
   call tests_write_status(" | read '%s' values", lstat, error_data)
@@ -243,11 +250,12 @@ def write_grp(grp_name, grp_id):
 """ % (tab, tab)
     else:
       # case of single value
-      ret += """
+      if (action == "write"):
+        ret += """
   call etsf_io_low_read_var(ncid, "%s", group%%%s, &
                           & %slstat, error_data = error_data)
-  call tests_write_status(" | read '%s' values", lstat, error_data)
-""" % (var, var, char_len, var)
+  call tests_%s_status(" | read '%s' values", lstat, error_data)
+""" % (var, var, char_len, action, var)
       if (var_dsc[0].startswith("string")):
         ret += "  if (group%%%s(1:index(group%%%s, char(0)) - 1) /= \"He\") then\n" % (var, var)
       else:
@@ -257,10 +265,11 @@ def write_grp(grp_name, grp_id):
                              & tgtname = "%s", errmess = "wrong values")
     lstat = .false.
   end if
-  call tests_write_status(" | check '%s' values", lstat, error_data)
-""" % (var, var)
-  # We close the file
-  ret += """
+  call tests_%s_status(" | check '%s' values", lstat, error_data)
+""" % (var, action, var)
+  if (action == "write"):
+    # We close the file
+    ret += """
   ! close file
   call etsf_io_low_close(ncid, lstat, error_data = error_data)
   call tests_write_status(" | closing", lstat, error_data)
@@ -272,7 +281,7 @@ def write_grp(grp_name, grp_id):
     (not(var_dsc[0].startswith("string")) and len(var_dsc) > 1)):
       ret += "deallocate(%s)\n" % (var)
   ret += "  write(*,*)\n"
-  ret += "end subroutine test_write_%s\n\n" %grp
+  ret += "end subroutine test_%s_%s\n\n" % (action, grp)
   return indent_code(ret, 1)
 
 # ---------------------------------------------------------------------------- #
@@ -343,7 +352,7 @@ write_grp_src = ""
 call_grp_src = ""
 for grp in etsf_group_list[1:]:
   # Load template
-  write_grp_src += write_grp(grp, "etsf_grp_" + grp)
+  write_grp_src += readwrite_grp(grp, "etsf_grp_" + grp, "write")
   call_grp_src += "  call test_write_%s()\n" % grp
 
 ret = file("config/etsf/template.tests_write", "r").read()
@@ -356,5 +365,37 @@ ret = re.sub("@CALL_WRITE_GROUP@", call_grp_src, ret)
 
 # Write routine
 out = file("%s/tests_write.f90" % (etsf_tests_srcdir),"w")
+out.write(ret)
+out.close()
+
+# Create tests for data_write()
+# =============================
+read_main_src = ""
+read_assoc_src = ""
+for var in etsf_groups["main"]:
+  var_dsc = etsf_variables[var]
+  # Load template
+  read_main_src += "call test_read_var_unformatted(\"%s\", %s)\n" % \
+    (var, "etsf_main_" + etsf_main_names[var])
+  read_assoc_src += "main%%%s%%data1D => values\n" % var
+read_main_src = indent_code(read_main_src, 2)
+  
+read_grp_src = ""
+call_grp_src = ""
+for grp in etsf_group_list[1:]:
+  # Load template
+  read_grp_src += readwrite_grp(grp, "etsf_grp_" + grp, "read")
+  call_grp_src += "  call test_read_%s()\n" % grp
+
+ret = file("config/etsf/template.tests_read", "r").read()
+
+# Substitute patterns
+ret = re.sub("@READ_MAIN_ASSOCIATE@", read_assoc_src, ret)
+ret = re.sub("@READ_MAIN@", read_main_src, ret)
+ret = re.sub("@READ_GRP@", read_grp_src, ret)
+ret = re.sub("@CALL_READ_GROUP@", call_grp_src, ret)
+
+# Write routine
+out = file("%s/tests_read.f90" % (etsf_tests_srcdir),"w")
 out.write(ret)
 out.close()

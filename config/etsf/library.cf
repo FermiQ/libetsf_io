@@ -78,7 +78,7 @@ etsf_subs_get_args = {
    "dims":[
       "dims type(etsf_dims) out"],
    "@GROUP@":[
-      "folder type(etsf_@GROUP@) out"],
+      "folder type(etsf_@GROUP@) inout"],
    "main":[
       "main_var integer in",
       "folder type(etsf_@GROUP@) inout"],
