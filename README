@@ -1,0 +1,57 @@
+README for etsf_io
+==================
+
+
+
+	Copyright (C) 2006
+
+	This file is part of ABINIT.
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU Lesser General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU Lesser General Public License for more details.
+
+	You should have received a copy of the GNU Lesser General Public License
+	along with this program; see the file COPYING. If not, write to
+	the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+
+
+
+ETSF_IO is a library build on top of NetCDF that gives easy access to files
+conforming to the ETSF specifications (see http://www.etsf.eu/specifications).
+NetCDF files are binary files with key-values access, optimized to store
+large volume of data. The ETSF specifications define all key-value pairs that
+are normalized for a file containing informations of an electronic calculation.
+
+This library is available in Fortran90 (and soon in C). It gives two level access
+on files:
+- the low level (see etsf_io_low_level module). It is a generic API to access NetCDF
+  files, with less capabilities than the NetCDF API, but with all in one methods and
+  dimension checkings. For instance etsf_io_low_read_var will read a var, knowing its
+  name, checking that provided dimensions and shape are compatible with the definition
+  of the variable in the NetCDF file.
+- the group level (see etsf_io, which is the main part indeed). In the ETSF specifications,
+  variables are gathered by groups. With this API, one to all groups can be read or write
+  at once, giving a complete structure to store data.
+
+Please see the files in the doc/www directory for documentation of the API, browsable
+with a web browser. #MUST BE DONE See also the doc/howto directory for indications on how to use
+the library in an other program (link on it, examples of low level access or group level
+access) MUST BE DONE#.
+
+Please see the file COPYING for copying conditions.
+
+See the file INSTALL for generic compilation and installation instructions.
+
+The main targets in the top Makefile are:
+- make, to build the library and the tests executables.
+- make run-tests, to run all incorporated unitary tests.
+
+Please report bugs to Caliste Damien <caliste@pcpm.ucl.ac.be>.

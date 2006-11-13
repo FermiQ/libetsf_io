@@ -1,0 +1,20 @@
+* Mon Nov 13 2006 Damien Caliste <caliste@pcpm.ucl.ac.be> 0.3
+- import the group level scripts of Yann Pouillon to build a high level API
+  on the ETSF specifications.
+- modify then to use the unformatted shape for the main data in the ETSF specs.
+- make the group level routines use the low level ones (guaranteeing dimension
+  checks).
+- add default values in the etsf_io structure and add the consistency checks in calls.
+
+* Mon Nov 06 2006 Damien Caliste <caliste@pcpm.ucl.ac.be> 0.2
+- modify the low level API to allow to use different (but compatible) shapes
+  for variables.
+- add the capability to address only part of variables.
+- create a generic type of pointers to be able to use the library without
+  dupplicating data in memory and access same data with the same high level
+  routine but with an unformatted shape array.
+
+* Thu Nov 02 2006 Damien Caliste <caliste@pcpm.ucl.ac.be> 0.1
+- basic read/write low level API in Fortran90.
+- put library under the LGPL, waiting for global discussion on the future licence.
+- initial API documentation using ROBODoc.
