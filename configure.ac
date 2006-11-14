@@ -22,9 +22,9 @@ dnl Defining fortran language for tests.
 AC_LANG(Fortran)
 AC_FC_SRCEXT(f90)
 
-dnl Set th default prefix to /opt (see the discussion
+dnl Set th default prefix to /opt/etsf (see the discussion
 dnl on the nanoquanta mailing list of october 2006).
-AC_PREFIX_DEFAULT(/opt)
+AC_PREFIX_DEFAULT(/opt/etsf)
 
 dnl If FC environement variable is not already set, it
 dnl looks for a modern Fortran compiler, prefering newest
@@ -99,7 +99,8 @@ if test "$withnetcdf" = "no" ; then
 fi
 
 dnl default installation directories
-moduledir=${includedir}/$FC
+fc_basename=`echo $FC | cut -d" " -f1`
+moduledir=${includedir}/$fc_basename
 AC_SUBST(moduledir)
 
 dnl Append $FCFLAGS_SRCEXT to $FCFLAGS since the former is not

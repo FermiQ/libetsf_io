@@ -132,6 +132,7 @@ egc += "\n integer, parameter :: etsf_%-20s = %d" % ("ngroups",egn)
 
 # Main variables
 emc = "\n\n ! Main variables (select only one at a time)"
+emc += "\n integer, parameter :: etsf_main_%-15s = 0" % "none"
 egv  = 1
 egn  = 0
 for var in etsf_groups["main"]:

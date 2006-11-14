@@ -330,7 +330,7 @@ def code_group_main(action,prefix=""):
 
  # Check the value of main_var.
  ret = """! Check consistency.
-if (main_var < 1 .or. main_var > etsf_main_nvars) then
+if (main_var < 0 .or. main_var > etsf_main_nvars) then
   call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_ARG, my_name, &
                            & tgtname = "main_var", errmess = "value out of bounds")
   lstat = .false.
