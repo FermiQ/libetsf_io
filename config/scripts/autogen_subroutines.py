@@ -31,6 +31,8 @@ def code_data(action):
 # Code for grouped data initialization
 def code_data_init():
 
+ # Create a New NetCDF file and the constant dimensions values
+ # and save all the dimensions to the file.
  ret = """
 ! Create the NetCDF file
 call etsf_io_low_open_create(ncid, filename, etsf_file_format_version, lstat, &
@@ -47,7 +49,9 @@ dims%symbol_length                  = etsf_chemlen
 
 call etsf_io_dims_def(ncid, dims, lstat, error_data)
 if (.not. lstat) return
-
+"""
+ # Check the groups argument.
+ ret += """
 ! Define groups
 ! Check consistency.
 if (groups < 0 .or. groups >= 2 ** etsf_ngroups) then
@@ -58,11 +62,15 @@ if (groups < 0 .or. groups >= 2 ** etsf_ngroups) then
 end if
 """
 
+ # Write the select case for the argument groups.
  ret += code_data_select("def")
+ 
+ # Call the main select case routine.
  ret += "\n\n! Define main variable\n"
  ret += "call etsf_io_main_def(ncid, main_var, lstat, error_data)\n"
  ret += "if (.not. lstat) return\n"
 
+ # Close the NetCDF file.
  ret += """
 ! End definitions and close file
 call etsf_io_low_close(ncid, lstat, error_data = error_data)"""
@@ -72,8 +80,11 @@ call etsf_io_low_close(ncid, lstat, error_data = error_data)"""
 
 
 # Code for data contents
+# Read a NetCDF file for main and one or several group.
+# WARNING: this definition is not used yet.
 def code_data_contents():
 
+ # Open the file for reading and get the dimensions
  ret = """! Open file for reading
 call etsf_io_low_open_read(ncid, trim(filename), lstat, error_data = error_data)
 if (.not. lstat) return
@@ -84,6 +95,9 @@ if (.not. lstat) return
 
 """
 
+ # Looking in the file for elements of groups.
+ # Do that by looking for the first variable of each group
+ # in the file. Then 'groups' contains all flags for present groups.
  ret += "! Get group names\ngroups = 0\n"
 
  for grp in etsf_group_list:
@@ -93,6 +107,7 @@ call etsf_io_low_read_var_infos(ncid, "%s", var_infos, lstat)
 if ( lstat ) groups = groups + etsf_grp_%s
 """ % (etsf_groups[grp][0],grp)
 
+ # Look for the main variable
  ret += "\n! Get main variable name\nmain_var = 0\n"
 
  for var in etsf_main_names.keys():
@@ -108,12 +123,16 @@ end if
 call etsf_io_low_close(ncid, lstat, error_data = error_data)"""
 
  return ret
+# WARNING: this definition is not used yet.
 
 
 
 # Code for grouped data reading
+# This code is put in etsf_io_data_read.
+# It read a main group and as much as other group as specified.
 def code_data_read():
 
+ # Open a NetCDF file for reading.
  ret = """! Open file for reading
 call etsf_io_low_open_read(ncid, trim(filename), lstat, error_data = error_data)
 if (.not. lstat) return
@@ -121,10 +140,13 @@ if (.not. lstat) return
 ! Get Data
 """
 
+ # Read the main group.
  ret += code_group_main("get", "main_") + "\n\n"
 
+ # Read the other groups.
  ret += code_data_select("get")
 
+ # Close the file.
  ret += """
 
 ! Close file
@@ -135,9 +157,24 @@ call etsf_io_low_close(ncid, lstat, error_data = error_data)"""
 
 
 # Code for grouped data selection
+# Write a loop on groups (except main) to call the
+# def/put/get routine for this group (depending on @action).
+# In case of read/write action, the corresponding group in
+# group_folder must be associated.
 def code_data_select(action):
 
- ret = "do i = 1, etsf_ngroups\n\n select case ( iand(groups, 2 ** (i - 1)) )"
+ # Consistency check.
+ ret = """
+if (groups < 0 .or. groups >= 2 ** etsf_ngroups) then
+  call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_ARG, my_name, &
+                           & tgtname = "main_var", errmess = "value out of bounds")
+  lstat = .false.
+  return
+end if
+
+"""
+
+ ret += "do i = 1, etsf_ngroups\n\n select case ( iand(groups, 2 ** (i - 1)) )"
 
  for group in etsf_group_list:
   if ( group != "main" ):
@@ -165,8 +202,11 @@ def code_data_select(action):
 
 
 # Code for grouped data writing
+# This code is put in etsf_io_data_write.
+# It writes a main group and as much as other group as specified.
 def code_data_write():
 
+ # Open a NetCDF file for writing.
  ret = """! Open file for writing
 call etsf_io_low_open_modify(ncid, trim(filename), lstat, error_data = error_data)
 if (.not. lstat) return
@@ -178,10 +218,13 @@ if (.not. lstat) return
 ! Put Data
 """
 
+ # Write the main group.
  ret += code_group_main("put", "main_") + "\n\n"
 
+ # Write the other groups.
  ret += code_data_select("put")
 
+ # Close the file.
  ret += """
 
 ! Close file
@@ -277,10 +320,13 @@ def code_group_generic(group,action):
   if ( ret != "" ):
    ret += "\n"
 
+  # put in charlen, the length of the string.
+  # This information is required by the low level routines.
   if ( var_desc[0].startswith("string")):
     char_len = etsf_constants[var_desc[-1]] + ", "
   else:
     char_len = ""
+  
   if ( action == "def" ):
     # Create the definition of the shape and dimensions
     if ( len(var_desc) > 1 ):
@@ -305,22 +351,14 @@ def code_group_generic(group,action):
     else:
       raise ValueError
     
-    # Check the association if required (var is a pointer)
-    if ( (var_desc[0].startswith("string") and len(var_desc) > 2 ) or \
-     (not(var_desc[0].startswith("string")) and len(var_desc) > 1 ) ):
-      ret += "if (.not. associated(folder%%%s)) then\n" % var
-      ret += "  call etsf_io_low_error_set(error_data, ERROR_MODE_%s, ERROR_TYPE_VAR, &\n" % action.upper()
-      ret += "                           & my_name, tgtname = \"%s\", &\n" % var
-      ret += "                           & errmess = \"No data type associated\")\n"
-      ret += "  lstat = .false.\n"
-      ret += "  return\n"
-      ret += "end if\n"
-    
+    # Variable are read or write, only if associated.
+    ret += "if (associated(folder%%%s)) then\n" % var
     ret += "  call etsf_io_low_%s_var(ncid, \"%s\", &\n" % (action_str, var) \
-         + "                           & folder%%%s, %s&\n" % (var, char_len) \
-         + "                           & lstat, error_data = error_data)\n" \
-         + "  if (.not. lstat) return\n"
-
+        +  "                          & folder%%%s, %s&\n" % (var, char_len) \
+        +  "                          & lstat, error_data = error_data)\n" \
+        +  "  if (.not. lstat) return\n"
+    ret += "end if\n"
+    
  return ret
 
 
@@ -381,6 +419,7 @@ end if
 
 
 # Transfer data to and from an optional argument
+# WARNING! This definition is not used yet.
 def code_optional_argument(group,action):
 
  ret = "if ( present(%s) ) then\n" % (group)
@@ -432,6 +471,7 @@ def code_optional_argument(group,action):
  ret += "\nendif"
 
  return ret
+# WARNING! This definition is not used yet.
 
 
 

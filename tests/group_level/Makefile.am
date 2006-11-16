@@ -24,14 +24,15 @@ tests_init.o: tests_init.f90 \
 #additional rules
 run-tests: run-tests-init run-tests-write run-tests-read
 
-run-tests-init: tests_init
+run-tests-init tests_init_done: tests_init
 	\rm -f test*.nc
 	./tests_init
+	touch tests_init_done
 
-run-tests-write: tests_write 
+run-tests-write: tests_write tests_init_done
 	\rm -f test_write_*.nc
 	./tests_write
 
-run-tests-read: tests_read 
+run-tests-read: tests_read tests_init_done
 	\rm -f test_read_*.nc
 	./tests_read

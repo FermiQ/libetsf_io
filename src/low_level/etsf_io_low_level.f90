@@ -538,6 +538,64 @@ contains
   end subroutine etsf_io_low_error_set
   !!***
 
+  !!****m* etsf_io_low_level/etsf_io_low_error_to_str
+  !! NAME
+  !!  etsf_io_low_error_to_str
+  !!
+  !! FUNCTION
+  !!  This method can be used to get a string from the given error.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!
+  !! INPUTS
+  !!  * error_data <type(etsf_io_low_error)>=informations about an error.
+  !!
+  !! OUTPUT
+  !!  * str = a string to write the error message to.
+  !!
+  !! SOURCE
+  subroutine etsf_io_low_error_to_str(str, error_data)
+    character(len = 1024), intent(out)   :: str
+    type(etsf_io_low_error), intent(in) :: error_data
+    
+    character(len = 80) :: line_tgtname, line_tgtid, line_messid, line_mess
+    
+    if (trim(error_data%target_name) /= "") then
+      write(line_tgtname, "(A,A,A)") "  Target (name)      : ", trim(error_data%target_name), char(10)
+    else
+      write(line_tgtname, "(A)") ""
+    end if
+    if (error_data%target_id >= 0) then
+      write(line_tgtid, "(A,I0,A)") "  Target (id)        : ", error_data%target_id, char(10)
+    else
+      write(line_tgtid, "(A)") ""
+    end if
+    if (trim(error_data%error_message) /= "") then
+      write(line_mess, "(A,A,A)") "  Error message      : ", trim(error_data%error_message), char(10)
+    else
+      write(line_mess, "(A)") ""
+    end if
+    if (error_data%error_id >= 0) then
+      write(line_messid, "(A,I0,A)") "  Error id           : ", error_data%error_id, char(10)
+    else
+      write(line_messid, "(A)") ""
+    end if
+
+    ! Error handling
+    write(str,*) " Calling subprogram : ", trim(error_data%parent), char(10), &
+               & "  Action performed   : ", trim(error_data%access_mode_str), &
+               & " ", trim(error_data%target_type_str), char(10), &
+               & line_tgtname, &
+               & line_tgtid, &
+               & line_mess, &
+               & line_messid
+  end subroutine etsf_io_low_error_to_str
+  !!***
+
   !!****m* etsf_io_low_level/etsf_io_low_error_handle
   !! NAME
   !!  etsf_io_low_error_handle

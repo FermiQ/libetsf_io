@@ -68,6 +68,7 @@ for dim in etsf_dimensions:
 edt += " end type etsf_dims"
 
 # Data structures for each group of variables
+# All attributes are made pointers and set to null() when initialised.
 egc = "\n\n ! Constants for groups of variables"
 egc += "\n integer, parameter :: etsf_grp_%-16s = 0" % "none"
 egf = "\n\n ! Folder for the groups of variables\n type etsf_groups"
@@ -101,11 +102,18 @@ for grp in etsf_group_list:
     for i in range(len(dsc)-dim_offset):
      dim += ",:"
     
+    # Dimension case (either string or numbers).
     out_str += "  %s, pointer :: %s(%s) => null()\n" % (fortran_type(dsc),var,dim)
    else:
-    out_str += "  %s :: %s\n" % (fortran_type(dsc),var)
+    if ( re.match("string",dsc[0]) ):
+      # String case (dimension less)
+      out_str += "  %s, pointer :: %s => null()\n" % (fortran_type(dsc),var)
+    else:
+      # Unformatted pointer case
+      out_str += "  %s :: %s\n" % (fortran_type(dsc),var)
   else:
-   out_str += "  %s :: %s\n" % (fortran_type(dsc),var)
+   # Numbers or undefined pointers.
+   out_str += "  %s, pointer :: %s => null()\n" % (fortran_type(dsc),var)
 
  out_str += " end type etsf_%s" % (grp)
  if ( grp != "main" ):
@@ -136,13 +144,13 @@ emc += "\n integer, parameter :: etsf_main_%-15s = 0" % "none"
 egv  = 1
 egn  = 0
 for var in etsf_groups["main"]:
- emc += "\n integer,parameter :: etsf_main_%-15s = %d" % \
+ emc += "\n integer, parameter :: etsf_main_%-15s = %d" % \
          (etsf_main_names[var],egv)
  egv += 1
  egn += 1
 
 # Number of main variables
-emc += "\n integer,parameter :: etsf_%-20s = %d" % ("main_nvars",egn)
+emc += "\n integer, parameter :: etsf_%-20s = %d" % ("main_nvars",egn)
 
 # Import template
 src = file("config/etsf/template.%s" % (etsf_modules["etsf_io"]),"r").read()
