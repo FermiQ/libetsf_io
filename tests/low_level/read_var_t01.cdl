@@ -11,6 +11,7 @@ variables:
   char atom_species_names(number_of_atom_species, character_string_length);
   int atom_species(number_of_atoms);
   int test_integer_2d(number_of_atom_species, number_of_atom_species);
+  int test_integer_4d(number_of_components, number_of_vectors, number_of_vectors, number_of_atom_species);
   int space_group;
   double test_double_0d;
   double test_double_1d(number_of_vectors);
@@ -29,6 +30,10 @@ data:
   atom_species_names = "Si", "H";
   atom_species = 1, 2, 2, 2, 2;
   test_integer_2d = 1, 2, 3, 4;
+  test_integer_4d = 1, 2, 3, 4, 5, 6, 7, 8, 9,
+                    10, 11, 12, 13, 14, 15, 16, 17, 18,
+                    -1, -2, -3, -4, -5, -6, -7, -8, -9,
+                    -10, -11, -12, -13, -14, -15, -16, -17, -18;
   test_double_0d = 3.14;
   test_double_1d = 1., 2., 3.;
   reduced_atom_positions = 0.5, 0.5, 0.5, 0.6, 0.6, 0.6, 0.4, 0.4, 0.6, 0.6, 0.4, 0.4, 0.4, 0.6, 0.4;

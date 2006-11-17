@@ -320,7 +320,7 @@ def code_group_generic(group,action):
   if ( ret != "" ):
    ret += "\n"
 
-  # put in charlen, the length of the string.
+  # put in char_len, the length of the string.
   # This information is required by the low level routines.
   if ( var_desc[0].startswith("string")):
     char_len = etsf_constants[var_desc[-1]] + ", "
@@ -350,14 +350,50 @@ def code_group_generic(group,action):
       action_str = "read"
     else:
       raise ValueError
+
+    # Retrieve variable properties of interest.
+    unformatted = False
+    splitted = False
+    if (var in etsf_properties):
+      props = etsf_properties[var]
+      unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
+      splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
+    # If variable may be splitted, we build a sub optional argument
+    if (splitted):
+      ret += "allocate(sub(%d))\n" % (len(var_desc) - 1)
+      ret += "sub(:) = 0\n"
+      for i in [1, 2]:
+        if (var_desc[i] == "number_of_spins"):
+          ret += "if (folder%%%s%%spin_splitted) then\n" % var
+          ret += "  sub(%d) = folder%%%s%%spin_id\n" % (len(var_desc) - i, var)
+          ret += "end if\n"
+        if (var_desc[i] == "number_of_kpoints"):
+          ret += "if (folder%%%s%%k_splitted) then\n" % var
+          ret += "  sub(%d) = folder%%%s%%k_id\n" % (len(var_desc) - i, var)
+          ret += "end if\n"
+      sub_arg = ", sub = sub"
+      sub_array = "%array"
+    else:
+      sub_arg = ""
+      sub_array = ""
     
     # Variable are read or write, only if associated.
-    ret += "if (associated(folder%%%s)) then\n" % var
+    if (splitted):
+      ret += "if (etsf_io_low_var_associated(folder%%%s%%array)) then\n" % var
+    elif (unformatted):
+      ret += "if (etsf_io_low_var_associated(folder%%%s)) then\n" % var
+    else:
+      ret += "if (associated(folder%%%s)) then\n" % var
+    # If variable may be splitted, we append the sub optional argument
     ret += "  call etsf_io_low_%s_var(ncid, \"%s\", &\n" % (action_str, var) \
-        +  "                          & folder%%%s, %s&\n" % (var, char_len) \
-        +  "                          & lstat, error_data = error_data)\n" \
+        +  "                          & folder%%%s%s, %s&\n" % (var, sub_array, char_len) \
+        +  "                          & lstat, error_data = error_data%s)\n" % sub_arg \
         +  "  if (.not. lstat) return\n"
     ret += "end if\n"
+
+    # If variable may be splitted
+    if (splitted):
+      ret += "deallocate(sub)\n"
     
  return ret
 
@@ -399,18 +435,44 @@ end if
       ret += "    & %s &\n" % dims
     ret += "    & lstat, error_data = error_data)\n" \
          + "  if (.not. lstat) return\n"
-  elif ( action == "put" ):
-    ret += "  call etsf_io_low_write_var(ncid, \"%s\", &\n" % var \
-         + "                           & %sfolder%%%s, &\n" % (prefix, var) \
-         + "                           & lstat, error_data = error_data)\n" \
-         + "  if (.not. lstat) return\n"
-  elif ( action == "get" ):
-    ret += "  call etsf_io_low_read_var(ncid, \"%s\", &\n" % var \
-         + "                          & %sfolder%%%s, &\n" % (prefix, var) \
-         + "                          & lstat, error_data = error_data)\n" \
-         + "  if (.not. lstat) return\n"
   else:
-    raise ValueError
+    if ( action == "put" ):
+      action_str = "write"
+    else:
+      action_str = "read"
+    # Retrieve variable properties of interest.
+    unformatted = False
+    splitted = False
+    if (var in etsf_properties):
+      props = etsf_properties[var]
+      unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
+      splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
+    # If variable may be splitted, we build a sub optional argument
+    if (splitted):
+      ret += "allocate(sub(%d))\n" % (len(var_desc) - 1)
+      ret += "sub(:) = 0\n"
+      for i in [1, 2]:
+        if (var_desc[i] == "number_of_spins"):
+          ret += "if (%sfolder%%%s%%spin_splitted) then\n" % (prefix, var)
+          ret += "  sub(%d) = %sfolder%%%s%%spin_id\n" % (len(var_desc) - i, prefix, var)
+          ret += "end if\n"
+        if (var_desc[i] == "number_of_kpoints"):
+          ret += "if (%sfolder%%%s%%k_splitted) then\n" % (prefix, var)
+          ret += "  sub(%d) = %sfolder%%%s%%k_id\n" % (len(var_desc) - i, prefix, var)
+          ret += "end if\n"
+      sub_arg = ", sub = sub"
+      sub_array = "%array"
+    else:
+      sub_arg = ""
+      sub_array = ""
+    # If variable may be splitted, we append the sub optional argument
+    ret += "call etsf_io_low_%s_var(ncid, \"%s\", &\n" % (action_str, var) \
+        +  "                        & %sfolder%%%s%s, &\n" % (prefix, var, sub_array) \
+        +  "                        & lstat, error_data = error_data%s)\n" % sub_arg \
+        +  "if (.not. lstat) return\n"
+    # If variable may be splitted
+    if (splitted):
+      ret += "deallocate(sub)\n"
 
  ret += "\nend select"
 
@@ -703,16 +765,3 @@ src = re.sub("@INCLUDED_FILES@", includes_am, src)
 out = file("%s/Makefile.am" % (etsf_file_srcdir), "w")
 out.write(src)
 out.close()
-
-# Generate etsf_handle_error routine
-#src = init_routine("handle_error","error","",my_name,None)
-#out = file("%s/etsf_handle_error.c" % (etsf_file_srcdir),"w")
-#out.write(src)
-#out.close()
-
-# Fix etsf_data_init routine
-#src = file("%s/etsf_data_init.F90" % (etsf_file_srcdir),"r").read()
-#src = re.sub(" type.etsf_dims. :: dims","",src)
-#out = file("%s/etsf_data_init.F90" % (etsf_file_srcdir),"w")
-#out.write(src)
-#out.close()

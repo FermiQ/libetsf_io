@@ -15,10 +15,13 @@
 #
 
 # ETSF property definitions
-ETSF_PROP_NONE       = 0        # No property
-ETSF_PROP_ATT_GLOBAL = 1        # Attribute is global
-ETSF_PROP_VAR_UNITS  = 2        # Variable has "units" attribute
-ETSF_PROP_VAR_KDEP   = 4        # Variable is k-point dependent
+ETSF_PROP_NONE            = 0    # No property
+ETSF_PROP_ATT_GLOBAL      = 1    # Attribute is global
+ETSF_PROP_VAR_UNITS       = 2    # Variable has "units" attribute
+ETSF_PROP_VAR_KDEP        = 4    # Variable is k-point dependent
+ETSF_PROP_VAR_UNFORMATTED = 8    # Type of the variable is etsf_io_low_* unformatted pointer
+ETSF_PROP_VAR_SPLITTED    = 16   # Variable can be accessed on single k point & spin values
+                                 # Splitted variables are always unformatted.
 
 # ETSF constants
 etsf_constants = {
@@ -33,7 +36,16 @@ etsf_properties = {
    "file_format":ETSF_PROP_ATT_GLOBAL,
    "file_format_version":ETSF_PROP_ATT_GLOBAL,
    "title":ETSF_PROP_ATT_GLOBAL,
-   "history":ETSF_PROP_ATT_GLOBAL}
+   "history":ETSF_PROP_ATT_GLOBAL,
+   "coefficients_of_wavefunctions":ETSF_PROP_VAR_SPLITTED,
+   "eigenvalues":ETSF_PROP_VAR_SPLITTED,
+   "occupations":ETSF_PROP_VAR_SPLITTED,
+   "real_space_wavefunctions":ETSF_PROP_VAR_SPLITTED,
+   "reduced_coordinates_of_plane_waves":ETSF_PROP_VAR_SPLITTED,
+   "density":ETSF_PROP_VAR_UNFORMATTED,
+   "correlation_potential":ETSF_PROP_VAR_UNFORMATTED,
+   "exchange_correlation_potential":ETSF_PROP_VAR_UNFORMATTED,
+   "exchange_potential":ETSF_PROP_VAR_UNFORMATTED,}
 
 # ETSF attributes
 etsf_attributes = {
@@ -103,7 +115,7 @@ etsf_variables = {
       "number_of_atom_species",
       "symbol_length"],
    "coefficients_of_wavefunctions":[
-      "real double_precision unformatted",
+      "real double_precision",
       "number_of_spins",
       "number_of_kpoints",
       "max_number_of_states",
@@ -114,14 +126,14 @@ etsf_variables = {
       "string",
       "character_string_length"],
    "correlation_potential":[
-      "real double_precision unformatted",
+      "real double_precision",
       "number_of_components",
       "number_of_grid_points_vector3",
       "number_of_grid_points_vector2",
       "number_of_grid_points_vector1",
       "real_or_complex"],
    "density":[
-      "real double_precision unformatted",
+      "real double_precision",
       "number_of_components",
       "number_of_grid_points_vector3",
       "number_of_grid_points_vector2",
@@ -133,7 +145,7 @@ etsf_variables = {
       "number_of_kpoints",
       "max_number_of_states"],
    "exchange_correlation_potential":[
-      "real double_precision unformatted",
+      "real double_precision",
       "number_of_components",
       "number_of_grid_points_vector3",
       "number_of_grid_points_vector2",
@@ -143,7 +155,7 @@ etsf_variables = {
       "string",
       "character_string_length"],
    "exchange_potential":[
-      "real double_precision unformatted",
+      "real double_precision",
       "number_of_components",
       "number_of_grid_points_vector3",
       "number_of_grid_points_vector2",
@@ -213,7 +225,7 @@ etsf_variables = {
       "number_of_atom_species",
       "character_string_length"],
    "real_space_wavefunctions":[
-      "real double_precision unformatted",
+      "real double_precision",
       "number_of_spins",
       "number_of_kpoints",
       "max_number_of_states",
@@ -223,14 +235,16 @@ etsf_variables = {
       "number_of_grid_points_vector1",
       "real_or_complex"],
    "reduced_atom_positions":[
-      "real double_precision","number_of_atoms",
+      "real double_precision",
+      "number_of_atoms",
       "number_of_reduced_dimensions"],
    "reduced_coordinates_of_kpoints":[
       "real double_precision",
       "number_of_kpoints",
       "number_of_reduced_dimensions"],
    "reduced_coordinates_of_plane_waves":[
-      "integer","number_of_kpoints",
+      "integer",
+      "number_of_kpoints",
       "max_number_of_coefficients",
       "number_of_reduced_dimensions"],
    "reduced_symmetry_matrices":[

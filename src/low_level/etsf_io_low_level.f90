@@ -463,6 +463,34 @@ module etsf_io_low_level
   end interface etsf_io_low_write_var
   !End of the generic interface of etsf_io_low_write_var
   
+  !!****m* etsf_io_low_level/etsf_io_low_var_associated
+  !! NAME
+  !!  etsf_io_low_var_associated
+  !!
+  !! FUNCTION
+  !!  This function works as the associated() intrinsic function but with
+  !!  pointers of undefined shapes (see #etsf_io_low_var_integer and #etsf_io_low_var_double).
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!
+  !! INPUTS
+  !!  * array <type(etsf_io_low_var_*)> = an undefined shape array.
+  !!
+  !! OUTPUT
+  !!  * returns .true. if one of the array datanD is associated.
+  !!***
+  interface etsf_io_low_var_associated
+    module procedure var_integer_associated
+    module procedure var_double_associated
+  end interface etsf_io_low_var_associated
+  
+  
+  private :: var_integer_associated
+  private :: var_double_associated
 contains
 
   !!****m* etsf_io_low_level/etsf_io_low_error_set
@@ -772,5 +800,31 @@ contains
 
   include "write_routines.f90"
   include "write_routines_auto.f90"
+
+  function var_integer_associated(array)
+    type(etsf_io_low_var_integer), intent(in) :: array
+    logical                                   :: var_integer_associated
+    
+    var_integer_associated = (associated(array%data1D) .or. &
+                            & associated(array%data2D) .or. &
+                            & associated(array%data3D) .or. &
+                            & associated(array%data4D) .or. &
+                            & associated(array%data5D) .or. &
+                            & associated(array%data6D) .or. &
+                            & associated(array%data7D))
+  end function var_integer_associated
+
+  function var_double_associated(array)
+    type(etsf_io_low_var_double), intent(in) :: array
+    logical                                  :: var_double_associated
+    
+    var_double_associated = (associated(array%data1D) .or. &
+                           & associated(array%data2D) .or. &
+                           & associated(array%data3D) .or. &
+                           & associated(array%data4D) .or. &
+                           & associated(array%data5D) .or. &
+                           & associated(array%data6D) .or. &
+                           & associated(array%data7D))
+  end function var_double_associated
 
 end module etsf_io_low_level

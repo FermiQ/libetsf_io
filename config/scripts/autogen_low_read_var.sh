@@ -76,7 +76,7 @@ for ((i=0;i<3;i++)) ; do
     type(etsf_io_low_var_infos) :: var_nc, var_user
     integer :: s, lvl, i, sub_value
     integer :: start(1:16), count(1:16)
-    logical :: stat
+    logical :: stat, sub_set
 
     lstat = .false.
     ! We get the dimensions and shape of the ref variable in the NetCDF file.
@@ -99,13 +99,25 @@ for ((i=0;i<3;i++)) ; do
         return
       end if
       ! Build the start and count argument for the nf90_get_var() routine
+      sub_value = var_nc%ncshape
+      sub_set = .false.
       do i = 1, var_nc%ncshape, 1
-        sub_value = var_nc%ncshape
         if (sub(i) == 0) then
+          if (sub_set) then
+            write(err, "(A)") "sub argument must not contain zero values after non-zero values."
+            if (present(error_data)) then
+              call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+                                       & tgtname = "sub", errmess = err)
+            end if
+            return
+          end if
           start(i) = 1
           count(i) = var_nc%ncdims(i)
         else
-          sub_value = i - 1
+          if (.not. sub_set) then
+            sub_value = i - 1
+            sub_set = .true.
+          end if
           start(i) = sub(i)
           count(i) = 1
           if (sub(i) < 0 .or. sub(i) > var_nc%ncdims(i)) then
@@ -113,7 +125,7 @@ for ((i=0;i<3;i++)) ; do
                                       & " (must be within ]0;", var_nc%ncdims(i), "])"
             if (present(error_data)) then
               call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                           & tgtname = "sub", errmess = err)
+                                       & tgtname = "sub", errmess = err)
             end if
             return
           end if

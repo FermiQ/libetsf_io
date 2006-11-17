@@ -92,21 +92,188 @@ def create_variables(grp_name, grp_id):
   ret = "type(etsf_%s), target :: group\n" % grp_name
   for var in etsf_groups[grp_name]:
     var_dsc = etsf_variables[var]
-    if ((var_dsc[0].startswith("string") and len(var_dsc) > 2) or \
-    (not(var_dsc[0].startswith("string")) and len(var_dsc) > 1)):
-      # This variable is a dimension
-      ret += "%s, allocatable, target :: %s(" % (fortran_type(var_dsc), var)
+    # Retrieve variable properties of interest.
+    unformatted = False
+    splitted = False
+    if (var in etsf_properties):
+      props = etsf_properties[var]
+      unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
+      splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
+    # All variables for the test will be allocatable arrays.
+    ret += "%s, allocatable, target :: %s(" % (fortran_type(var_dsc), var)
+    
+    # If the variable is splitted or unformatted, we
+    # use 1D array as target.
+    if (not(unformatted) and not(splitted)):
       if (var_dsc[0].startswith("string")):
         stop = -2
       else:
         stop = -1
       for i in var_dsc[1:stop]:
         ret += ":,"
-      ret += ":)\n"
-    else:
-      # This variable is a scalar (string or numeric)
-      ret += "%s, target :: %s\n" % (fortran_type(var_dsc), var)
+    ret += ":)\n"
   ret += "\n"
+  return ret
+  
+def output_allocate_init_statement(var):
+  # Retrieve variable properties of interest.
+  unformatted = False
+  splitted = False
+  if (var in etsf_properties):
+    props = etsf_properties[var]
+    unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
+    splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
+
+  ret = ""
+  var_dsc = etsf_variables[var]
+  # Case the variable is a scalar
+  if ((var_dsc[0].startswith("string") and len(var_dsc) < 3) or \
+  (not(var_dsc[0].startswith("string")) and len(var_dsc) < 2)):
+    ret += "allocate(%s(1))\n" % var
+    if (var_dsc[0].startswith("string")):
+      ret += "write(%s(1), \"(A)\") \"He\"\n" % var
+    else:
+      ret += "%s(1) = 456\n" % var
+    return ret
+  
+  
+  # The variable is a dimension
+  if (var_dsc[0].startswith("string")):
+    stop = -2
+  else:
+    stop = -1
+  # We compute the total length of data
+  ret += "length = &\n"
+  for dim in var_dsc[1:stop]:
+    ret += "  & dims%%%s * &\n" % dim
+  ret += "  & dims%%%s\n" % var_dsc[stop]
+  if (splitted or unformatted):
+    # We allocate.
+    ret += "allocate(%s(length))\n" % var
+    if (var_dsc[0].startswith("string")):
+      ret += "write(%s, \"(A)\") \"He\"\n" % var
+    else:
+      ret += "%s = (/ (i, i = 1, length) /)\n" % var
+  else:
+    # We allocate with the fixed shape in a reverse order.
+    var_dsc_cpy = var_dsc[1:]
+    var_dsc_cpy.reverse()
+    ret += "allocate(%s( &\n" % var
+    for dim in var_dsc_cpy[-1 - stop:-1]:
+      ret += "  & dims%%%s, &\n" % dim
+    ret += "  & dims%%%s))\n" % var_dsc_cpy[-1]
+    if (var_dsc[0].startswith("string")):
+      # Only 1D array of strings are supported.
+      ret += "do i = 1, dims%%%s, 1\n" % var_dsc[1]
+      ret += "  write(%s(i), \"(A)\") \"He\"\n" % var
+      ret += "end do\n"
+    else:
+      # We put values with a reshape.
+      ret += "%s = reshape( (/ (i, i = 1, length) /) , (/ & \n" % var
+      for dim in var_dsc_cpy[-1 - stop:-1]:
+        ret += "  & dims%%%s, &\n" % dim
+      ret += "  & dims%%%s /) )\n" % var_dsc_cpy[-1]
+  return ret
+  
+def output_associate_statement(var):
+  # Retrieve variable properties of interest.
+  unformatted = False
+  splitted = False
+  if (var in etsf_properties):
+    props = etsf_properties[var]
+    unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
+    splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
+
+  ret = ""
+  if (splitted):
+    ret += "group%%%s%%array%%data1D => %s\n" % (var, var)
+  elif (unformatted):
+    ret += "group%%%s%%data1D => %s\n" % (var, var)
+  else:
+    var_dsc = etsf_variables[var]
+    if ((var_dsc[0].startswith("string") and len(var_dsc) < 3) or \
+    (not(var_dsc[0].startswith("string")) and len(var_dsc) < 2)):
+      ret += "group%%%s => %s(1)\n" % (var, var)
+    else:
+      ret += "group%%%s => %s\n" % (var, var)
+  return ret
+  
+def output_check_statement(var, action):
+  # Retrieve variable properties of interest.
+  unformatted = False
+  splitted = False
+  if (var in etsf_properties):
+    props = etsf_properties[var]
+    unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
+    splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
+
+  ret = ""
+  var_dsc = etsf_variables[var]
+  if (var_dsc[0].startswith("string")):
+    char_len = "dims%%%s, " % var_dsc[-1]
+    stop = -2
+  else:
+    char_len = ""
+    stop = -1
+  
+  # Case the variable is a scalar
+  if ((var_dsc[0].startswith("string") and len(var_dsc) < 3) or \
+  (not(var_dsc[0].startswith("string")) and len(var_dsc) < 2)):
+    if (action == "write"):
+      # In write mode, we read the value.
+      ret += "call etsf_io_low_read_var(ncid, \"%s\", %s(1), &\n" % (var, var)
+      ret += "                        & %slstat, error_data = error_data)\n" % char_len
+      ret += "call tests_%s_status(\" | read '%s' values\", lstat, error_data)\n" % (action, var)
+    # We make the test.
+    if (var_dsc[0].startswith("string")):
+      ret += "if (%s(1)(1:index(%s(1), char(0)) - 1) /= \"He\") then\n" % (var, var)
+    else:
+      ret += "if (int(%s(1)) /= 456) then\n" % var
+    ret += "  call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &\n"
+    ret += "                           & tgtname = \"%s\", errmess = \"wrong values\")\n" %var
+    ret += "  lstat = .false.\n"
+    ret += "end if\n"
+    ret += "call tests_%s_status(\" | check '%s' values\", lstat, error_data)\n" % (action, var)
+    return ret
+  
+  # case of array
+  if (action == "write"):
+    # In write mode, we read the value.
+    ret += "call etsf_io_low_read_var(ncid, \"%s\", %s, &\n" % (var, var)
+    ret += "                        & %slstat, error_data = error_data)\n" % char_len
+    ret += "call tests_write_status(\" | read '%s' values\", lstat, error_data)\n" % var
+  # We make the test.
+  if (var_dsc[0].startswith("string")):
+    ret += "lstat = .true.\n"
+    ret += "do i = 1, dims%%%s, 1\n" % var_dsc[1]
+    ret += "  if (index(%s(i), char(0)) > 0) then\n" % var
+    ret += "    lstat = (%s(i)(1:index(%s(i), char(0)) - 1) == \"He\") .and. lstat\n" % (var, var)
+    ret += "  else\n"
+    ret += "    lstat = (trim(%s(i)) == \"He\") .and. lstat\n" % var
+    ret += "  end if\n"
+    ret += "end do\n"
+  else:
+    ret += "length = &\n"
+    for dim in var_dsc[1:stop]:
+      ret += "  & dims%%%s * &\n" % dim
+    ret += "  & dims%%%s\n" % var_dsc[stop]
+    if (var_dsc[0].startswith("integer")):
+      tab = "int"
+    else:
+      tab = "dbl"
+    ret += "allocate(test_%s_tab(length))\n" % tab
+    ret += "test_%s_tab = reshape(%s, (/ length /))\n" % (tab, var)
+    ret += "lstat = .true.\n"
+    ret += "do i = 1, length, 1\n"
+    ret += "  lstat = (int(test_%s_tab(i)) == i) .and. lstat\n" % tab
+    ret += "end do\n"
+    ret += "deallocate(test_%s_tab)\n" % tab
+  ret += "if (.not. lstat) then\n"
+  ret += "  call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &\n"
+  ret += "                           & tgtname = \"%s\", errmess = \"wrong values\")\n" %var
+  ret += "  lstat = .false.\n"
+  ret += "end if\n"
+  ret += "call tests_%s_status(\" | check '%s' values\", lstat, error_data)\n" % (action, var)
   return ret
   
 def readwrite_grp(grp_name, grp_id, action):
@@ -141,132 +308,39 @@ def readwrite_grp(grp_name, grp_id, action):
                        & dims, "Fichier de test", "history", lstat, error_data)
   call tests_%s_status("init file with group '%s'", lstat, error_data)
 """ % (grp_name, action, action, grp_name, grp_id, action, grp_name)
-  # We allocate space for the data to be written or read.
+  # We allocate space for the data to be written or read and
+  # we put some values in it then we associate the data.
   for var in etsf_groups[grp_name]:
-    var_dsc = etsf_variables[var]
-    if ((var_dsc[0].startswith("string") and len(var_dsc) > 2) or \
-    (not(var_dsc[0].startswith("string")) and len(var_dsc) > 1)):
-      var_dsc_cpy = var_dsc[1:]
-      var_dsc_cpy.reverse()
-      ret += "allocate(%s( &\n" % (var)
-      if (var_dsc[0].startswith("string")):
-        stop = -2
-      else:
-        stop = -1
-      for dim in var_dsc_cpy[-1 - stop:-1]:
-        ret += "  & dims%%%s, &\n" % dim
-      ret += "  & dims%%%s))\n" % var_dsc_cpy[-1]
-      if (var_dsc[0].startswith("string")):
-        ret += """
-  do i = 1, dims%%%s, 1
-    write(%s(i), "(A)") "He"
-  end do
-""" % (var_dsc[1], var)
-      else:
-        ret += "length = &\n"
-        for dim in var_dsc[1:stop]:
-          ret += "  & dims%%%s * &\n" % dim
-        ret += "  & dims%%%s\n" % var_dsc[stop]
-        ret += "%s = reshape( (/ (i, i = 1, length) /) , (/ & \n" % var
-        for dim in var_dsc_cpy[-1 - stop:-1]:
-          ret += "  & dims%%%s, &\n" % dim
-        ret += "  & dims%%%s /) )\n" % var_dsc_cpy[-1]
-    else:
-      if (var_dsc[0].startswith("string")):
-        ret += "write(%s, \"(A)\") \"He\"\n" % var
-      else:
-        ret += "%s = 456\n" % var
-  # We associate
-  ret += "\n! Association\n"
-  for var in etsf_groups[grp_name]:
-    var_dsc = etsf_variables[var]
-    ret += "group%%%s => %s\n" % (var, var)
+    # We allocate and put init values.
+    ret += "! Allocate and init %s\n" % var
+    ret += output_allocate_init_statement(var)
+    # We associate
+    ret += "! Associate %s\n" % var
+    # If the var is neither unformatted nor splitted, we associate directly
+    ret += output_associate_statement(var)
+    
   ret += "\n"
-  # we call the write routine (both for testing or to write for future read testing.
-  ret += """
-  call etsf_io_data_write("test_%s_%s.nc", etsf_main_none, %s, &
-                        & main, groups, lstat, error_data)
-  call tests_%s_status("write data", lstat, error_data)
-""" % (action, grp_name, grp_id, action)
+  # we call the write routine (both for testing or to write for future read testing).
+  ret += "call etsf_io_data_write(\"test_%s_%s.nc\", etsf_main_none, %s, &\n" % (action, grp_name, grp_id)
+  ret += "                      & main, groups, lstat, error_data)\n"
+  ret += "call tests_%s_status(\"write data\", lstat, error_data)\n" % action
+  
   # We open the file for low level access
-  ret += "  ! check informations.\n"
+  ret += "! check informations.\n"
   if (action == "write"):
     # We check the previous write action with low level reading
-    ret += "  call etsf_io_low_open_read(ncid, \"test_write_%s.nc\", lstat, error_data = error_data)\n" % (grp_name)
-    ret += "  call tests_write_status(\" | opening\", lstat, error_data)\n"
+    ret += "call etsf_io_low_open_read(ncid, \"test_write_%s.nc\", lstat, error_data = error_data)\n" % (grp_name)
+    ret += "call tests_write_status(\" | opening\", lstat, error_data)\n"
   else:
     # we call the read action for testing purpose
-    ret += "  call etsf_io_data_read(\"test_read_%s.nc\", etsf_main_none, %s, &\n" % (grp_name, grp_id)
-    ret += "                       & main, groups, lstat, error_data)\n"
-    ret += "  call tests_read_status(\"read data\", lstat, error_data)\n"
+    ret += "call etsf_io_data_read(\"test_read_%s.nc\", etsf_main_none, %s, &\n" % (grp_name, grp_id)
+    ret += "                     & main, groups, lstat, error_data)\n"
+    ret += "call tests_read_status(\"read data\", lstat, error_data)\n"
+  
   # We will check the values
   for var in etsf_groups[grp_name]:
-    var_dsc = etsf_variables[var]
-    if (var_dsc[0].startswith("string")):
-      char_len = "dims%%%s, " % var_dsc[-1]
-      stop = -2
-    else:
-      char_len = ""
-      stop = -1
-    if ((var_dsc[0].startswith("string") and len(var_dsc) > 2) or \
-    (not(var_dsc[0].startswith("string")) and len(var_dsc) > 1)):
-      # case of array
-      if (action == "write"):
-        ret += """
-  call etsf_io_low_read_var(ncid, "%s", %s, &
-                          & %slstat, error_data = error_data)
-  call tests_write_status(" | read '%s' values", lstat, error_data)
-""" % (var, var, char_len, var)
-      if (var_dsc[0].startswith("string")):
-        ret += """
-  lstat = .true.
-  do i = 1, dims%%%s, 1
-    if (index(%s(i), char(0)) > 0) then
-      lstat = (%s(i)(1:index(%s(i), char(0)) - 1) == \"He\") .and. lstat
-    else
-      lstat = (trim(%s(i)) == \"He\") .and. lstat
-    end if
-  end do
-  if (.not. lstat) then
-""" % (var_dsc[1], var, var, var, var)
-      else:
-        ret += "length = &\n"
-        for dim in var_dsc[1:stop]:
-          ret += "  & dims%%%s * &\n" % dim
-        ret += "  & dims%%%s\n" % var_dsc[stop]
-        if (var_dsc[0].startswith("integer")):
-          tab = "int"
-        else:
-          tab = "dbl"
-        ret += "  allocate(test_%s_tab(length))\n" % tab
-        ret += "  test_%s_tab = reshape(%s, (/ length /))\n" % (tab, var)
-        ret += """
-  lstat = .true.
-  do i = 1, length, 1
-    lstat = (int(test_%s_tab(i)) == i) .and. lstat
-  end do
-  deallocate(test_%s_tab)
-  if (.not. lstat) then
-""" % (tab, tab)
-    else:
-      # case of single value
-      if (action == "write"):
-        ret += """
-  call etsf_io_low_read_var(ncid, "%s", group%%%s, &
-                          & %slstat, error_data = error_data)
-  call tests_%s_status(" | read '%s' values", lstat, error_data)
-""" % (var, var, char_len, action, var)
-      if (var_dsc[0].startswith("string")):
-        ret += "  if (group%%%s(1:index(group%%%s, char(0)) - 1) /= \"He\") then\n" % (var, var)
-      else:
-        ret += "  if (int(group%%%s) /= 456) then\n" % var
-    ret += """
-    call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
-                             & tgtname = "%s", errmess = "wrong values")
-    lstat = .false.
-  end if
-  call tests_%s_status(" | check '%s' values", lstat, error_data)
-""" % (var, action, var)
+    ret += output_check_statement(var, action)
+  
   if (action == "write"):
     # We close the file
     ret += """
@@ -276,10 +350,7 @@ def readwrite_grp(grp_name, grp_id, action):
 """
   # We deallocate
   for var in etsf_groups[grp_name]:
-    var_dsc = etsf_variables[var]
-    if ((var_dsc[0].startswith("string") and len(var_dsc) > 2) or \
-    (not(var_dsc[0].startswith("string")) and len(var_dsc) > 1)):
-      ret += "deallocate(%s)\n" % (var)
+    ret += "deallocate(%s)\n" % (var)
   ret += "  write(*,*)\n"
   ret += "end subroutine test_%s_%s\n\n" % (action, grp)
   return indent_code(ret, 1)
@@ -358,8 +429,8 @@ for grp in etsf_group_list[1:]:
 ret = file("config/etsf/template.tests_write", "r").read()
 
 # Substitute patterns
-ret = re.sub("@WRITE_MAIN_ASSOCIATE@", write_assoc_src, ret)
-ret = re.sub("@WRITE_MAIN@", write_main_src, ret)
+#ret = re.sub("@WRITE_MAIN_ASSOCIATE@", write_assoc_src, ret)
+#ret = re.sub("@WRITE_MAIN@", write_main_src, ret)
 ret = re.sub("@WRITE_GRP@", write_grp_src, ret)
 ret = re.sub("@CALL_WRITE_GROUP@", call_grp_src, ret)
 
@@ -390,8 +461,8 @@ for grp in etsf_group_list[1:]:
 ret = file("config/etsf/template.tests_read", "r").read()
 
 # Substitute patterns
-ret = re.sub("@READ_MAIN_ASSOCIATE@", read_assoc_src, ret)
-ret = re.sub("@READ_MAIN@", read_main_src, ret)
+#ret = re.sub("@READ_MAIN_ASSOCIATE@", read_assoc_src, ret)
+#ret = re.sub("@READ_MAIN@", read_main_src, ret)
 ret = re.sub("@READ_GRP@", read_grp_src, ret)
 ret = re.sub("@CALL_READ_GROUP@", call_grp_src, ret)
 

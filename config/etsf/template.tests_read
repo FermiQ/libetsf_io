@@ -28,53 +28,6 @@ contains
     end if
   end subroutine tests_read_status
 
-  subroutine test_read_var_unformatted(varname, main_id)
-    character(len = *), intent(in) :: varname
-    integer, intent(in) :: main_id
-    
-    type(etsf_main) :: main
-    type(etsf_groups) :: grp
-    type(etsf_io_low_var_infos) :: var_infos
-    double precision, allocatable, target :: values(:)
-    integer :: ncid, i, length
-    logical :: lstat
-    type(etsf_io_low_error) :: error_data
-    
-    call tests_read_status("variable '"// trim(varname) //"'", .true., error_data)
-    call etsf_io_low_open_read(ncid, "test_"// trim(varname) //".nc", lstat, error_data = error_data)
-    call tests_read_status(" | opening", lstat, error_data)
-    call etsf_io_low_read_var_infos(ncid, trim(varname), var_infos, lstat, error_data = error_data)
-    call tests_read_status(" | read '"// trim(varname) //"' characteristics", lstat, error_data)
-    call etsf_io_low_close(ncid, lstat, error_data = error_data)
-    call tests_read_status(" | closing", lstat, error_data)
-    length = 1
-    do i = 1, var_infos%ncshape, 1
-      length = length * var_infos%ncdims(i)
-    end do
-    allocate(values(length))
-    ! for testing purpose, every pointers are associated, don't do that in normal cases
-@READ_MAIN_ASSOCIATE@
-    values = (/ (i, i = 1, length) /)
-    call etsf_io_data_write("test_"// trim(varname) //".nc", main_id, etsf_grp_none, &
-                          & main, grp, lstat, error_data)
-    call tests_read_status(" | write action", lstat, error_data)
-    values(:) = 0.d0
-    call etsf_io_data_read("test_"// trim(varname) //".nc", main_id, etsf_grp_none, &
-                          & main, grp, lstat, error_data)
-    call tests_read_status(" | reading values", lstat, error_data)
-    lstat = .true.
-    do i = 1, length, 1
-      lstat = (int(values(i)) == i) .and. lstat
-    end do
-    if (.not. lstat) then
-      call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, &
-                               & "test_read_var_unformatted", tgtname = trim(varname), &
-                               & errmess = "wrong characteristics")
-    end if
-    call tests_read_status(" | check '"// trim(varname) //"' values", lstat, error_data)
-    deallocate(values)
-  end subroutine test_read_var_unformatted
-  
   subroutine test_data_read()
     type(etsf_main) :: main
     type(etsf_groups) :: grp
@@ -101,8 +54,6 @@ contains
     call etsf_io_data_read("test_density.nc", etsf_main_density, -1, &
                           & main, grp, lstat, error)
     call tests_read_status("groups: wrong value", (.not. lstat), error)
-
-@READ_MAIN@
 
     write(*,*)
 

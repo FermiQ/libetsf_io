@@ -92,27 +92,29 @@ for grp in etsf_group_list:
     dim_offset = 3
    else:
     dim_offset = 2
-   # If the type is given as unformatted, we use
-   # the etsf_io_low_var_* type to hide dimensions.
-   if ( re.match(".*unformatted$",dsc[0]) ):
-    dim_offset = len(dsc) + 1
+   # Retrieve variable properties of interest.
+   unformatted = False
+   splitted = False
+   if (var in etsf_properties):
+    props = etsf_properties[var]
+    unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
+    splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
 
-   dim = ":"
-   if ( len(dsc) >= dim_offset ):
-    for i in range(len(dsc)-dim_offset):
-     dim += ",:"
-    
-    # Dimension case (either string or numbers).
-    out_str += "  %s, pointer :: %s(%s) => null()\n" % (fortran_type(dsc),var,dim)
+   if (unformatted or splitted):
+    # Unformatted pointer case
+    out_str += "  %s :: %s\n" % (fortran_type(dsc, props),var)
    else:
-    if ( re.match("string",dsc[0]) ):
-      # String case (dimension less)
-      out_str += "  %s, pointer :: %s => null()\n" % (fortran_type(dsc),var)
+    if ( len(dsc) >= dim_offset ):
+     dim = ":"
+     for i in range(len(dsc)-dim_offset):
+      dim += ",:"
+     # Dimension case (either string or numbers).
+     out_str += "  %s, pointer :: %s(%s) => null()\n" % (fortran_type(dsc),var,dim)
     else:
-      # Unformatted pointer case
-      out_str += "  %s :: %s\n" % (fortran_type(dsc),var)
+     # String case (dimension less)
+     out_str += "  %s, pointer :: %s => null()\n" % (fortran_type(dsc),var)
   else:
-   # Numbers or undefined pointers.
+   # Numbers
    out_str += "  %s, pointer :: %s => null()\n" % (fortran_type(dsc),var)
 
  out_str += " end type etsf_%s" % (grp)
