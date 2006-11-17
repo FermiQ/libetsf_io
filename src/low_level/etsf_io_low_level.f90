@@ -58,13 +58,13 @@ module etsf_io_low_level
   
   include "public_variables.f90"
     
-  !!****m* etsf_io_low_level/etsf_io_low_read_var
+  !!****m* etsf_io_low_read_group/etsf_io_low_read_var
   !! NAME
   !!  etsf_io_low_read_var
   !!
   !! SYNOPSIS
-  !!  call etsf_io_low_read_var(ncid, varname, var, lstat, ncvarid, error_data)
-  !!  call etsf_io_low_read_var(ncid, varname, var, charlen, lstat, ncvarid, error_data)
+  !!  * call etsf_io_low_read_var(ncid, varname, var, lstat, ncvarid, sub, error_data)
+  !!  * call etsf_io_low_read_var(ncid, varname, var, charlen, lstat, ncvarid, sub, error_data)
   !!
   !! FUNCTION
   !!  This is a generic interface to read values of a variables (either integer
@@ -77,11 +77,13 @@ module etsf_io_low_level
   !!  the example below on how to read a string. @var can also be a #etsf_io_low_var_double,
   !!  or a #etsf_io_low_var_integer. In this case, the associated pointer is used
   !!  as the storage area for the read values.
-  !!    If the shape of the given storage variable (@var) and the definition of the
+  !!
+  !!  If the shape of the given storage variable (@var) and the definition of the
   !!  corresponding NetCDF variable differ ; the read is done only if the number of
   !!  elements are identical. Number of elements is the product over all dimensions
   !!  of the size (see example below).
-  !!    It is also possible to read some particular dimensions of one variable using
+  !!
+  !!  It is also possible to read some particular dimensions of one variable using
   !!  the optional @sub argument. This is only possible for multi-dimensional variables
   !!  and is compatible with a shape modification. See the following examples. The @sub
   !!  argument is an array specifying for each dimension of the NetCDF variable, if
@@ -128,9 +130,9 @@ module etsf_io_low_level
   !!   call etsf_io_low_read_var(ncid, "density", density, lstat)
   !!
   !!  Get the last 3 dimensions of a 4D array:
-  !!   NetCDF def: density(2, 3, 3, 3) # dimensions in NetCDF are reverted
+  !!   NetCDF def: density(2, 3, 4, 5) # dimensions in NetCDF are reverted
   !!                                   # compared to Fortran style
-  !!   double precision :: density_down(3, 3, 3)
+  !!   double precision :: density_down(5, 4, 3)
   !!   call etsf_io_low_read_var(ncid, "density", density_down, lstat, sub = (/ 0, 0, 0, 2 /))
   !!
   !!  Get the last 3 dimensions of a 4D array and store them into a 1D array:
@@ -177,13 +179,13 @@ module etsf_io_low_level
   end interface etsf_io_low_read_var
   !End of the generic interface of etsf_io_low_read_var
   
-  !!****m* etsf_io_low_level/etsf_io_low_read_att
+  !!****m* etsf_io_low_read_group/etsf_io_low_read_att
   !! NAME
   !!  etsf_io_low_read_att
   !!
   !! SYNOPSIS
-  !!  call etsf_io_low_read_att(ncid, ncvarid, attname, attlen, att, lstat, error_data)
-  !!  call etsf_io_low_read_att(ncid, ncvarid, attname, att, lstat, error_data)
+  !!  * call etsf_io_low_read_att(ncid, ncvarid, attname, attlen, att, lstat, error_data)
+  !!  * call etsf_io_low_read_att(ncid, ncvarid, attname, att, lstat, error_data)
   !!
   !! FUNCTION
   !!  This is a generic interface to read values of an attribute (either integer,
@@ -238,19 +240,20 @@ module etsf_io_low_level
   end interface etsf_io_low_read_att
   !End of the generic interface of etsf_io_low_read_att
 
-  !!****m* etsf_io_low_level/etsf_io_low_def_var
+  !!****m* etsf_io_low_write_group/etsf_io_low_def_var
   !! NAME
   !!  etsf_io_low_def_var
   !!
   !! SYNOPSIS
-  !!  call etsf_io_low_def_var(ncid, varname, vartype, vardims, lstat, ncvarid, error_data)
-  !!  call etsf_io_low_def_var(ncid, varname, vartype, lstat, ncvarid, error_data)
+  !!  * call etsf_io_low_def_var(ncid, varname, vartype, vardims, lstat, ncvarid, error_data)
+  !!  * call etsf_io_low_def_var(ncid, varname, vartype, lstat, ncvarid, error_data)
   !!
   !! FUNCTION
   !!  In the contrary of dimensions or attributes, before using a write method on variables
   !!  they must be defined using such methods. This allow to choose the type, the shape
   !!  and the size of a new variable. Once defined, a variable can't be changed or removed.
-  !!    One can add scalars, one dimensional arrays or multi-dimensional arrays (restricted
+  !!
+  !!  One can add scalars, one dimensional arrays or multi-dimensional arrays (restricted
   !!  to a maximum of 7 dimensions). See the examples below to know how to use such methods.
   !!
   !! COPYRIGHT
@@ -293,7 +296,7 @@ module etsf_io_low_level
   end interface etsf_io_low_def_var
   !End of the generic interface of etsf_io_low_def_var
 
-  !!****m* etsf_io_low_level/etsf_io_low_write_att
+  !!****m* etsf_io_low_write_group/etsf_io_low_write_att
   !! NAME
   !!  etsf_io_low_write_att
   !!
@@ -344,13 +347,13 @@ module etsf_io_low_level
   end interface etsf_io_low_write_att
   !End of the generic interface of etsf_io_low_write_att
 
-  !!****m* etsf_io_low_level/etsf_io_low_write_var
+  !!****m* etsf_io_low_write_group/etsf_io_low_write_var
   !! NAME
   !!  etsf_io_low_write_var
   !!
   !! SYNOPSIS
-  !!  call etsf_io_low_write_var(ncid, varname, var, lstat, ncvarid, error_data)
-  !!  call etsf_io_low_write_var(ncid, varname, var, charlen, lstat, ncvarid, error_data)
+  !!  * call etsf_io_low_write_var(ncid, varname, var, lstat, ncvarid, sub, error_data)
+  !!  * call etsf_io_low_write_var(ncid, varname, var, charlen, lstat, ncvarid, sub, error_data)
   !!
   !! FUNCTION
   !!  This is a generic interface to write values of a variables (either integer
@@ -364,11 +367,13 @@ module etsf_io_low_level
   !!  the example below on how to write a string. @var can also be a #etsf_io_low_var_double,
   !!  or a #etsf_io_low_var_integer. In this case, the associated pointer is used
   !!  as the storage area for the written values.
-  !!    If the shape of the input data variable (@var) and the definition of the
+  !!
+  !!  If the shape of the input data variable (@var) and the definition of the
   !!  corresponding NetCDF variable differ ; the write action is performed only if the number of
   !!  elements are identical. Number of elements is the product over all dimensions
   !!  of the size (see example below).
-  !!    It is also possible to write some particular dimensions of one variable using
+  !!
+  !!  It is also possible to write some particular dimensions of one variable using
   !!  the optional @sub argument. This is only possible for multi-dimensional variables
   !!  and is compatible with a shape modification. See the following examples. The @sub
   !!  argument is an array specifying for each dimension of the NetCDF variable, if
@@ -414,9 +419,9 @@ module etsf_io_low_level
   !!   call etsf_io_low_read_var(ncid, "reduced_atom_positions", coord, lstat)
   !!
   !!  Write the last 3 dimensions of a 4D array:
-  !!   NetCDF def: density(2, 3, 3, 3) # dimensions in NetCDF are reverted
+  !!   NetCDF def: density(2, 3, 4, 5) # dimensions in NetCDF are reverted
   !!                                   # compared to Fortran style
-  !!   double precision :: density_down(3, 3, 3)
+  !!   double precision :: density_down(5, 4, 3)
   !!   call etsf_io_low_write_var(ncid, "density", density_down, lstat, sub = (/ 0, 0, 0, 2 /))
   !!
   !!  Write the last 3 dimensions of a 4D array and read them from a 1D array:
@@ -463,13 +468,16 @@ module etsf_io_low_level
   end interface etsf_io_low_write_var
   !End of the generic interface of etsf_io_low_write_var
   
-  !!****m* etsf_io_low_level/etsf_io_low_var_associated
+  !!****f* etsf_io_low_level/etsf_io_low_var_associated
   !! NAME
   !!  etsf_io_low_var_associated
   !!
   !! FUNCTION
   !!  This function works as the associated() intrinsic function but with
   !!  pointers of undefined shapes (see #etsf_io_low_var_integer and #etsf_io_low_var_double).
+  !!
+  !! SYNOPSIS
+  !!  call etsf_io_low_var_associated(array)
   !!
   !! COPYRIGHT
   !!  Copyright (C) 2006
@@ -488,12 +496,81 @@ module etsf_io_low_level
     module procedure var_double_associated
   end interface etsf_io_low_var_associated
   
+  !!****g* etsf_io_low_level/etsf_io_low_error_group
+  !! FUNCTION
+  !!  These methods are used to handle errors generated by ETSF access.
+  !!  For this a Fortran type is used and called #etsf_io_low_error. It
+  !!  stores several informations such as the name of the method where the
+  !!  error occured or a message describing the error. One can create an
+  !!  error using etsf_io_low_error_set() and then put it into a nice
+  !!  string for future use with etsf_io_low_error_to_str().
+  !!
+  !! SOURCE
+  public :: etsf_io_low_error
+  public :: etsf_io_low_error_handle
+  public :: etsf_io_low_error_set
+  public :: etsf_io_low_error_to_str
+  !!***
+
+  !!****g* etsf_io_low_level/etsf_io_low_file_group
+  !! FUNCTION
+  !!  When accessing a ETSF file, there is three routines to do that. One can:
+  !!   * create a new file with etsf_io_low_open_create() ;
+  !!   * read an already existing file with etsf_io_low_open_read() ;
+  !!   * write data to a an already existing file with etsf_io_low_open_modify().
+  !!
+  !! SOURCE
+  public :: etsf_io_low_close
+  public :: etsf_io_low_open_create
+  public :: etsf_io_low_open_modify
+  public :: etsf_io_low_open_read
+  !!***
+
+  !!****g* etsf_io_low_level/etsf_io_low_check_group
+  !! FUNCTION
+  !!  These routines are used to check informations defined in an openend ETSF file.
+  !!
+  !! SOURCE
+  public :: etsf_io_low_check_att
+  public :: etsf_io_low_check_header
+  public :: etsf_io_low_check_var
+  !!***
+
+  !!****g* etsf_io_low_level/etsf_io_low_read_group
+  !! FUNCTION
+  !!  These routines are used read data from an ETSF file. These data can be:
+  !!  * dimensions ;
+  !!  * attributes (global or not) ;
+  !!  * variables.
+  !!
+  !! SOURCE
+  public :: etsf_io_low_var_infos
+  public :: etsf_io_low_read_att
+  public :: etsf_io_low_read_dim
+  public :: etsf_io_low_read_var
+  public :: etsf_io_low_read_var_infos
+  !!***
+
+  !!****g* etsf_io_low_level/etsf_io_low_write_group
+  !! FUNCTION
+  !!  These routines are used write (or define) data from an ETSF file. These data can be:
+  !!  * dimensions ;
+  !!  * attributes (global or not) ;
+  !!  * variables.
+  !!
+  !! SOURCE
+  public :: etsf_io_low_def_var
+  public :: etsf_io_low_write_att
+  public :: etsf_io_low_write_dim
+  public :: etsf_io_low_write_var
+  !!***
   
+  ! Private methods.
   private :: var_integer_associated
   private :: var_double_associated
 contains
 
-  !!****m* etsf_io_low_level/etsf_io_low_error_set
+  !!****m* etsf_io_low_error_group/etsf_io_low_error_set
   !! NAME
   !!  etsf_io_low_error_set
   !!
@@ -566,7 +643,7 @@ contains
   end subroutine etsf_io_low_error_set
   !!***
 
-  !!****m* etsf_io_low_level/etsf_io_low_error_to_str
+  !!****m* etsf_io_low_error_group/etsf_io_low_error_to_str
   !! NAME
   !!  etsf_io_low_error_to_str
   !!
@@ -624,7 +701,7 @@ contains
   end subroutine etsf_io_low_error_to_str
   !!***
 
-  !!****m* etsf_io_low_level/etsf_io_low_error_handle
+  !!****m* etsf_io_low_error_group/etsf_io_low_error_handle
   !! NAME
   !!  etsf_io_low_error_handle
   !!
@@ -671,7 +748,7 @@ contains
   end subroutine etsf_io_low_error_handle
   !!***
 
-  !!****m* etsf_io_low_level/etsf_io_low_close
+  !!****m* etsf_io_low_file_group/etsf_io_low_close
   !! NAME
   !!  etsf_io_low_close
   !!
@@ -715,7 +792,7 @@ contains
   end subroutine etsf_io_low_close
   !!***
 
-  !!****m* etsf_io_low_level/etsf_io_low_write_var_mode
+  !!****m* etsf_io_low_file_group/etsf_io_low_write_var_mode
   !! NAME
   !!  etsf_io_low_write_var_mode
   !!
@@ -764,7 +841,7 @@ contains
   end subroutine etsf_io_low_write_var_mode
   !!***
 
-  !!****m* etsf_io_low_level/pad
+  !!****f* etsf_io_low_level/pad
   !! NAME
   !!  pad
   !!

@@ -1,4 +1,4 @@
-  !!****m* etsf_io_low_level/etsf_io_low_open_create
+  !!****m* etsf_io_low_file_group/etsf_io_low_open_create
   !! NAME
   !!  etsf_io_low_open_create
   !!
@@ -10,8 +10,10 @@
   !!  etsf_io_low_def_var()) and attributes (see etsf_io_low_write_att()) can be defined.
   !!  To use etsf_io_low_write_var(), the file should be switched to data mode using
   !!  etsf_io_low_write_var_mode().
-  !!    If title or history are given and are too long, they will be truncated.
-  !!    If one wants to modify an already existing file, one should use
+  !!
+  !!  If title or history are given and are too long, they will be truncated.
+  !!
+  !!  If one wants to modify an already existing file, one should use
   !!  etsf_io_low_open_modify() instead.
   !!
   !! COPYRIGHT
@@ -132,22 +134,25 @@
   end subroutine etsf_io_low_open_create
   !!***
     
-  !!****m* etsf_io_low_level/etsf_io_low_open_modify
+  !!****m* etsf_io_low_file_group/etsf_io_low_open_modify
   !! NAME
   !!  etsf_io_low_open_modify
   !!
   !! FUNCTION
   !!  This method is used to open a NetCDF file for modifications. The file should
   !!  already exist and have a valid ETSF header.
+  !!
   !!  When finished, the file handled by @ncid, is in define mode, which means
   !!  that dimensions (see etsf_io_low_write_dim()), variables (see
   !!  etsf_io_low_def_var()) and attributes (see etsf_io_low_write_att()) can be defined.
   !!  To use etsf_io_low_write_var(), the file should be switched to data mode using
   !!  etsf_io_low_write_var_mode().
-  !!    If title or history are given and are too long, they will be truncated. Moreover
+  !!
+  !!  If title or history are given and are too long, they will be truncated. Moreover
   !!  the given history is appended to the already existing history (if enough
   !!  place exists).
-  !!    If one wants to create a new file, one should use etsf_io_low_open_create() instead.
+  !!
+  !!  If one wants to create a new file, one should use etsf_io_low_open_create() instead.
   !!
   !! COPYRIGHT
   !!  Copyright (C) 2006
@@ -284,7 +289,7 @@
   end subroutine etsf_io_low_open_modify
   !!***
   
-  !!****m* etsf_io_low_level/etsf_io_low_write_dim
+  !!****m* etsf_io_low_write_group/etsf_io_low_write_dim
   !! NAME
   !!  etsf_io_low_write_dim
   !!

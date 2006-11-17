@@ -47,14 +47,19 @@ ignore items:
 options:
     --src ./src
     --doc ./doc/www
+    --one_file_per_header
     --html
     --multidoc
+    --sections
+    --sectionnameonly
     --index
     --tabsize 2
-    --tell
     --toc
-    --documenttitle "libetsf_io.so - ETSF I/O - API"
+    --nopre
+    --documenttitle "libetsf_io.a - ETSF I/O - API"
     --syntaxcolors
+headertypes:
+    g  "Sub categories"  robo_sub_cat
 ignore files:
     ChangeLog
     Makefile*
@@ -115,3 +120,5 @@ keywords:
     in
     out
     inout
+    private
+    public

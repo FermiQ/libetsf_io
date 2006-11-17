@@ -120,12 +120,15 @@ for grp in etsf_group_list:
  out_str += " end type etsf_%s" % (grp)
  if ( grp != "main" ):
   est += """
-  !!****s* etsf_io/etsf_%s
+  !!****s* etsf_groups/etsf_%s
   !! NAME
   !!  etsf_%s
   !!
   !! FUNCTION
-  !!  This structure is a container that stores variables used in a same context.
+  !!  All variables from the specifications have been gathered into types called
+  !!  groups. These groups can be gathered into a container called #etsf_groups.
+  !!  This container is the main argument of the routines etsf_io_data_read()
+  !!  and etsf_io_data_write().
   !!
   !! SOURCE
 """ % (grp, grp)

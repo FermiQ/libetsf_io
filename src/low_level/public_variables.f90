@@ -1,4 +1,4 @@
-  !!****d* etsf_io_low_level/ERROR_MODE
+  !!****d* etsf_io_low_error_group/ERROR_MODE
   !! NAME
   !!  ERROR_MODE
   !!
@@ -18,7 +18,7 @@
                       & ERROR_MODE_INQ = 4, ERROR_MODE_PUT = 5, ERROR_MODE_SPEC = 6
   !!***
 
-  !!****d* etsf_io_low_level/ERROR_TYPE
+  !!****d* etsf_io_low_error_group/ERROR_TYPE
   !! NAME
   !!  ERROR_TYPE
   !!
@@ -61,7 +61,7 @@
   integer, parameter :: etsf_io_low_character  = NF90_CHAR
   !!***
 
-  !!****s* etsf_io_low_level/etsf_io_low_error
+  !!****s* etsf_io_low_error_group/etsf_io_low_error
   !! NAME
   !!  etsf_io_low_error
   !!
@@ -92,7 +92,7 @@
   end type etsf_io_low_error
   !!***
 
-  !!****s* etsf_io_low_level/etsf_io_low_var_infos
+  !!****s* etsf_io_low_read_group/etsf_io_low_var_infos
   !! NAME
   !!  etsf_io_low_var_infos
   !!
@@ -111,7 +111,7 @@
   end type etsf_io_low_var_infos
   !!***
   
-  !!****d* etsf_io_low_level/FLAGS_MATCHING
+  !!****d* etsf_io_low_read_group/FLAGS_MATCHING
   !! NAME
   !!  FLAGS_MATCHING
   !!

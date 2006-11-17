@@ -1,4 +1,4 @@
-  !!****m* etsf_io_low_level/etsf_io_low_read_dim
+  !!****m* etsf_io_low_read_group/etsf_io_low_read_dim
   !! NAME
   !!  etsf_io_low_read_dim
   !!
@@ -60,15 +60,15 @@
   end subroutine etsf_io_low_read_dim
   !!***
   
-  !!****m* etsf_io_low_level/etsf_io_low_read_var_infos
+  !!****m* etsf_io_low_read_group/etsf_io_low_read_var_infos
   !! NAME
   !!  etsf_io_low_read_var_infos
   !!
   !! FUNCTION
   !!  This method is used to retrieve informations about a variable:
-  !!   * its NetCDF id ;
-  !!   * its type (see #ETSF_IO_LOW_CONSTANTS) ;
-  !!   * its shape and length for each dimension.
+  !!  * its NetCDF id ;
+  !!  * its type (see #ETSF_IO_LOW_CONSTANTS) ;
+  !!  * its shape and length for each dimension.
   !!
   !! COPYRIGHT
   !!  Copyright (C) 2006
@@ -150,7 +150,7 @@
   end subroutine etsf_io_low_read_var_infos
   !!***
   
-  !!****m* etsf_io_low_level/etsf_io_low_check_var
+  !!****m* etsf_io_low_check_group/etsf_io_low_check_var
   !! NAME
   !!  etsf_io_low_check_var
   !!
@@ -273,15 +273,15 @@
   end subroutine etsf_io_low_check_var
   !!***
   
-  !!****m* etsf_io_low_level/etsf_io_low_check_att
+  !!****m* etsf_io_low_check_group/etsf_io_low_check_att
   !! NAME
   !!  etsf_io_low_check_att
   !!
   !! FUNCTION
   !!  This method is used to check that an attribute:
-  !!   * exists in the read NetCDF file ;
-  !!   * has the right type ;
-  !!   * has the right length (1 for scalar, > 1 for arrays).
+  !!  * exists in the read NetCDF file ;
+  !!  * has the right type ;
+  !!  * has the right length (1 for scalar, > 1 for arrays).
   !!
   !! COPYRIGHT
   !!  Copyright (C) 2006
@@ -355,7 +355,7 @@
   end subroutine etsf_io_low_check_att
   !!***
   
-  !!****m* etsf_io_low_level/etsf_io_low_check_header
+  !!****m* etsf_io_low_check_group/etsf_io_low_check_header
   !! NAME
   !!  etsf_io_low_check_header
   !!
@@ -457,7 +457,7 @@
   end subroutine etsf_io_low_check_header
   !!***
   
-  !!****m* etsf_io_low_level/etsf_io_low_open_read
+  !!****m* etsf_io_low_file_group/etsf_io_low_open_read
   !! NAME
   !!  etsf_io_low_open_read
   !!
