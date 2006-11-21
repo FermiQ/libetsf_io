@@ -158,11 +158,12 @@ for ((i=0;i<3;i++)) ; do
     if (modulo(lvl / etsf_io_low_var_shape_dif, 2) == 1 .or. present(sub)) then
       ! The shape differs but is compatible, we then give the count and ma
       ! arguments.
-      ${addcomment}s = nf90_put_var(ncid, var_nc%ncid, values = var, &
-      ${addcomment}                & start = start(1:var_nc%ncshape), &
-      ${addcomment}                & count = count(1:var_nc%ncshape), &
-      ${addcomment}                & map = (/ 1, (product(var_nc%ncdims(:i)), &
-      ${addcomment}                             & i = 1, var_nc%ncshape - 1) /))
+      s = nf90_put_var(ncid, var_nc%ncid, values = var, &
+                      & start = start(1:var_nc%ncshape) &
+      ${addcomment}                & ,count = count(1:var_nc%ncshape) &
+      ${addcomment}                & ,map = (/ 1, (product(var_nc%ncdims(:i)), &
+      ${addcomment}                & i = 1, var_nc%ncshape - 1) /) &
+                      &       )
     else
       s = nf90_put_var(ncid, var_nc%ncid, values = var)
     end if

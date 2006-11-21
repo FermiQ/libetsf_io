@@ -1,3 +1,9 @@
+* Fri Nov 17 2006 Damien Caliste <caliste@pcpm.ucl.ac.be> 0.4
+- create a type for variables that can have a partial access. Update the code
+  routine to cope with this new type.
+- upgrade the documentation by using sections and subsections.
+- correct a bug when using sub access on low level.
+
 * Mon Nov 13 2006 Damien Caliste <caliste@pcpm.ucl.ac.be> 0.3
 - import the group level scripts of Yann Pouillon to build a high level API
   on the ETSF specifications.

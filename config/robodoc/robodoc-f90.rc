@@ -47,7 +47,6 @@ ignore items:
 options:
     --src ./src
     --doc ./doc/www
-    --one_file_per_header
     --html
     --multidoc
     --sections

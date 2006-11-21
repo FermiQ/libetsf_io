@@ -79,7 +79,7 @@ module etsf_io
 @FLAGS_MAIN@
   !!***
 
-  !!****s* etsf_io_basics_group/etsf_dimensions
+  !!****s* etsf_io_basics_group/etsf_dims
   !! NAME
   !!  etsf_dimensions
   !!

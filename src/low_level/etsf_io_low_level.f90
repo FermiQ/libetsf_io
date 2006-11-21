@@ -256,6 +256,10 @@ module etsf_io_low_level
   !!  One can add scalars, one dimensional arrays or multi-dimensional arrays (restricted
   !!  to a maximum of 7 dimensions). See the examples below to know how to use such methods.
   !!
+  !!  As in pure NetCDF, it is impossible to overwrite the definition of a variable.
+  !!  Nevertheless, the method returns .true. in @lstat, if the definition is done a second
+  !!  time with the same type, shape and dimensions.
+  !!
   !! COPYRIGHT
   !!  Copyright (C) 2006
   !!  This file is distributed under the terms of the
@@ -667,7 +671,8 @@ contains
     character(len = 1024), intent(out)   :: str
     type(etsf_io_low_error), intent(in) :: error_data
     
-    character(len = 80) :: line_tgtname, line_tgtid, line_messid, line_mess
+    character(len = 80) :: line_tgtname, line_tgtid, line_messid
+    character(len = 256) :: line_mess
     
     if (trim(error_data%target_name) /= "") then
       write(line_tgtname, "(A,A,A)") "  Target (name)      : ", trim(error_data%target_name), char(10)
@@ -684,7 +689,7 @@ contains
     else
       write(line_mess, "(A)") ""
     end if
-    if (error_data%error_id >= 0) then
+    if (error_data%error_id /= 0) then
       write(line_messid, "(A,I0,A)") "  Error id           : ", error_data%error_id, char(10)
     else
       write(line_messid, "(A)") ""
@@ -694,10 +699,10 @@ contains
     write(str,*) " Calling subprogram : ", trim(error_data%parent), char(10), &
                & "  Action performed   : ", trim(error_data%access_mode_str), &
                & " ", trim(error_data%target_type_str), char(10), &
-               & line_tgtname, &
-               & line_tgtid, &
-               & line_mess, &
-               & line_messid
+               & trim(line_tgtname), &
+               & trim(line_tgtid), &
+               & trim(line_mess), &
+               & trim(line_messid)
   end subroutine etsf_io_low_error_to_str
   !!***
 

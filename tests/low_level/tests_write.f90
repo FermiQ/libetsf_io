@@ -291,6 +291,8 @@ contains
     end if
     call etsf_io_low_write_dim(ncid, "character_string_length", 1, lstat, error_data = error)
     call tests_write_status("argument dimname: overwriting (should fail)", (.not. lstat), error)
+    call etsf_io_low_write_dim(ncid, "character_string_length", 80, lstat, error_data = error)
+    call tests_write_status("argument dimname: overwriting (same value)", lstat, error)
     ! We test we can read and fetch the right value
     call etsf_io_low_read_dim(ncid, "character_string_length", value, lstat, error_data = error)
     call tests_write_status(" | reading dimension", lstat, error)
@@ -552,6 +554,9 @@ contains
     ! We add single variable, but overwriting is not allowed.
     call etsf_io_low_def_var(ncid, "number_of_electrons", NF90_DOUBLE, lstat, error_data = error)
     call tests_write_status("single value: overwriting (should fail)", (.not. lstat), error)
+    ! We add single variable, overwriting, with the same definition.
+    call etsf_io_low_def_var(ncid, "number_of_electrons", NF90_INT, lstat, error_data = error)
+    call tests_write_status("single value: overwriting (matching definition)", lstat, error)
     ! We check the definition.
     call etsf_io_low_read_var_infos(ncid, "number_of_electrons", infos, lstat, error_data = error)
     call tests_write_status("single value: read definition", lstat, error)
@@ -578,6 +583,10 @@ contains
     ! We add single variable, but overwriting is not allowed.
     call etsf_io_low_def_var(ncid, "atom_species", NF90_INT, lstat, error_data = error)
     call tests_write_status("1D array: overwriting (should fail)", (.not. lstat), error)
+    ! We add single variable, overwriting, with the same definition.
+    call etsf_io_low_def_var(ncid, "atom_species", NF90_INT, (/ "number_of_atoms" /), &
+                           & lstat, error_data = error)
+    call tests_write_status("1D array: overwriting (matching definition)", lstat, error)
     ! We check the definition.
     call etsf_io_low_read_var_infos(ncid, "atom_species", infos, lstat, error_data = error)
     call tests_write_status("1D array: read definition", lstat, error)

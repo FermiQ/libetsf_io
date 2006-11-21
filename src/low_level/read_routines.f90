@@ -201,7 +201,7 @@
       write(err, "(A)") "incompatible type, both must be either numeric or character."
       if (present(error_data)) then
         call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
-                     & errmess = err)
+                     & tgtname = var_ref%name, errmess = err)
       end if
       return
     end if
@@ -216,7 +216,7 @@
     else
       sub_shape = var_ref%ncshape
     end if
-    if (.not.((var_ref%ncshape > 0 .and. sub_shape > 0 .and. sub_shape <= var_ref%ncshape) .or. &
+    if (.not.((var_ref%ncshape > 0 .and. sub_shape >= 0 .and. sub_shape <= var_ref%ncshape) .or. &
             & (var_ref%ncshape == 0 .and. sub_shape == 0))) then
       write(err, "(A)") "wrong sub argument ( 0 < sub <= var_ref%ncshape)."
       if (present(error_data)) then
@@ -237,7 +237,7 @@
                                           & ", var_to = ", var%ncdims(i), ")"
           if (present(error_data)) then
             call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
-                         & errmess = err)
+                         & tgtname = var_ref%name, errmess = err)
           end if
           return
         end if
@@ -246,7 +246,7 @@
       ! The argument has a different shape that the store variable.
       ! We check the compatibility, product(var_to%ncdims) == product(var_from%ncdims)
       lvl = lvl + etsf_io_low_var_shape_dif
-      if (var_ref%ncshape == 0) then
+      if (var_ref%ncshape == 0 .or. sub_shape == 0 ) then
         nb_ele_ref = 1
       else
         nb_ele_ref = product(var_ref%ncdims(1:sub_shape))
@@ -261,7 +261,7 @@
                                   & nb_ele_ref, ", var = ", nb_ele, ")"
         if (present(error_data)) then
           call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
-                       & errmess = err)
+                       & tgtname = var_ref%name, errmess = err)
         end if
         return
       end if

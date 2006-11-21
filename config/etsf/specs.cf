@@ -292,7 +292,6 @@ etsf_groups = {
       "eigenvalues",
       "occupations"],
    "kpoints":[
-      "kinetic_energy_cutoff",
       "kpoint_grid_shift",
       "kpoint_grid_vectors",
       "monkhorst_pack_folding",
@@ -300,6 +299,7 @@ etsf_groups = {
       "kpoint_weights"],
    "wavedata":[
       "basis_set",
+      "kinetic_energy_cutoff",
       "number_of_coefficients",
       "reduced_coordinates_of_plane_waves"],
    "gwdata":[

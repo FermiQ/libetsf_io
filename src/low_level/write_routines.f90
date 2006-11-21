@@ -295,7 +295,8 @@
   !!
   !! FUNCTION
   !!  This method is a wraper add a dimension to a NetCDF file. As in pure NetCDF
-  !!  calls, overwriting a value is not permitted.
+  !!  calls, overwriting a value is not permitted. Nevertheless, the method returns
+  !!  .true. in @lstat, if the dimension already exists and has the same value.
   !!
   !! COPYRIGHT
   !!  Copyright (C) 2006
@@ -324,14 +325,36 @@
     
     ! Local
     character(len = *), parameter :: me = "etsf_io_low_write_dim"
-    integer :: s, dimid
+    character(len = 500) :: message
+    integer :: s, dimid, readvalue
     
+    ! Check if dimension already exists.
+    call etsf_io_low_read_dim(ncid, dimname, readvalue, lstat)
+    if (lstat) then
+      ! Dimension already exists.
+      if (readvalue /= dimvalue) then
+        ! Dimension differs, raise error.
+        if (present(error_data)) then
+          write(message, "(2A,I0,A,I0,A)") "dimension already exists with a different", &
+                                         & " value (read = ", readvalue, " ; write = ", &
+                                         & dimvalue, ")."
+          call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_DIM, me, &
+                                   & tgtname = dimname, errmess = message)
+        end if
+        lstat = .false.
+        return
+      else
+        ! Dimension matches, return.
+        return
+      end if        
+    end if
+    ! Define dimension since it don't already exist.
     lstat = .false.
     s = nf90_def_dim(ncid, dimname, dimvalue, dimid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
         call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_DIM, me, &
-                      & tgtname = dimname, errid = s, errmess = nf90_strerror(s))
+                                 & tgtname = dimname, errid = s, errmess = nf90_strerror(s))
       end if
       return
     end if
@@ -354,8 +377,29 @@
     
     ! Local
     character(len = *), parameter :: me = "etsf_io_low_def_var"
+    type(etsf_io_low_var_infos) :: var_infos
     integer :: s, varid
 
+    ! Check if dimension already exists.
+    call etsf_io_low_read_var_infos(ncid, varname, var_infos, lstat)
+    if (lstat) then
+      ! Variable already exists.
+      lstat = (var_infos%nctype == vartype .and. var_infos%ncshape == 0)
+      if (.not. lstat) then
+        ! Variable differs, raise error.
+        if (present(error_data)) then
+          call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_VAR, me, &
+                                   & tgtname = varname, errmess = &
+                                   & "variable already exists with a different definition.")
+        end if
+        lstat = .false.
+        return
+      else
+        ! Dimension matches, return.
+        return
+      end if        
+    end if
+    ! Define variable since it don't already exist.
     lstat = .false.    
     ! Special case where dimension is null
     s = nf90_def_var(ncid, varname, vartype, varid)
@@ -385,26 +429,48 @@
     
     ! Local
     character(len = *), parameter :: me = "etsf_io_low_def_var"
-    integer :: s, varid, ndims, i, val
-    integer, allocatable :: ncdims(:)
+    type(etsf_io_low_var_infos) :: var_infos
+    integer :: s, varid, ndims, i
+    integer, allocatable :: ncdims(:, :)
     logical :: stat
 
     lstat = .false.
     ! The dimension are given by their names, we must first fetch them.
     ndims = size(vardims)
-    allocate(ncdims(1:ndims))
+    allocate(ncdims(0:1, 1:ndims))
     do i = 1, ndims, 1
       if (present(error_data)) then
-        call etsf_io_low_read_dim(ncid, trim(vardims(i)), val, stat, ncdimid = ncdims(i), error_data = error_data)
+        call etsf_io_low_read_dim(ncid, trim(vardims(i)), ncdims(0, i), &
+                                & stat, ncdimid = ncdims(1, i), error_data = error_data)
       else
-        call etsf_io_low_read_dim(ncid, trim(vardims(i)), val, stat, ncdimid = ncdims(i))
+        call etsf_io_low_read_dim(ncid, trim(vardims(i)), ncdims(0, i), &
+                                & stat, ncdimid = ncdims(1, i))
       end if
       if (.not. stat) then
         deallocate(ncdims)
         return
       end if
     end do
-    s = nf90_def_var(ncid, varname, vartype, ncdims, varid)
+    ! Check if dimension already exists.
+    call etsf_io_low_read_var_infos(ncid, varname, var_infos, lstat)
+    if (lstat) then
+      ! Variable already exists.
+      lstat = (var_infos%nctype == vartype .and. var_infos%ncshape == ndims)
+      do i = 1, min(var_infos%ncshape, ndims), 1
+        lstat = lstat .and. (ncdims(0, i) == var_infos%ncdims(i))
+      end do
+      if (.not. lstat) then
+        ! Variable differs, raise error.
+        if (present(error_data)) then
+          call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_VAR, me, &
+                                   & tgtname = varname, errmess = &
+                                   & "variable already exists with a different definition.")
+        end if
+      end if        
+      return
+    end if
+    ! Define variable since it don't already exist.
+    s = nf90_def_var(ncid, varname, vartype, ncdims(1, :), varid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
         call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_VAR, me, &
