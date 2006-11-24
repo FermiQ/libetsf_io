@@ -9,7 +9,7 @@
   !!  that dimensions (see etsf_io_low_write_dim()), variables (see
   !!  etsf_io_low_def_var()) and attributes (see etsf_io_low_write_att()) can be defined.
   !!  To use etsf_io_low_write_var(), the file should be switched to data mode using
-  !!  etsf_io_low_write_var_mode().
+  !!  etsf_io_low_set_write_mode().
   !!
   !!  If title or history are given and are too long, they will be truncated.
   !!
@@ -73,7 +73,7 @@
     end if
     ! From now on the file is open. If an error occur,
     ! we should close it.
-
+    
     ! We create the header.
     ! The file format
     s = nf90_put_att(ncid, NF90_GLOBAL, "file_format", etsf_io_low_file_format)
@@ -146,7 +146,7 @@
   !!  that dimensions (see etsf_io_low_write_dim()), variables (see
   !!  etsf_io_low_def_var()) and attributes (see etsf_io_low_write_att()) can be defined.
   !!  To use etsf_io_low_write_var(), the file should be switched to data mode using
-  !!  etsf_io_low_write_var_mode().
+  !!  etsf_io_low_set_write_mode().
   !!
   !!  If title or history are given and are too long, they will be truncated. Moreover
   !!  the given history is appended to the already existing history (if enough
@@ -225,13 +225,23 @@
       return
     end if
 
-    ! By default, we switch to define mode.
-    s = nf90_redef(ncid)
-    if (s /= nf90_noerr) then
-      if (present(error_data)) then
-        call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_DEF, me, tgtid = ncid, &
-                      & tgtname = filename, errid = s, errmess = nf90_strerror(s))
-      end if
+    ! We switch to define mode to set attributes.
+    if (present(error_data)) then
+      call etsf_io_low_set_define_mode(ncid, stat, error_data = error_data)
+    else
+      call etsf_io_low_set_define_mode(ncid, stat)
+    end if
+    if (.not. stat) then
+      call etsf_io_low_close(ncid, stat)
+      return
+    end if
+    ! We switch to define mode to set attributes.
+    if (present(error_data)) then
+      call etsf_io_low_set_define_mode(ncid, stat, error_data = error_data)
+    else
+      call etsf_io_low_set_define_mode(ncid, stat)
+    end if
+    if (.not. stat) then
       call etsf_io_low_close(ncid, stat)
       return
     end if
@@ -498,7 +508,6 @@
 
     !Local
     character(len = *), parameter :: me = "write_var_double_var"
-    character(len = 80) :: err
     integer :: varid
     type(etsf_io_low_error) :: error
     
@@ -559,9 +568,8 @@
                               & ncvarid = varid, error_data = error)
       end if
     else
-      write(err, "(A,F10.5)") "no data array associated"
       call etsf_io_low_error_set(error, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                   & tgtname = "var", errmess = err)
+                   & tgtname = "var", errmess = "no data array associated")
       lstat = .false.
     end if
     if (present(error_data)) then
@@ -584,7 +592,6 @@
 
     !Local
     character(len = *), parameter :: me = "write_var_integer_var"
-    character(len = 80) :: err
     integer :: varid
     type(etsf_io_low_error) :: error
     
@@ -645,9 +652,8 @@
                                & ncvarid = varid, error_data = error)
       end if
     else
-      write(err, "(A,F10.5)") "no data array associated"
       call etsf_io_low_error_set(error, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                   & tgtname = "var", errmess = err)
+                   & tgtname = "var", errmess = "no data array associated")
       lstat = .false.
     end if
     if (present(error_data)) then

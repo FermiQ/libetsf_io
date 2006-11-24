@@ -676,7 +676,7 @@ contains
       write(*,*) "Abort, can't open file"
       return
     end if
-    call etsf_io_low_write_var_mode(ncid, lstat)
+    call etsf_io_low_set_write_mode(ncid, lstat)
     if (.not. lstat) then
       write(*,*) "Abort, can't switch to data mode"
       return
@@ -811,7 +811,7 @@ contains
       write(*,*) "Abort, can't open file"
       return
     end if
-    call etsf_io_low_write_var_mode(ncid, lstat)
+    call etsf_io_low_set_write_mode(ncid, lstat)
     if (.not. lstat) then
       write(*,*) "Abort, can't switch to data mode"
       return
@@ -925,7 +925,7 @@ contains
       write(*,*) "Abort, can't open file"
       return
     end if
-    call etsf_io_low_write_var_mode(ncid, lstat)
+    call etsf_io_low_set_write_mode(ncid, lstat)
     if (.not. lstat) then
       write(*,*) "Abort, can't switch to data mode"
       return

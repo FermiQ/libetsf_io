@@ -41,7 +41,7 @@ etsf_subprograms = {
    "data":[
       "data",
       "@ACTION_TEXT@ an ETSF file.",
-      "init contents read write"],
+      "init read write"],
 } 
 
 # Peculiarities
@@ -62,9 +62,7 @@ etsf_subs_actions = {
 # Descriptions of the subprogram arguments for the "def" action
 etsf_subs_def_args = {
    "dims":[
-      "dims type(etsf_dims) in"],
-   "main":[
-      "main_var integer in"],
+      "dims type(etsf_dims) in"]
 }
 
 # Descriptions of the subprogram arguments for the "get" action
@@ -78,10 +76,7 @@ etsf_subs_get_args = {
    "dims":[
       "dims type(etsf_dims) out"],
    "@GROUP@":[
-      "folder type(etsf_@GROUP@) inout"],
-   "main":[
-      "main_var integer in",
-      "folder type(etsf_@GROUP@) inout"],
+      "folder type(etsf_@GROUP@) inout"]
 }
 
 # Descriptions of the subprogram arguments for the "put" action
@@ -90,21 +85,18 @@ etsf_subs_put_args = {
       "title character(len=etsf_charlen) in",
       "history character(len=etsf_histlen) in"],
    "@GROUP@":[
-      "folder type(etsf_@GROUP@) in"],
-   "main":[
-      "main_var integer in",
-      "folder type(etsf_@GROUP@) in"],
+      "folder type(etsf_@GROUP@) in"]
 }
 
 # Descriptions of the subprogram arguments for the "init" action
 etsf_subs_init_args = {
    "data":[
       "filename character(len=*) in",
-      "main_var integer in",
       "groups integer in",
       "dims type(etsf_dims) inout",
       "title character(len=*) in",
       "history character(len=*) in"]
+      
 }
 
 # Descriptions of the subprogram arguments for the "contents" action
@@ -120,9 +112,7 @@ etsf_subs_contents_args = {
 etsf_subs_read_args = {
    "data":[
       "filename character(len=*) in",
-      "main_var integer in",
       "groups integer in",
-      "main_folder type(etsf_main) inout",
       "group_folder type(etsf_groups) inout"]
 }
 
@@ -130,8 +120,6 @@ etsf_subs_read_args = {
 etsf_subs_write_args = {
    "data":[
       "filename character(len=*) in",
-      "main_var integer in",
       "groups integer in",
-      "main_folder type(etsf_main) in",
       "group_folder type(etsf_groups) in"]
 }

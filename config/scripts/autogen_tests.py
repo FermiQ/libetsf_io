@@ -32,60 +32,62 @@ def indent_code(code,offset):
  return tmp+re.sub("\n","\n"+tmp,code)
 
 
-
-def init_var(var_dsc, var_name, main_id, grp_id):
-  ret = """
-! Create a file with %s informations.
-call etsf_io_data_init("test_%s.nc", %s, %s, &
-  & dims, "Fichier de test", "history", lstat, error)
-call tests_write_status("main_var: %s", lstat, error)
-! check informations.    
-call etsf_io_low_open_read(ncid, "test_%s.nc", lstat, error_data = error)
-call tests_write_status(" | opening", lstat, error)
-""" % (var_name, var_name, main_id, grp_id, var_name, var_name)
-
-  for dim in var_dsc[1:]:
-    ret += """
-call etsf_io_low_read_dim(ncid, "%s", dimvalue, lstat, error_data = error)
-call tests_write_status(" | read '%s'", lstat, error)
-if (dimvalue /= dims%%%s) then
-  call etsf_io_low_error_set(error, ERROR_MODE_SPEC, ERROR_TYPE_DIM, me, &
-                           & tgtname = "%s", errmess = "Wrong value")
-  lstat = .false.
-end if
-call tests_write_status(" | check value '%s'", lstat, error)
-""" % (dim, dim, dim, dim, dim)
-
-  ret += """
-call etsf_io_low_read_var_infos(ncid, "%s", var_infos, lstat, error_data = error)
-call tests_write_status(" | read '%s' characteristics", lstat, error)
-if (var_infos%%nctype /= %s .or. &
-  & var_infos%%ncshape /= %d .or. &
-""" % (var_name, var_name, nf90_type(var_dsc), len(var_dsc) - 1)
-  index = len(var_dsc) - 1
-  for dim in var_dsc[1:]:
-    ret += "  & var_infos%%ncdims(%d) /= dims%%%s .or. &\n" % (index, dim)
-    index -= 1
-  ret += """  & .false. ) then
-  call etsf_io_low_error_set(error, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &
-                            & tgtname = "%s", errmess = "Wrong characteristic")
-  lstat = .false.
-end if
-call tests_write_status(" | check '%s' characteristics", lstat, error)
-
-call etsf_io_low_close(ncid, lstat, error_data = error)
-call tests_write_status(" | closing", lstat, error)
-""" % (var_name, var_name)
-  return indent_code(ret, 2)
-
 def init_grp(grp_name, grp_id):
-  ret = ""
+  # We define the variables using etsf_io_data_init
+  ret  = "call etsf_io_data_init(\"test_init_%s.nc\", %s, dims, \"Test\", \"\", lstat, error)\n" % (grp_name, grp_id)
+  ret += "call tests_write_status(\"Create file test_init_%s.nc\", lstat, error)\n" % grp_name
+
+  # We open the file for checkings
+  ret += "call etsf_io_low_open_read(ncid, \"test_init_%s.nc\", lstat, error_data = error)\n" % grp_name
+  ret += "call tests_write_status(\" | opening\", lstat, error)\n"
+  
+  # We check each variable definition for this group.
   for var in etsf_groups[grp_name]:
     var_dsc = etsf_variables[var]
-    # Load template
-    ret += init_var(var_dsc, var, "etsf_main_density", grp_id)
+    
+    # Retrieve variable properties of interest.
+    att_units   = False
+    if (var in etsf_properties):
+      props = etsf_properties[var]
+      att_units   = ( props & ETSF_PROP_VAR_UNITS == ETSF_PROP_VAR_UNITS)
+      
+    # Begin with all required dimensions
+    for dim in var_dsc[1:]:
+      ret += "call etsf_io_low_read_dim(ncid, \"%s\", dimvalue, lstat, error_data = error)\n" % dim
+      ret += "call tests_write_status(\" | read dim '%s'\", lstat, error)\n" % dim
+      ret += "if (dimvalue /= dims%%%s) then\n" % dim
+      ret += "  call etsf_io_low_error_set(error, ERROR_MODE_SPEC, ERROR_TYPE_DIM, me, &\n"
+      ret += "                           & tgtname = \"%s\", errmess = \"Wrong value\")\n" % dim
+      ret += "  lstat = .false.\n"
+      ret += "end if\n"
+      ret += "call tests_write_status(\" | check dim value '%s'\", lstat, error)\n" % dim
 
-  return ret
+    # Check the variable definition
+    ret += "call etsf_io_low_read_var_infos(ncid, \"%s\", var_infos, lstat, error_data = error)\n" % var
+    ret += "call tests_write_status(\" | read var '%s' characteristics\", lstat, error)\n" % var
+    ret += "if (var_infos%%nctype /= %s .or. &\n" % nf90_type(var_dsc)
+    ret += "  & var_infos%%ncshape /= %d .or. &\n" % (len(var_dsc) - 1)
+    index = len(var_dsc) - 1
+    for dim in var_dsc[1:]:
+      ret += "  & var_infos%%ncdims(%d) /= dims%%%s .or. &\n" % (index, dim)
+      index -= 1
+    ret += "  & .false. ) then\n"
+    ret += "  call etsf_io_low_error_set(error, ERROR_MODE_SPEC, ERROR_TYPE_VAR, me, &\n"
+    ret += "                           & tgtname = \"%s\", errmess = \"Wrong characteristic\")\n" %var
+    ret += "  lstat = .false.\n"
+    ret += "end if\n"
+    ret += "call tests_write_status(\" | check var '%s' characteristics\", lstat, error)\n" % var
+    
+    # Check the mandatory attributes
+    if (att_units):
+      ret += "call etsf_io_low_check_att(ncid, var_infos%ncid, \"units\", &\n"
+      ret += "                         & etsf_io_low_character, etsf_charlen, &\n"
+      ret += "                         & lstat, error_data = error)\n"
+      ret += "call tests_write_status(\" | check att 'units'\", lstat, error)\n"
+      
+  ret += "call etsf_io_low_close(ncid, lstat, error_data = error)\n"
+  ret += "call tests_write_status(\" | closing\", lstat, error)\n"
+  return indent_code(ret, 2)
 
 def create_variables(grp_name, grp_id):
   # create the declaration of variables used by this grp
@@ -281,7 +283,6 @@ def readwrite_grp(grp_name, grp_id, action):
   ret = "subroutine test_%s_%s()\n" % (action, grp)
   ret += "  type(etsf_dims) :: dims\n"
   ret += "  type(etsf_groups) :: groups\n"
-  ret += "  type(etsf_main) :: main\n"
   ret += "  integer :: i, length, ncid\n"
   ret += "  logical :: lstat\n"
   ret += "  integer, allocatable :: test_int_tab(:)\n"
@@ -304,8 +305,7 @@ def readwrite_grp(grp_name, grp_id, action):
   dims%%number_of_atoms = 4
   dims%%number_of_kpoints = 12
   dims%%number_of_components = 2
-  call etsf_io_data_init("test_%s_%s.nc", etsf_main_none, %s, &
-                       & dims, "Fichier de test", "history", lstat, error_data)
+  call etsf_io_data_init("test_%s_%s.nc", %s, dims, "Fichier de test", "history", lstat, error_data)
   call tests_%s_status("init file with group '%s'", lstat, error_data)
 """ % (grp_name, action, action, grp_name, grp_id, action, grp_name)
   # We allocate space for the data to be written or read and
@@ -321,8 +321,8 @@ def readwrite_grp(grp_name, grp_id, action):
     
   ret += "\n"
   # we call the write routine (both for testing or to write for future read testing).
-  ret += "call etsf_io_data_write(\"test_%s_%s.nc\", etsf_main_none, %s, &\n" % (action, grp_name, grp_id)
-  ret += "                      & main, groups, lstat, error_data)\n"
+  ret += "call etsf_io_data_write(\"test_%s_%s.nc\", %s, &\n" % (action, grp_name, grp_id)
+  ret += "                      & groups, lstat, error_data)\n"
   ret += "call tests_%s_status(\"write data\", lstat, error_data)\n" % action
   
   # We open the file for low level access
@@ -333,8 +333,8 @@ def readwrite_grp(grp_name, grp_id, action):
     ret += "call tests_write_status(\" | opening\", lstat, error_data)\n"
   else:
     # we call the read action for testing purpose
-    ret += "call etsf_io_data_read(\"test_read_%s.nc\", etsf_main_none, %s, &\n" % (grp_name, grp_id)
-    ret += "                     & main, groups, lstat, error_data)\n"
+    ret += "call etsf_io_data_read(\"test_read_%s.nc\", %s, &\n" % (grp_name, grp_id)
+    ret += "                     & groups, lstat, error_data)\n"
     ret += "call tests_read_status(\"read data\", lstat, error_data)\n"
   
   # We will check the values
@@ -385,21 +385,14 @@ for cnf in my_configs:
 
 # Create tests for data_init()
 # ============================
-init_main_src = ""
-for var in etsf_groups["main"]:
-  var_dsc = etsf_variables[var]
-  # Load template
-  init_main_src += init_var(var_dsc, var, "etsf_main_" + etsf_main_names[var], "etsf_grp_none")
-
 init_grp_src = ""
-for grp in etsf_group_list[1:]:
+for grp in etsf_group_list:
   # Load template
   init_grp_src += init_grp(grp, "etsf_grp_" + grp)
 
 ret = file("config/etsf/template.tests_init", "r").read()
 
 # Substitute patterns
-ret = re.sub("@INIT_MAIN@", init_main_src, ret)
 ret = re.sub("@INIT_GRP@", init_grp_src, ret)
 
 # Write routine
@@ -409,16 +402,6 @@ out.close()
 
 # Create tests for data_write()
 # =============================
-write_main_src = ""
-write_assoc_src = ""
-for var in etsf_groups["main"]:
-  var_dsc = etsf_variables[var]
-  # Load template
-  write_main_src += "call test_write_var_unformatted(\"%s\", %s)\n" % \
-    (var, "etsf_main_" + etsf_main_names[var])
-  write_assoc_src += "main%%%s%%data1D => values\n" % var
-write_main_src = indent_code(write_main_src, 2)
-  
 write_grp_src = ""
 call_grp_src = ""
 for grp in etsf_group_list[1:]:
@@ -429,8 +412,6 @@ for grp in etsf_group_list[1:]:
 ret = file("config/etsf/template.tests_write", "r").read()
 
 # Substitute patterns
-#ret = re.sub("@WRITE_MAIN_ASSOCIATE@", write_assoc_src, ret)
-#ret = re.sub("@WRITE_MAIN@", write_main_src, ret)
 ret = re.sub("@WRITE_GRP@", write_grp_src, ret)
 ret = re.sub("@CALL_WRITE_GROUP@", call_grp_src, ret)
 
@@ -441,16 +422,6 @@ out.close()
 
 # Create tests for data_read()
 # =============================
-read_main_src = ""
-read_assoc_src = ""
-for var in etsf_groups["main"]:
-  var_dsc = etsf_variables[var]
-  # Load template
-  read_main_src += "call test_read_var_unformatted(\"%s\", %s)\n" % \
-    (var, "etsf_main_" + etsf_main_names[var])
-  read_assoc_src += "main%%%s%%data1D => values\n" % var
-read_main_src = indent_code(read_main_src, 2)
-  
 read_grp_src = ""
 call_grp_src = ""
 for grp in etsf_group_list[1:]:
@@ -461,8 +432,6 @@ for grp in etsf_group_list[1:]:
 ret = file("config/etsf/template.tests_read", "r").read()
 
 # Substitute patterns
-#ret = re.sub("@READ_MAIN_ASSOCIATE@", read_assoc_src, ret)
-#ret = re.sub("@READ_MAIN@", read_main_src, ret)
 ret = re.sub("@READ_GRP@", read_grp_src, ret)
 ret = re.sub("@CALL_READ_GROUP@", call_grp_src, ret)
 

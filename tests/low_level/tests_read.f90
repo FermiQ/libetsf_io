@@ -17,8 +17,9 @@ program tests_read
   call tests_read_open(trim(path))
   call tests_read_dim(trim(path))
   call tests_read_var_infos(trim(path))
-  call tests_check_var(trim(path))
   call tests_check_att(trim(path))
+  call tests_read_att(trim(path))
+  call tests_check_var(trim(path))
   call tests_read_var_integer(trim(path))
   call tests_read_var_double(trim(path))
   call tests_read_var_character(trim(path))
@@ -237,6 +238,63 @@ contains
                          
     write(*,*) 
   end subroutine tests_check_var
+
+  subroutine tests_read_att(path)
+    character(len = *), intent(in) :: path
+    integer :: ncid, atttype, attlen, valInt
+    real :: valFloat
+    logical :: lstat
+    character(len = *), parameter :: me = "tests_check_att"
+    character(len = 80) :: valString
+    type(etsf_io_low_error) :: error
+    
+    write(*,*)
+    write(*,*) "Testing etsf_io_low_read_att()..."
+    
+    call etsf_io_low_read_att(0, etsf_io_low_global_att, "toto", valInt, &
+                            & lstat, error_data = error)
+    call tests_read_status("argument ncid: wrong value", (.not. lstat), error)
+    
+    call etsf_io_low_open_read(ncid, path//"/check_att_t01.nc", lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't open file"
+      return
+    end if
+
+    call etsf_io_low_read_att(ncid, -1, "toto", valInt, &
+                            & lstat, error_data = error)
+    call tests_read_status("argument ncvarid: wrong value", (.not. lstat), error)
+
+    call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "toto", valInt, &
+                            & lstat, error_data = error)
+    call tests_read_status("argument attname: wrong value", (.not. lstat), error)
+
+    call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "file_format_version", valInt, &
+                            & lstat, error_data = error)
+    call tests_read_status("argument att: wrong type", (.not. lstat), error)
+
+    call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "file_format_version", valFloat, &
+                            & lstat, error_data = error)
+    call tests_read_status("argument att: good type (float)", lstat, error)
+    if (valFloat /= 1.3) then
+      call etsf_io_low_error_set(error, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, errmess = "Wrong value")
+      lstat = .false.
+    end if
+    call tests_read_status(" | cheking value", lstat, error)
+
+    call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "file_format", 80, valString, &
+                            & lstat, error_data = error)
+    call tests_read_status("argument att: good type (string)", lstat, error)
+    if (trim(valString) /= "ETSF Nanoquanta") then
+      call etsf_io_low_error_set(error, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, errmess = "Wrong value")
+      lstat = .false.
+    end if
+    call tests_read_status(" | cheking value", lstat, error)
+
+    call etsf_io_low_close(ncid, lstat)
+
+    write(*,*)
+  end subroutine tests_read_att
 
   subroutine tests_check_att(path)
     character(len = *), intent(in) :: path

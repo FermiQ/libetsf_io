@@ -53,23 +53,11 @@ if (.not. lstat) return
  # Check the groups argument.
  ret += """
 ! Define groups
-! Check consistency.
-if (groups < 0 .or. groups >= 2 ** etsf_ngroups) then
-  call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_ARG, my_name, &
-                           & tgtname = "main_var", errmess = "value out of bounds")
-  lstat = .false.
-  return
-end if
 """
 
  # Write the select case for the argument groups.
  ret += code_data_select("def")
  
- # Call the main select case routine.
- ret += "\n\n! Define main variable\n"
- ret += "call etsf_io_main_def(ncid, main_var, lstat, error_data)\n"
- ret += "if (.not. lstat) return\n"
-
  # Close the NetCDF file.
  ret += """
 ! End definitions and close file
@@ -140,9 +128,6 @@ if (.not. lstat) return
 ! Get Data
 """
 
- # Read the main group.
- ret += code_group_main("get", "main_") + "\n\n"
-
  # Read the other groups.
  ret += code_data_select("get")
 
@@ -157,7 +142,7 @@ call etsf_io_low_close(ncid, lstat, error_data = error_data)"""
 
 
 # Code for grouped data selection
-# Write a loop on groups (except main) to call the
+# Write a loop on groups to call the
 # def/put/get routine for this group (depending on @action).
 # In case of read/write action, the corresponding group in
 # group_folder must be associated.
@@ -167,20 +152,21 @@ def code_data_select(action):
  ret = """
 if (groups < 0 .or. groups >= 2 ** etsf_ngroups) then
   call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_ARG, my_name, &
-                           & tgtname = "main_var", errmess = "value out of bounds")
+                           & tgtname = "groups", errmess = "value out of bounds")
   lstat = .false.
   return
 end if
 
 """
 
- ret += "do i = 1, etsf_ngroups\n\n select case ( iand(groups, 2 ** (i - 1)) )"
+ ret += "do i = 1, etsf_ngroups\n"
+ ret += "  select case ( iand(groups, 2 ** (i - 1)) )\n"
 
  for group in etsf_group_list:
-  if ( group != "main" ):
+   ret += "    case (etsf_grp_%s)\n" % group
    if ( action == "def" ):
     buf = "call etsf_io_%s_def(ncid, lstat, error_data)\n" % (group)
-    buf += "if (.not. lstat) return"
+    buf += "if (.not. lstat) return\n"
    else:
     # Check the association
     buf = "if (.not. associated(group_folder%%%s)) then\n" % group
@@ -191,11 +177,10 @@ end if
     buf += "  return\n"
     buf += "end if\n"
     buf += "call etsf_io_%s_%s(ncid, group_folder%%%s, lstat, error_data)\n" % (group, action, group)
-    buf += "if (.not. lstat) return"
-
-   ret += "\n\n  case (etsf_grp_%s)\n%s" % (group, indent_code(buf,3))
-
- ret += "\n\n end select\nend do"
+    buf += "if (.not. lstat) return\n"
+   ret += indent_code(buf,3)
+ ret += "  end select\n"
+ ret += "end do\n"
 
  return ret
 
@@ -212,14 +197,11 @@ call etsf_io_low_open_modify(ncid, trim(filename), lstat, error_data = error_dat
 if (.not. lstat) return
 
 ! We switch to write mode.
-call etsf_io_low_write_var_mode(ncid, lstat, error_data = error_data)
+call etsf_io_low_set_write_mode(ncid, lstat, error_data = error_data)
 if (.not. lstat) return
 
 ! Put Data
 """
-
- # Write the main group.
- ret += code_group_main("put", "main_") + "\n\n"
 
  # Write the other groups.
  ret += code_data_select("put")
@@ -277,7 +259,7 @@ def code_globals(action):
         val = "etsf_%s" % (att.lower())
       # att_len is the length of the variable, when needed
       if ( att_desc[0].startswith("string") ):
-        att_len = etsf_constants[att_desc[0].split()[1]]+ ", "
+        att_len = etsf_constants[att_desc[0].split()[1]]
       else:
         att_len = ""
 
@@ -285,15 +267,11 @@ def code_globals(action):
         ret += "\n"
 
       if ( action == "put" ):
-        ret += "call etsf_io_low_write_att(ncid, etsf_io_low_global_att, \"%s\", &\n" % att \
-             + "                         & %s, &\n" % val \
-             + "                         & lstat, error_data = error_data)\n" \
-             + "if (.not. lstat) return\n"
+        ret += code_attributes("write", "etsf_io_low_global_att", att, val, "")
+        ret += "if (.not. lstat) return\n"
       elif ( action == "get" ):
-        ret += "call etsf_io_low_read_att(ncid, etsf_io_low_global_att, \"%s\", &\n" % att \
-             + "                        & %s%s, &\n" % (att_len, val) \
-             + "                        & lstat, error_data = error_data)\n" \
-             + "if (.not. lstat) return\n"
+        ret += code_attributes("read", "etsf_io_low_global_att", att, val, att_len)
+        ret += "if (.not. lstat) return\n"
 
   return ret
 
@@ -302,20 +280,27 @@ def code_globals(action):
 # Generic code for a group
 def code_group_generic(group,action):
 
- if ( group == "main" ):
-  return code_group_main(action)
-
- ret = ""
-
  # Look for peculiarities
  if ( group in etsf_properties ):
   specs = etsf_properties[group]
  else:
   specs = ETSF_PROP_NONE
 
+ # Store code for possible attributes.
+ ret_att = ""
+ # Store main code
+ ret = ""
+ ret += "allocate(varid(%d))\n" % len(etsf_groups[group])
+ if (action == "put"):
+  ret += "! Begin by putting the file in write mode.\n"
+  ret += "call etsf_io_low_set_write_mode(ncid, lstat, error_data = error_data)\n"
+  ret += "if (.not. lstat) return\n"
+ 
  # Process each variable in the group
+ ivar = 0
  for var in etsf_groups[group]:
   var_desc = etsf_variables[var]
+  ivar += 1
 
   if ( ret != "" ):
    ret += "\n"
@@ -326,6 +311,16 @@ def code_group_generic(group,action):
     char_len = etsf_constants[var_desc[-1]] + ", "
   else:
     char_len = ""
+
+  # Retrieve variable properties of interest.
+  unformatted = False
+  splitted    = False
+  att_units   = False
+  if (var in etsf_properties):
+    props = etsf_properties[var]
+    unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
+    splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
+    att_units   = ( props & ETSF_PROP_VAR_UNITS == ETSF_PROP_VAR_UNITS)
   
   if ( action == "def" ):
     # Create the definition of the shape and dimensions
@@ -333,16 +328,21 @@ def code_group_generic(group,action):
       dims = "pad(\"" + var_desc[1] + "\")"
       for dim in var_desc[2:]:
         dims = "pad(\""+ dim + "\"), &\n%4s& " % " " + dims
-      dims = "(/ " + dims + " /), "
+      dims = "(/ " + dims + " /),"
     else:
       dims = None
 
-    ret += "  call etsf_io_low_def_var(ncid, \"%s\", &\n" % var \
-         + "    & %s, &\n" % nf90_type(var_desc)
+    ret += "call etsf_io_low_def_var(ncid, \"%s\", &\n" % var \
+        + "  & %s, &\n" % nf90_type(var_desc)
     if (dims is not None):
-      ret += "    & %s &\n" % dims
-    ret += "    & lstat, error_data = error_data)\n" \
-         + "  if (.not. lstat) return\n"
+      ret += "  & %s &\n" % dims
+    ret += "  & lstat, ncvarid = varid(%d), error_data = error_data)\n" % ivar \
+        + "if (.not. lstat) return\n"
+
+    # Handle attributes of the variable
+    if (att_units):
+      ret_att += code_attribute_units("write", "\"atomic units\"", "1.0d0", ivar)
+
   else:
     if ( action == "put" ):
       action_str = "write"
@@ -351,13 +351,6 @@ def code_group_generic(group,action):
     else:
       raise ValueError
 
-    # Retrieve variable properties of interest.
-    unformatted = False
-    splitted = False
-    if (var in etsf_properties):
-      props = etsf_properties[var]
-      unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
-      splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
     # If variable may be splitted, we build a sub optional argument
     if (splitted):
       ret += "allocate(sub(%d))\n" % (len(var_desc) - 1)
@@ -379,106 +372,78 @@ def code_group_generic(group,action):
     
     # Variable are read or write, only if associated.
     if (splitted):
-      ret += "if (etsf_io_low_var_associated(folder%%%s%%array)) then\n" % var
+      code_if = "if (etsf_io_low_var_associated(folder%%%s%%array)) then\n" % var
     elif (unformatted):
-      ret += "if (etsf_io_low_var_associated(folder%%%s)) then\n" % var
+      code_if = "if (etsf_io_low_var_associated(folder%%%s)) then\n" % var
     else:
-      ret += "if (associated(folder%%%s)) then\n" % var
+      code_if = "if (associated(folder%%%s)) then\n" % var
+
+    ret += code_if
     # If variable may be splitted, we append the sub optional argument
     ret += "  call etsf_io_low_%s_var(ncid, \"%s\", &\n" % (action_str, var) \
         +  "                          & folder%%%s%s, %s&\n" % (var, sub_array, char_len) \
-        +  "                          & lstat, error_data = error_data%s)\n" % sub_arg \
+        +  "                          & lstat, ncvarid = varid(%d), &\n" % ivar \
+        +  "                          & error_data = error_data%s)\n" % sub_arg \
         +  "  if (.not. lstat) return\n"
     ret += "end if\n"
 
+    # Handle attributes of the variable
+    if (att_units and action == "get"):
+      ret_att += code_if
+      ret_att += indent_code(code_attribute_units(action_str, "folder%%%s__units" % var, \
+                               "folder%%%s__scale_to_atomic_units" % var, ivar), 1)
+      ret_att += "end if\n\n"
+
     # If variable may be splitted
     if (splitted):
       ret += "deallocate(sub)\n"
-    
+
+ # Add attribute code if some
+ if (ret_att is not ""):
+   ret += "\n! Handle all attributes for the group.\n"
+   ret += ret_att
+ ret += "deallocate(varid)\n"
  return ret
 
-
-
-# Code for the main group
-def code_group_main(action,prefix=""):
-
- # Check the value of main_var.
- ret = """! Check consistency.
-if (main_var < 0 .or. main_var > etsf_main_nvars) then
-  call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_ARG, my_name, &
-                           & tgtname = "main_var", errmess = "value out of bounds")
-  lstat = .false.
-  return
-end if
-"""
-
- ret += "\nselect case ( main_var )\n"
-
- for var in etsf_groups["main"]:
-  var_desc = etsf_variables[var]
-
-  ret += "\ncase ( etsf_main_%s )\n" % (etsf_main_names[var])
-
-  if ( action == "def" ):
-    # Create the definition of the shape and dimensions
-    if ( len(var_desc) > 1 ):
-      dims = "pad(\"" + var_desc[1] + "\")"
-      for dim in var_desc[2:]:
-        dims = "pad(\""+ dim + "\"), &\n%4s& " % " " + dims
-      dims = "(/ " + dims + " /), "
-    else:
-      dims = None
-
-    ret += "  call etsf_io_low_def_var(ncid, \"%s\", &\n" % var \
-         + "    & %s, &\n" % nf90_type(var_desc)
-    if (dims is not None):
-      ret += "    & %s &\n" % dims
-    ret += "    & lstat, error_data = error_data)\n" \
-         + "  if (.not. lstat) return\n"
+# Code for the unit attribute, testing its value
+# and the scale_to_atomic_units attribute.
+def code_attribute_units(action, att_unit, att_scale, ivar):
+  ret = "! handle the units attribute.\n"
+  ret += code_attributes(action, "varid(%d)" % ivar, "units", \
+                         att_unit, "etsf_charlen")
+  ret += "if (.not. lstat) return\n"
+  # If unit exists, we test its value in the reading case.
+  if (action == "read"):
+    ret += "if (lstat) then\n"
+    ret += "  if (trim(%s) /= \"atomic units\") then\n" % att_unit
+    ret += indent_code(code_attributes("read", "varid(%d)" % ivar, \
+                       "scale_to_atomic_units", att_scale, ""), 2)
+    ret += "    if (.not. lstat) return\n"
+    ret += "  else\n"
+    ret += "    %s = 1.0d0\n" % att_scale
+    ret += "  end if\n"
+    ret += "else\n"
+    ret += "  %s = \"atomic units\"\n" % att_unit
+    ret += "  %s = 1.0d0\n" % att_scale
+    ret += "end if\n"
   else:
-    if ( action == "put" ):
-      action_str = "write"
-    else:
-      action_str = "read"
-    # Retrieve variable properties of interest.
-    unformatted = False
-    splitted = False
-    if (var in etsf_properties):
-      props = etsf_properties[var]
-      unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
-      splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
-    # If variable may be splitted, we build a sub optional argument
-    if (splitted):
-      ret += "allocate(sub(%d))\n" % (len(var_desc) - 1)
-      ret += "sub(:) = 0\n"
-      for i in [1, 2]:
-        if (var_desc[i] == "number_of_spins"):
-          ret += "if (%sfolder%%%s%%spin_splitted) then\n" % (prefix, var)
-          ret += "  sub(%d) = %sfolder%%%s%%spin_id\n" % (len(var_desc) - i, prefix, var)
-          ret += "end if\n"
-        if (var_desc[i] == "number_of_kpoints"):
-          ret += "if (%sfolder%%%s%%k_splitted) then\n" % (prefix, var)
-          ret += "  sub(%d) = %sfolder%%%s%%k_id\n" % (len(var_desc) - i, prefix, var)
-          ret += "end if\n"
-      sub_arg = ", sub = sub"
-      sub_array = "%array"
-    else:
-      sub_arg = ""
-      sub_array = ""
-    # If variable may be splitted, we append the sub optional argument
-    ret += "call etsf_io_low_%s_var(ncid, \"%s\", &\n" % (action_str, var) \
-        +  "                        & %sfolder%%%s%s, &\n" % (prefix, var, sub_array) \
-        +  "                        & lstat, error_data = error_data%s)\n" % sub_arg \
-        +  "if (.not. lstat) return\n"
-    # If variable may be splitted
-    if (splitted):
-      ret += "deallocate(sub)\n"
+    ret += code_attributes("write", "varid(%d)" % ivar, \
+                           "scale_to_atomic_units", att_scale, "")
+    ret += "if (.not. lstat) return\n"
+    
+  return ret
 
- ret += "\nend select"
-
- return ret
-
-
+# Code for read/write attributes.
+def code_attributes(action, varid, attname, attvalue, attlen):
+  if (action == "read" and attlen is not ""):
+    lenarg = attlen + ", "
+  else:
+    lenarg = ""
+  ret = "call etsf_io_low_%s_att(ncid, %s, \"%s\", &\n" % (action, varid, attname) \
+      + "                         & %s%s, &\n" % (lenarg, attvalue) \
+      + "                         & lstat, error_data = error_data)\n"
+  return ret
+    
 
 # Transfer data to and from an optional argument
 # WARNING! This definition is not used yet.
@@ -571,8 +536,10 @@ def indent_code(code,offset):
  for i in range(offset):
   tmp += "  "
 
- return tmp+re.sub("\n","\n"+tmp,code)
-
+ if (code.endswith('\n')):
+  return tmp+re.sub("\n","\n"+tmp,code[:-1])+'\n'
+ else:
+  return tmp+re.sub("\n","\n"+tmp,code)
 
 
 # Initialize a routine from a template
@@ -700,7 +667,7 @@ for sub in etsf_subprograms.keys():
   if ( sub == "@GROUP@" ):
    sub_list = etsf_group_list
    sub_code = "group_generic"
-   sub_cprm = "sub_name,action"
+   sub_cprm = "sub_name, action"
   else:
    sub_list = [sub]
    sub_code = sub

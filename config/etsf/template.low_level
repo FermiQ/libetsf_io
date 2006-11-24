@@ -35,6 +35,7 @@ subroutine etsf_io_@NAME@(ncid, @ARG_LIST@, lstat, error_data)
   !Local variables-------------------------------
   character(len = *), parameter :: my_name = 'etsf_io_@NAME@'
   integer, allocatable          :: sub(:)
+  integer, allocatable          :: varid(:)
 @LOCAL_VARS@
 
   ! *************************************************************************

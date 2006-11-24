@@ -66,19 +66,6 @@ module etsf_io
 @FLAGS_GROUPS@
   !!***
 
-  !!****d* etsf_io_basics_group/FLAGS_MAIN
-  !! NAME
-  !!  FLAGS_MAIN
-  !!
-  !! FUNCTION
-  !!  These flags are used when indicating which main data must be handled.
-  !!  Contrary to #FLAGS_GROUPS, these flags are mutualy exclusive and only one
-  !!  can be given at a time. See etsf_io_data_write() or etsf_io_data_read() for usage.
-  !!
-  !! SOURCE
-@FLAGS_MAIN@
-  !!***
-
   !!****s* etsf_io_basics_group/etsf_dims
   !! NAME
   !!  etsf_dimensions
@@ -146,20 +133,6 @@ module etsf_io
     logical                      :: k_splitted = .false., spin_splitted = .false.
     integer                      :: k_id, spin_id
   end type etsf_io_splitted_var_double
-  !!***
-
-  !!****s* etsf_io/etsf_main
-  !! NAME
-  !!  etsf_main
-  !!
-  !! FUNCTION
-  !!  This structure is a container for the main (and voulminous) data stored in
-  !!  an ETSF file. Their type is #etsf_io_low_var_double that enables to use
-  !!  dimensions with a different shape that the one defined by NetCDF without
-  !!  any data duplication.
-  !!
-  !! SOURCE
-@STRUCT_MAIN@
   !!***
 
 @STRUCTURES@

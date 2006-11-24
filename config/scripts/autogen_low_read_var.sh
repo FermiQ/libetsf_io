@@ -192,6 +192,9 @@ for ((i=0;i<4;i++)) ; do
   if test $type = "character" ; then
     fortrantype=${ATT_GENERATED_TYPES[i]}'(len = attlen)'
     vardims=
+    # The att argument must be filled with space because netcdf
+    # will only write the length of the attribute from the file
+    # and the remaining in att will be garbage.
     init='write(att, "(A)") repeat(" " , attlen)'
   else
     if test $type = "double" ; then

@@ -39,15 +39,11 @@ contains
     write(*,*)
     write(*,*) "Testing etsf_io_data_init()..."
 
-    call etsf_io_data_init("test_wrong_0.nc", -1, etsf_grp_none, &
-      & dims, "Fichier de test", "history", lstat, error)
-    call tests_write_status("main_var: wrong value", (.not. lstat), error)
-
-    call etsf_io_data_init("test_wrong_1.nc", etsf_main_density, -1, &
+    call etsf_io_data_init("test_wrong_1.nc", -1, &
       & dims, "Fichier de test", "history", lstat, error)
     call tests_write_status("groups: wrong value", (.not. lstat), error)
 
-    call etsf_io_data_init("test_wrong_1.nc", etsf_main_density, etsf_grp_none, &
+    call etsf_io_data_init("test_wrong_1.nc", etsf_grp_none, &
       & dims, "Fichier de test", "history", lstat, error)
     call tests_write_status("filename: wrong value (file exists)", (.not. lstat), error)
 
@@ -60,7 +56,6 @@ contains
     dims%number_of_atoms = 4
     dims%number_of_kpoints = 12
     dims%number_of_components = 2
-@INIT_MAIN@
 
 @INIT_GRP@
 

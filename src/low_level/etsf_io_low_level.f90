@@ -569,7 +569,7 @@ module etsf_io_low_level
   public :: etsf_io_low_write_var
   !!***
   
-  ! Private methods.
+  ! Private variables & methods.
   private :: var_integer_associated
   private :: var_double_associated
 contains
@@ -739,13 +739,13 @@ contains
     if (trim(error_data%target_name) /= "") then
       write(*,*) "    *** Target (name)      : ", trim(error_data%target_name)
     end if
-    if (error_data%target_id >= 0) then
+    if (error_data%target_id /= 0) then
       write(*,*) "    *** Target (id)        : ", error_data%target_id
     end if
     if (trim(error_data%error_message) /= "") then
       write(*,*) "    *** Error message      : ", trim(error_data%error_message)
     end if
-    if (error_data%error_id >= 0) then
+    if (error_data%error_id /= 0) then
       write(*,*) "    *** Error id           : ", error_data%error_id
     end if
     write(*,*) "    ***"
@@ -797,9 +797,9 @@ contains
   end subroutine etsf_io_low_close
   !!***
 
-  !!****m* etsf_io_low_file_group/etsf_io_low_write_var_mode
+  !!****m* etsf_io_low_file_group/etsf_io_low_set_write_mode
   !! NAME
-  !!  etsf_io_low_write_var_mode
+  !!  etsf_io_low_set_write_mode
   !!
   !! FUNCTION
   !!  This method put the given NetCDF file handler in a data mode, by closing
@@ -823,19 +823,19 @@ contains
   !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
   !!
   !! SOURCE
-  subroutine etsf_io_low_write_var_mode(ncid, lstat, error_data)
+  subroutine etsf_io_low_set_write_mode(ncid, lstat, error_data)
     integer, intent(in)                            :: ncid
     logical, intent(out)                           :: lstat
     type(etsf_io_low_error), intent(out), optional :: error_data
 
     !Local
-    character(len = *), parameter :: me = "etsf_io_low_write_var_mode"
+    character(len = *), parameter :: me = "etsf_io_low_set_write_mode"
     integer :: s
     
     lstat = .false.
-    ! Close file
+    ! Change the mode.
     s = nf90_enddef(ncid)
-    if (s /= nf90_noerr) then
+    if (s /= nf90_noerr .and. s /= -38) then
       if (present(error_data)) then
         call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_END, me, &
                      & errid = s, errmess = nf90_strerror(s))
@@ -843,7 +843,55 @@ contains
       return
     end if
     lstat = .true.
-  end subroutine etsf_io_low_write_var_mode
+  end subroutine etsf_io_low_set_write_mode
+  !!***
+
+  !!****m* etsf_io_low_file_group/etsf_io_low_set_define_mode
+  !! NAME
+  !!  etsf_io_low_set_define_mode
+  !!
+  !! FUNCTION
+  !!  This method put the given NetCDF file handler in a define mode, by closing
+  !!  a data mode. When opening a file (create or modify), this is the default mode.
+  !!  Use etsf_io_low_set_write_mode() to switch then to data mode to write
+  !!  variable values. But to set attributes, the file must be in define mode
+  !!  again. This method is then usefull.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!
+  !! INPUTS
+  !!  * ncid = a NetCDF handler, opened with write access.
+  !!
+  !! OUTPUT
+  !!  * lstat = .true. if operation succeed.
+  !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!
+  !! SOURCE
+  subroutine etsf_io_low_set_define_mode(ncid, lstat, error_data)
+    integer, intent(in)                            :: ncid
+    logical, intent(out)                           :: lstat
+    type(etsf_io_low_error), intent(out), optional :: error_data
+
+    !Local
+    character(len = *), parameter :: me = "etsf_io_low_set_define_mode"
+    integer :: s
+    
+    lstat = .false.
+    ! Change the mode.
+    s = nf90_redef(ncid)
+    if (s /= nf90_noerr .and. s /= -39) then
+      if (present(error_data)) then
+        call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_DEF, me, &
+                     & errid = s, errmess = nf90_strerror(s))
+      end if
+      return
+    end if
+    lstat = .true.
+  end subroutine etsf_io_low_set_define_mode
   !!***
 
   !!****f* etsf_io_low_level/pad

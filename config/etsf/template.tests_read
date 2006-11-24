@@ -29,7 +29,6 @@ contains
   end subroutine tests_read_status
 
   subroutine test_data_read()
-    type(etsf_main) :: main
     type(etsf_groups) :: grp
     integer :: ncid
     type(etsf_io_low_error) :: error
@@ -40,19 +39,13 @@ contains
     write(*,*)
     write(*,*) "Testing etsf_io_data_read()..."
 
-    call etsf_io_data_read("pouet", etsf_main_density, etsf_grp_none, &
-                          & main, grp, lstat, error)
+    call etsf_io_data_read("pouet", etsf_grp_none, grp, lstat, error)
     call tests_read_status("filename: wrong value (no file)", (.not. lstat), error)
-    call etsf_io_data_read("Makefile", etsf_main_density, etsf_grp_none, &
-                          & main, grp, lstat, error)
+    
+    call etsf_io_data_read("Makefile", etsf_grp_none, grp, lstat, error)
     call tests_read_status("filename: wrong value (text file)", (.not. lstat), error)
 
-    call etsf_io_data_read("test_density.nc", -1, etsf_grp_none, &
-                          & main, grp, lstat, error)
-    call tests_read_status("main_var: wrong value", (.not. lstat), error)
-
-    call etsf_io_data_read("test_density.nc", etsf_main_density, -1, &
-                          & main, grp, lstat, error)
+    call etsf_io_data_read("test_density.nc", -1, grp, lstat, error)
     call tests_read_status("groups: wrong value", (.not. lstat), error)
 
     write(*,*)

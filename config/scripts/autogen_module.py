@@ -64,7 +64,11 @@ for att in etsf_attributes.keys():
 # Data type for dimensions
 edt = "\n\n ! Data type for dimensions\n type etsf_dims\n"
 for dim in etsf_dimensions:
- edt += "  %s :: %s = 1\n" % (fortran_type(["integer"]),dim)
+ if (dim in etsf_constants):
+   default_value = etsf_constants[dim]
+ else:
+   default_value = "1"
+ edt += "  %s :: %s = %s\n" % (fortran_type(["integer"]),dim, default_value)
 edt += " end type etsf_dims"
 
 # Data structures for each group of variables
@@ -75,16 +79,15 @@ egf = "\n\n ! Folder for the groups of variables\n type etsf_groups"
 egv = 1
 egn = 0
 est = ""
-ema = ""
 for grp in etsf_group_list:
- if ( grp != "main" ):
-  egc += "\n integer, parameter :: etsf_grp_%-16s = %d" % (grp,egv)
-  egf += "\n  type(etsf_%s), pointer :: %s => null()" % (grp,grp)
-  egv *= 2
-  egn += 1
+ egc += "\n integer, parameter :: etsf_grp_%-16s = %d" % (grp,egv)
+ egf += "\n  type(etsf_%s), pointer :: %s => null()" % (grp,grp)
+ egv *= 2
+ egn += 1
   
  out_str = "\n\n ! Data type for %s\n type etsf_%s\n" % (grp,grp)
-
+ out_att = ""
+ 
  for var in etsf_groups[grp]:
   dsc = etsf_variables[var]
   if ( len(dsc) > 1 ):
@@ -117,54 +120,54 @@ for grp in etsf_group_list:
    # Numbers
    out_str += "  %s, pointer :: %s => null()\n" % (fortran_type(dsc),var)
 
+ # Deals with attributes for variable of this group.
+ for var in etsf_groups[grp]:
+   # Retrieve variable properties of interest.
+   att_units = False
+   if (var in etsf_properties):
+    props = etsf_properties[var]
+    att_units = ( props & ETSF_PROP_VAR_UNITS == ETSF_PROP_VAR_UNITS)
+   
+   if (att_units):
+    att_desc = etsf_attributes["units"]
+    att_desc2 = etsf_attributes["scale_to_atomic_units"]
+    out_att += "  ! Units attributes for variable %s\n" % var
+    out_att += "  %s :: %s__%s = %s\n" % (fortran_type(att_desc), var, "units", att_desc[1])
+    out_att += "  %s :: %s__%s = %s\n" % (fortran_type(att_desc2), var, "scale_to_atomic_units", att_desc2[1])
+    
+ if (out_att is not ""):
+   out_str += "\n  ! Attributes\n"
+   out_str += out_att
  out_str += " end type etsf_%s" % (grp)
- if ( grp != "main" ):
-  est += """
-  !!****s* etsf_groups/etsf_%s
-  !! NAME
-  !!  etsf_%s
-  !!
-  !! FUNCTION
-  !!  All variables from the specifications have been gathered into types called
-  !!  groups. These groups can be gathered into a container called #etsf_groups.
-  !!  This container is the main argument of the routines etsf_io_data_read()
-  !!  and etsf_io_data_write().
-  !!
-  !! SOURCE
+
+ est += """
+ !!****s* etsf_groups/etsf_%s
+ !! NAME
+ !!  etsf_%s
+ !!
+ !! FUNCTION
+ !!  All variables from the specifications have been gathered into types called
+ !!  groups. These groups can be gathered into a container called #etsf_groups.
+ !!  This container is the main argument of the routines etsf_io_data_read()
+ !!  and etsf_io_data_write().
+ !!
+ !! SOURCE
 """ % (grp, grp)
-  est += out_str
-  est += """
-  !!***"""
- else:
-  ema += out_str
+ est += out_str
+ est += """
+ !!***"""
 
 egf += "\n end type etsf_groups"
 
 # Number of groups
 egc += "\n integer, parameter :: etsf_%-20s = %d" % ("ngroups",egn)
 
-# Main variables
-emc = "\n\n ! Main variables (select only one at a time)"
-emc += "\n integer, parameter :: etsf_main_%-15s = 0" % "none"
-egv  = 1
-egn  = 0
-for var in etsf_groups["main"]:
- emc += "\n integer, parameter :: etsf_main_%-15s = %d" % \
-         (etsf_main_names[var],egv)
- egv += 1
- egn += 1
-
-# Number of main variables
-emc += "\n integer, parameter :: etsf_%-20s = %d" % ("main_nvars",egn)
-
 # Import template
 src = file("config/etsf/template.%s" % (etsf_modules["etsf_io"]),"r").read()
 src = re.sub("@SCRIPT@",my_name,src)
 src = re.sub("@CONSTANTS@",ead,src)
 src = re.sub("@FLAGS_GROUPS@",egc,src)
-src = re.sub("@FLAGS_MAIN@",emc,src)
 src = re.sub("@DIMENSIONS@",edt,src)
-src = re.sub("@STRUCT_MAIN@",ema,src)
 src = re.sub("@STRUCTURES@",est,src)
 src = re.sub("@STRUCT_GROUPS@",egf,src)
 

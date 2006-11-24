@@ -28,7 +28,9 @@ etsf_constants = {
    "character_string_length":"etsf_charlen",
    "history_length":"etsf_histlen",
    "symbol_length":"etsf_chemlen",
-   "three_dimensions":"etsf_3dimlen"}
+   "number_of_cartesian_directions":"etsf_3dimlen",
+   "number_of_reduced_dimensions":"etsf_3dimlen",
+   "number_of_vectors":"etsf_3dimlen"}
 
 # ETSF properties
 etsf_properties = {
@@ -38,14 +40,18 @@ etsf_properties = {
    "title":ETSF_PROP_ATT_GLOBAL,
    "history":ETSF_PROP_ATT_GLOBAL,
    "coefficients_of_wavefunctions":ETSF_PROP_VAR_SPLITTED,
-   "eigenvalues":ETSF_PROP_VAR_SPLITTED,
+   "eigenvalues":ETSF_PROP_VAR_SPLITTED + ETSF_PROP_VAR_UNITS,
    "occupations":ETSF_PROP_VAR_SPLITTED,
    "real_space_wavefunctions":ETSF_PROP_VAR_SPLITTED,
    "reduced_coordinates_of_plane_waves":ETSF_PROP_VAR_SPLITTED,
-   "density":ETSF_PROP_VAR_UNFORMATTED,
-   "correlation_potential":ETSF_PROP_VAR_UNFORMATTED,
-   "exchange_correlation_potential":ETSF_PROP_VAR_UNFORMATTED,
-   "exchange_potential":ETSF_PROP_VAR_UNFORMATTED,}
+   "density":ETSF_PROP_VAR_UNFORMATTED + ETSF_PROP_VAR_UNITS,
+   "correlation_potential":ETSF_PROP_VAR_UNFORMATTED + ETSF_PROP_VAR_UNITS,
+   "exchange_correlation_potential":ETSF_PROP_VAR_UNFORMATTED + ETSF_PROP_VAR_UNITS,
+   "exchange_potential":ETSF_PROP_VAR_UNFORMATTED + ETSF_PROP_VAR_UNITS,
+   "fermi_energy":ETSF_PROP_VAR_UNITS,
+   "smearing_width":ETSF_PROP_VAR_UNITS,
+   "kinetic_energy_cutoff":ETSF_PROP_VAR_UNITS,
+   "gw_corrections":ETSF_PROP_VAR_UNITS}
 
 # ETSF attributes
 etsf_attributes = {
@@ -63,13 +69,15 @@ etsf_attributes = {
    "k_dependent":[
       "string character_string_length"],
    "scale_to_atomic_units":[
-      "real double_precision"],
+      "real double_precision",
+      "1.0d0"],
    "symmorphic":[
       "string character_string_length"],
    "title":[
       "string character_string_length"],
    "units":[
-      "string character_string_length"]}
+      "string character_string_length",
+      "\"atomic units\""]}
 
 # ETSF dimensions
 etsf_dimensions = [
@@ -308,21 +316,21 @@ etsf_groups = {
       "kb_formfactors",
       "kb_formfactor_derivative"],
    "main":[
-      "coefficients_of_wavefunctions",
-      "real_space_wavefunctions",
       "density",
       "exchange_potential",
       "correlation_potential",
-      "exchange_correlation_potential"]}
+      "exchange_correlation_potential",
+      "coefficients_of_wavefunctions",
+      "real_space_wavefunctions"]}
 
-# Sorted list of the groups (always keep "main" first)
+# Sorted list of the groups (always keep "main" last)
 etsf_group_list = [
-   "main",
    "geometry",
    "electrons",
    "kpoints",
    "wavedata",
-   "gwdata"]
+   "gwdata",
+   "main"]
 
 # Main variable nicknames
 etsf_main_names = {
