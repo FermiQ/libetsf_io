@@ -66,6 +66,18 @@ module etsf_io
 @FLAGS_GROUPS@
   !!***
 
+  !!****d* etsf_io_basics_group/FLAGS_MAIN
+  !! NAME
+  !!  FLAGS_MAIN
+  !!
+  !! FUNCTION
+  !!  These flags are used on data definition (see etsf_io_data_init()) to specify
+  !!  which main variable should be defined in the NetCDF file. They are not exclusive.
+  !!
+  !! SOURCE
+@FLAGS_MAIN@
+  !!***
+
   !!****s* etsf_io_basics_group/etsf_dims
   !! NAME
   !!  etsf_dimensions

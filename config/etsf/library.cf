@@ -62,7 +62,9 @@ etsf_subs_actions = {
 # Descriptions of the subprogram arguments for the "def" action
 etsf_subs_def_args = {
    "dims":[
-      "dims type(etsf_dims) in"]
+      "dims type(etsf_dims) in"],
+   "main":[
+      "mains integer in"]
 }
 
 # Descriptions of the subprogram arguments for the "get" action
@@ -92,6 +94,7 @@ etsf_subs_put_args = {
 etsf_subs_init_args = {
    "data":[
       "filename character(len=*) in",
+      "mains integer in",
       "groups integer in",
       "dims type(etsf_dims) inout",
       "title character(len=*) in",

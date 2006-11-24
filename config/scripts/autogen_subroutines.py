@@ -165,7 +165,10 @@ end if
  for group in etsf_group_list:
    ret += "    case (etsf_grp_%s)\n" % group
    if ( action == "def" ):
-    buf = "call etsf_io_%s_def(ncid, lstat, error_data)\n" % (group)
+    if (group == "main"):
+     buf = "call etsf_io_main_def(ncid, mains, lstat, error_data)\n"
+    else:
+     buf = "call etsf_io_%s_def(ncid, lstat, error_data)\n" % (group)
     buf += "if (.not. lstat) return\n"
    else:
     # Check the association
@@ -290,6 +293,19 @@ def code_group_generic(group,action):
  ret_att = ""
  # Store main code
  ret = ""
+ 
+ # Consistency check.
+ if (group == "main" and action == "def"):
+  ret += """! Consistency checks.
+if (mains < 0 .or. mains >= 2 ** etsf_main_nvars) then
+  call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_ARG, my_name, &
+                           & tgtname = "mains", errmess = "value out of bounds")
+  lstat = .false.
+  return
+end if
+
+"""
+
  ret += "allocate(varid(%d))\n" % len(etsf_groups[group])
  if (action == "put"):
   ret += "! Begin by putting the file in write mode.\n"
@@ -332,16 +348,24 @@ def code_group_generic(group,action):
     else:
       dims = None
 
-    ret += "call etsf_io_low_def_var(ncid, \"%s\", &\n" % var \
+    # Handle the defintion
+    buf = "call etsf_io_low_def_var(ncid, \"%s\", &\n" % var \
         + "  & %s, &\n" % nf90_type(var_desc)
     if (dims is not None):
-      ret += "  & %s &\n" % dims
-    ret += "  & lstat, ncvarid = varid(%d), error_data = error_data)\n" % ivar \
+      buf += "  & %s &\n" % dims
+    buf += "  & lstat, ncvarid = varid(%d), error_data = error_data)\n" % ivar \
         + "if (.not. lstat) return\n"
-
     # Handle attributes of the variable
     if (att_units):
-      ret_att += code_attribute_units("write", "\"atomic units\"", "1.0d0", ivar)
+      buf += code_attribute_units("write", "\"atomic units\"", "1.0d0", ivar)
+
+    # Print the variable definition        
+    if (group == "main"):
+      ret += "if (iand(mains, etsf_main_%s) /= 0) then\n" % etsf_main_names[var]
+      ret += indent_code(buf, 1)
+      ret += "end if\n"
+    else:
+      ret += buf
 
   else:
     if ( action == "put" ):

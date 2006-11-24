@@ -34,7 +34,8 @@ def indent_code(code,offset):
 
 def init_grp(grp_name, grp_id):
   # We define the variables using etsf_io_data_init
-  ret  = "call etsf_io_data_init(\"test_init_%s.nc\", %s, dims, \"Test\", \"\", lstat, error)\n" % (grp_name, grp_id)
+  ret  = "call etsf_io_data_init(\"test_init_%s.nc\", 2 ** etsf_main_nvars - 1, &\n" % grp_name
+  ret += "                     & %s, dims, \"Test\", \"\", lstat, error)\n" % grp_id
   ret += "call tests_write_status(\"Create file test_init_%s.nc\", lstat, error)\n" % grp_name
 
   # We open the file for checkings
@@ -305,9 +306,10 @@ def readwrite_grp(grp_name, grp_id, action):
   dims%%number_of_atoms = 4
   dims%%number_of_kpoints = 12
   dims%%number_of_components = 2
-  call etsf_io_data_init("test_%s_%s.nc", %s, dims, "Fichier de test", "history", lstat, error_data)
-  call tests_%s_status("init file with group '%s'", lstat, error_data)
-""" % (grp_name, action, action, grp_name, grp_id, action, grp_name)
+""" % (grp_name, action)
+  ret += "call etsf_io_data_init(\"test_%s_%s.nc\", 2 ** etsf_main_nvars - 1, &\n" % (action, grp_name)
+  ret += "                     & %s, dims, \"Test\", \"\", lstat, error_data)\n" % grp_id
+  ret += "call tests_%s_status(\"Create file test_%s_%s.nc\", lstat, error_data)\n" % (action, action, grp_name)
   # We allocate space for the data to be written or read and
   # we put some values in it then we associate the data.
   for var in etsf_groups[grp_name]:

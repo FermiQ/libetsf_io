@@ -39,11 +39,15 @@ contains
     write(*,*)
     write(*,*) "Testing etsf_io_data_init()..."
 
-    call etsf_io_data_init("test_wrong_1.nc", -1, &
+    call etsf_io_data_init("test_wrong_1.nc", etsf_main_none, -1, &
       & dims, "Fichier de test", "history", lstat, error)
     call tests_write_status("groups: wrong value", (.not. lstat), error)
 
-    call etsf_io_data_init("test_wrong_1.nc", etsf_grp_none, &
+    call etsf_io_data_init("test_wrong_1.nc", -1, etsf_grp_main, &
+      & dims, "Fichier de test", "history", lstat, error)
+    call tests_write_status("mains: wrong value", (.not. lstat), error)
+
+    call etsf_io_data_init("test_wrong_1.nc", etsf_main_none, etsf_grp_none, &
       & dims, "Fichier de test", "history", lstat, error)
     call tests_write_status("filename: wrong value (file exists)", (.not. lstat), error)
 

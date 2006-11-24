@@ -162,11 +162,28 @@ egf += "\n end type etsf_groups"
 # Number of groups
 egc += "\n integer, parameter :: etsf_%-20s = %d" % ("ngroups",egn)
 
+# Main variables
+emc = "\n\n ! Main variables"
+emc += "\n integer, parameter :: etsf_main_%-15s = 0" % "none"
+egv  = 1
+egn  = 0
+for var in etsf_groups["main"]:
+ emc += "\n integer, parameter :: etsf_main_%-15s = %d" % \
+         (etsf_main_names[var],egv)
+ egv *= 2
+ egn += 1
+
+# Number of main variables
+emc += "\n integer, parameter :: etsf_%-20s = %d" % ("main_nvars",egn)
+
+
+
 # Import template
 src = file("config/etsf/template.%s" % (etsf_modules["etsf_io"]),"r").read()
 src = re.sub("@SCRIPT@",my_name,src)
 src = re.sub("@CONSTANTS@",ead,src)
 src = re.sub("@FLAGS_GROUPS@",egc,src)
+src = re.sub("@FLAGS_MAIN@",emc,src)
 src = re.sub("@DIMENSIONS@",edt,src)
 src = re.sub("@STRUCTURES@",est,src)
 src = re.sub("@STRUCT_GROUPS@",egf,src)
