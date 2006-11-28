@@ -190,103 +190,110 @@ for ((i=0;i<4;i++)) ; do
   type=${ATT_GENERATED_TYPES[i]}
   nctype=${ATT_NF90_TYPES[i]}
   if test $type = "character" ; then
+    start=1
     fortrantype=${ATT_GENERATED_TYPES[i]}'(len = attlen)'
-    vardims=
-    # The att argument must be filled with space because netcdf
-    # will only write the length of the attribute from the file
-    # and the remaining in att will be garbage.
-    init='write(att, "(A)") repeat(" " , attlen)'
   else
+    start=0
     if test $type = "double" ; then
       fortrantype=${ATT_GENERATED_TYPES[i]}' precision'
     else
       fortrantype=${ATT_GENERATED_TYPES[i]}
     fi
-    vardims="(1:attlen)"
-    init=
   fi
-  cat >> $TARGET_FILE << EOF
-  subroutine read_att_${type}_1D(ncid, ncvarid, attname, attlen, att, &
+  for ((dim=$start;dim<2;dim++)) ; do
+    if test $type = "character" ; then
+      vardims=
+      # The att argument must be filled with space because netcdf
+      # will only write the length of the attribute from the file
+      # and the remaining in att will be garbage.
+      init='write(att, "(A)") repeat(" " , attlen)'
+    else
+      vardims="(1:attlen)"
+      init=
+    fi
+    if test "$dim" == "1" ; then
+      dimarg=", attlen"
+      dimcomment=
+      attlen="attlen"
+    else
+      dimarg=
+      vardims=
+      dimcomment="!"
+      attlen="1"
+    fi
+    for ((var=0;var<2;var++)) ; do
+      if test "$var" == "0" ; then
+        subname=
+        subargname="varname"
+        subargtype="character(len = *)"
+        subarglocal="type(etsf_io_low_var_infos) :: var_infos"
+        subvarid="var_infos%ncid"
+      else
+        subname="id_"
+        subargname="ncvarid"
+        subargtype="integer"
+        subarglocal=
+        subvarid=$subargname
+      fi
+      cat >> $TARGET_FILE << EOF
+  subroutine read_att_${subname}${type}_${dim}D(ncid, ${subargname}, attname${dimarg}, att, &
                                         & lstat, error_data)
     integer, intent(in)                            :: ncid
-    integer, intent(in)                            :: ncvarid
+    ${subargtype}, intent(in)                            :: ${subargname}
     character(len = *), intent(in)                 :: attname
-    integer, intent(in)                            :: attlen
+    ${dimcomment}integer, intent(in)                            :: attlen
     ${fortrantype}, intent(out)                    :: att${vardims}
     logical, intent(out)                           :: lstat
     type(etsf_io_low_error), intent(out), optional :: error_data
 
     !Local
-    character(len = *), parameter :: me = "etsf_io_low_read_att_${type}"
+    character(len = *), parameter :: me = "etsf_io_low_read_att_${subname}${type}_${dim}D"
     integer :: s
+    ${subarglocal}
 
     lstat = .false.
     ${init}
+EOF
+      if test "$var" == "0" ; then
+        cat >> $TARGET_FILE << EOF
+    if (present(error_data)) then
+      call etsf_io_low_read_var_infos(ncid, ${subargname}, var_infos, &
+                                    & lstat, error_data = error_data)
+    else
+      call etsf_io_low_read_var_infos(ncid, ${subargname}, var_infos, lstat)
+    end if
+    if (.not. lstat) then
+      return
+    end if
+EOF
+      fi
+      cat >> $TARGET_FILE << EOF
     ! We first check the definition of the attribute (name, type and dims)
     if (present(error_data)) then
-      call etsf_io_low_check_att(ncid, ncvarid, attname, ${nctype}, &
-                               & attlen, lstat, error_data = error_data)
+      call etsf_io_low_check_att(ncid, ${subvarid}, attname, ${nctype}, &
+                               & ${attlen}, lstat, error_data = error_data)
     else
-      call etsf_io_low_check_att(ncid, ncvarid, attname, ${nctype}, &
-                               & attlen, lstat)
+      call etsf_io_low_check_att(ncid, ${subvarid}, attname, ${nctype}, &
+                               & ${attlen}, lstat)
     end if
     if (.not. lstat) then
       return
     end if
     ! Now that we are sure that the read attribute has the same type and dimension
     ! that the argument one, we can do the get action securely.
-    s = nf90_get_att(ncid, ncvarid, attname, att)
+    s = nf90_get_att(ncid, ${subvarid}, attname, att)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
         call etsf_io_low_error_set(error_data, ERROR_MODE_GET, ERROR_TYPE_ATT, me, &
-                     & tgtname = attname, tgtid = ncvarid, errid = s, errmess = nf90_strerror(s))
+                     & tgtname = attname, tgtid = ${subvarid}, errid = s, errmess = nf90_strerror(s))
       end if
       return
     end if
     lstat = .true.
-  end subroutine read_att_${type}_1D
+  end subroutine read_att_${subname}${type}_${dim}D
 EOF
-  if test $type != "character" ; then
-    cat >> $TARGET_FILE << EOF
-  subroutine read_att_${type}(ncid, ncvarid, attname, att, &
-                                        & lstat, error_data)
-    integer, intent(in)                            :: ncid
-    integer, intent(in)                            :: ncvarid
-    character(len = *), intent(in)                 :: attname
-    ${fortrantype}, intent(out)                    :: att
-    logical, intent(out)                           :: lstat
-    type(etsf_io_low_error), intent(out), optional :: error_data
-
-    !Local
-    character(len = *), parameter :: me = "etsf_io_low_read_att_${type}"
-    integer :: s
-
-    lstat = .false.
-    ! We first check the definition of the attribute (name, type and dims)
-    if (present(error_data)) then
-      call etsf_io_low_check_att(ncid, ncvarid, attname, ${nctype}, &
-                               & 1, lstat, error_data = error_data)
-    else
-      call etsf_io_low_check_att(ncid, ncvarid, attname, ${nctype}, &
-                               & 1, lstat)
-    end if
-    if (.not. lstat) then
-      return
-    end if
-    ! Now that we are sure that the read attribute has the same type and dimension
-    ! that the argument one, we can do the get action securely.
-    s = nf90_get_att(ncid, ncvarid, attname, att)
-    if (s /= nf90_noerr) then
-      if (present(error_data)) then
-        call etsf_io_low_error_set(error_data, ERROR_MODE_GET, ERROR_TYPE_ATT, me, &
-                     & tgtname = attname, tgtid = ncvarid, errid = s, errmess = nf90_strerror(s))
-      end if
-      return
-    end if
-    lstat = .true.
-  end subroutine read_att_${type}
-EOF
-  fi
+    done
+  done
 done
 
 # Echo a warning banner.

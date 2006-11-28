@@ -332,11 +332,13 @@ end if
   unformatted = False
   splitted    = False
   att_units   = False
+  att_kdep    = False
   if (var in etsf_properties):
     props = etsf_properties[var]
     unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
     splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
     att_units   = ( props & ETSF_PROP_VAR_UNITS == ETSF_PROP_VAR_UNITS)
+    att_kdep    = ( props & ETSF_PROP_VAR_KDEP == ETSF_PROP_VAR_KDEP)
   
   if ( action == "def" ):
     # Create the definition of the shape and dimensions
@@ -358,6 +360,8 @@ end if
     # Handle attributes of the variable
     if (att_units):
       buf += code_attribute_units("write", "\"atomic units\"", "1.0d0", ivar)
+    if (att_kdep):
+      buf += code_attribute_kdep("write", "\"yes\"", "varid(%d)" % ivar)
 
     # Print the variable definition        
     if (group == "main"):
@@ -401,14 +405,33 @@ end if
       code_if = "if (etsf_io_low_var_associated(folder%%%s)) then\n" % var
     else:
       code_if = "if (associated(folder%%%s)) then\n" % var
-
     ret += code_if
+    
+    # Treat the k_dependent attribute
+    if (action == "get" and att_kdep):
+      ret += indent_code(code_attribute_kdep("read", "flag", "\"%s\"" % var), 1)
+      ret += "  if (flag(1:2) == \"no\") then\n"
+      ret += "    call etsf_io_low_read_dim(ncid, \"%s\", len, &\n" % etsf_kdep_fallback[var]
+      ret += "                            & lstat, error_data = error_data)\n"
+      ret += "    if (.not. lstat) return\n"
+      ret += "    folder%%%s%s = len\n" % (var, sub_array)
+      ret += "  else\n"
+      
     # If variable may be splitted, we append the sub optional argument
-    ret += "  call etsf_io_low_%s_var(ncid, \"%s\", &\n" % (action_str, var) \
+    buf =  "  call etsf_io_low_%s_var(ncid, \"%s\", &\n" % (action_str, var) \
         +  "                          & folder%%%s%s, %s&\n" % (var, sub_array, char_len) \
         +  "                          & lstat, ncvarid = varid(%d), &\n" % ivar \
         +  "                          & error_data = error_data%s)\n" % sub_arg \
         +  "  if (.not. lstat) return\n"
+
+    # Treat the k_dependent attribute
+    if (action == "get" and att_kdep):
+      ret += indent_code(buf, 1)
+      ret += "  end if\n"
+    else:
+      ret += buf
+    
+    # End the if associated
     ret += "end if\n"
 
     # Handle attributes of the variable
@@ -454,6 +477,14 @@ def code_attribute_units(action, att_unit, att_scale, ivar):
     ret += code_attributes("write", "varid(%d)" % ivar, \
                            "scale_to_atomic_units", att_scale, "")
     ret += "if (.not. lstat) return\n"
+    
+  return ret
+  
+# Code for the k_dependent attribute.
+def code_attribute_kdep(action, att_value, ivar):
+  ret  = "! handle the k_dependent attribute.\n"
+  ret += code_attributes(action, ivar, "k_dependent", att_value, "etsf_charlen")
+  ret += "if (.not. lstat) return\n"
     
   return ret
 

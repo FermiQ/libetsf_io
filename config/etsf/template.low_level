@@ -36,6 +36,8 @@ subroutine etsf_io_@NAME@(ncid, @ARG_LIST@, lstat, error_data)
   character(len = *), parameter :: my_name = 'etsf_io_@NAME@'
   integer, allocatable          :: sub(:)
   integer, allocatable          :: varid(:)
+  character(etsf_charlen)       :: flag
+  integer                       :: len
 @LOCAL_VARS@
 
   ! *************************************************************************

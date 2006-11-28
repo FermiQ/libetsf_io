@@ -230,9 +230,16 @@ module etsf_io_low_level
   !!***
   !Generic interface of the routines etsf_io_low_read_att
   interface etsf_io_low_read_att
-    module procedure read_att_integer
-    module procedure read_att_real
-    module procedure read_att_double
+    module procedure read_att_id_integer_0D
+    module procedure read_att_id_real_0D
+    module procedure read_att_id_double_0D
+    module procedure read_att_id_integer_1D
+    module procedure read_att_id_real_1D
+    module procedure read_att_id_double_1D
+    module procedure read_att_id_character_1D
+    module procedure read_att_integer_0D
+    module procedure read_att_real_0D
+    module procedure read_att_double_0D
     module procedure read_att_integer_1D
     module procedure read_att_real_1D
     module procedure read_att_double_1D

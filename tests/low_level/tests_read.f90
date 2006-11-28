@@ -291,6 +291,24 @@ contains
     end if
     call tests_read_status(" | cheking value", lstat, error)
 
+    call etsf_io_low_read_att(ncid, "atom_species", "mass", valFloat, &
+                            & lstat, error_data = error)
+    call tests_read_status("argument varname: accessing variable through its name (float)", lstat, error)
+    if (valFloat /= 1.2) then
+      call etsf_io_low_error_set(error, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, errmess = "Wrong value")
+      lstat = .false.
+    end if
+    call tests_read_status(" | cheking value", lstat, error)
+
+    call etsf_io_low_read_att(ncid, "atom_species", "comment", 80, valString, &
+                            & lstat, error_data = error)
+    call tests_read_status("argument varname: accessing variable through its name (string)", lstat, error)
+    if (trim(valString) /= "bonjour") then
+      call etsf_io_low_error_set(error, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, errmess = "Wrong value")
+      lstat = .false.
+    end if
+    call tests_read_status(" | cheking value", lstat, error)
+
     call etsf_io_low_close(ncid, lstat)
 
     write(*,*)

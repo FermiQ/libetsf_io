@@ -51,7 +51,9 @@ etsf_properties = {
    "fermi_energy":ETSF_PROP_VAR_UNITS,
    "smearing_width":ETSF_PROP_VAR_UNITS,
    "kinetic_energy_cutoff":ETSF_PROP_VAR_UNITS,
-   "gw_corrections":ETSF_PROP_VAR_UNITS}
+   "gw_corrections":ETSF_PROP_VAR_UNITS,
+   "number_of_states":ETSF_PROP_VAR_KDEP,
+   "number_of_coefficients":ETSF_PROP_VAR_KDEP}
 
 # ETSF attributes
 etsf_attributes = {
@@ -340,3 +342,8 @@ etsf_main_names = {
    "exchange_potential":"pot_x_only",
    "correlation_potential":"pot_c_only",
    "exchange_correlation_potential":"pot_xc"}
+   
+# Values to give if k_dependent is set to no.
+etsf_kdep_fallback = {
+   "number_of_states":"max_number_of_states",
+   "number_of_coefficients":"max_number_of_coefficients"}
