@@ -172,3 +172,10 @@
     integer, pointer :: data7D(:, :, :, :, :, :, :) => null()
   end type etsf_io_low_var_integer
   !!***
+
+  type etsf_io_low_block
+    integer :: ncshape
+    integer :: start(16)
+    integer :: count(16)
+    integer :: map(16)
+  end type etsf_io_low_block

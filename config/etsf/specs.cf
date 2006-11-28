@@ -99,7 +99,6 @@ etsf_dimensions = [
    "number_of_reduced_dimensions",
    "number_of_spinor_components",
    "number_of_spins",
-   "number_of_symmetries",
    "number_of_symmetry_operations",
    "number_of_vectors",
    "real_or_complex",
@@ -259,12 +258,12 @@ etsf_variables = {
       "number_of_reduced_dimensions"],
    "reduced_symmetry_matrices":[
       "integer",
-      "number_of_symmetries",
+      "number_of_symmetry_operations",
       "number_of_reduced_dimensions",
       "number_of_reduced_dimensions"],
    "reduced_symmetry_translations":[
       "real double_precision",
-      "number_of_symmetries",
+      "number_of_symmetry_operations",
       "number_of_reduced_dimensions"],
    "smearing_scheme":[
       "string",

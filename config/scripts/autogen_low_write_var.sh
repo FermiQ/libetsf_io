@@ -143,15 +143,15 @@ for ((i=0;i<3;i++)) ; do
     var_user%ncshape = ${dim}
     ${addcomment}var_user%ncdims(${start}:${dim}) = shape(var)
     ${charcomment}var_user%ncdims(1) = charlen
-    if (present(error_data)) then
-      call etsf_io_low_check_var(var_nc, var_user, stat, level = lvl, sub = sub_value, &
-                               & error_data = error_data)
-    else
-      call etsf_io_low_check_var(var_nc, var_user, stat, level = lvl, sub = sub_value)
-    end if
-    if (.not. stat) then
-      return
-    end if
+    !if (present(error_data)) then
+    !  call etsf_io_low_check_var(var_nc, var_user, stat, level = lvl, sub = sub_value, &
+    !                           & error_data = error_data)
+    !else
+    !  call etsf_io_low_check_var(var_nc, var_user, stat, level = lvl, sub = sub_value)
+    !end if
+    !if (.not. stat) then
+    !  return
+    !end if
 
     ! Now that we are sure that the written var has the same type and dimension
     ! that the argument one, we can do the put action securely.

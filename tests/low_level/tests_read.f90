@@ -160,9 +160,9 @@ contains
   subroutine tests_check_var(path)
     character(len = *), intent(in) :: path
     logical :: lstat
-    integer :: level
     type(etsf_io_low_error) :: error
     type(etsf_io_low_var_infos) :: var_from, var_to
+    type(etsf_io_low_block) :: block
     
     write(*,*)
     error%access_mode_id = ERROR_MODE_SPEC
@@ -172,69 +172,86 @@ contains
     write(*,*) "Testing etsf_io_low_check_var()..."
     var_from%nctype = etsf_io_low_character
     var_to%nctype = etsf_io_low_double
-    call etsf_io_low_check_var(var_from, var_to, lstat, level = level, error_data = error)
+    call etsf_io_low_check_var(var_from, var_to, block, lstat, error_data = error)
     call tests_read_status("field nctype: incompatible values", (.not. lstat), error)
     
     var_from%ncshape = 0
     var_to%ncshape = 0
     
-    var_from%nctype = etsf_io_low_integer
-    var_to%nctype = etsf_io_low_double
-    call etsf_io_low_check_var(var_from, var_to, lstat, level = level, error_data = error)
-    call tests_read_status("field nctype: compatible values", (lstat .and. &
-                         & modulo(level / etsf_io_low_var_type_dif, 2) == 1), error)
-                         
     var_from%nctype = etsf_io_low_double
     var_to%nctype = etsf_io_low_double
-    call etsf_io_low_check_var(var_from, var_to, lstat, level = level, error_data = error)
-    call tests_read_status("field nctype: matching values", (lstat .and. &
-                         & modulo(level / etsf_io_low_var_type_dif, 2) == 0), error)
+    call etsf_io_low_check_var(var_from, var_to, block, lstat, error_data = error)
+    call tests_read_status("field nctype: matching values", lstat, error)
                          
-    call etsf_io_low_check_var(var_from, var_to, lstat, level = level, error_data = error)
-    call tests_read_status("field ncshape (0D): matching values", (lstat .and. &
-                         & modulo(level / etsf_io_low_var_shape_dif, 2) == 0), error)
-                         
+    call etsf_io_low_block_set_default(block, var_from)
     var_from%ncshape = 4
     var_to%ncshape = 2
     var_from%ncdims(1:4) = (/ 3, 3, 3, 2 /)
     var_to%ncdims(1:2) = (/ 25, 2 /)
-    call etsf_io_low_check_var(var_from, var_to, lstat, level = level, error_data = error)
+    call etsf_io_low_block_set_default(block, var_from)
+    call etsf_io_low_check_var(var_from, var_to, block, lstat, error_data = error)
     call tests_read_status("field ncshape: uncompatible values", (.not. lstat), error)
 
     var_from%ncdims(1:4) = (/ 3, 3, 3, 2 /)
     var_to%ncdims(1:2) = (/ 27, 2 /)
-    call etsf_io_low_check_var(var_from, var_to, lstat, level = level, error_data = error)
-    call tests_read_status("field ncshape: compatible values", (lstat .and. &
-                         & modulo(level / etsf_io_low_var_shape_dif, 2) == 1), error)
+    call etsf_io_low_check_var(var_from, var_to, block, lstat, error_data = error)
+    call tests_read_status("field ncshape: compatible values", lstat, error)
                          
     var_from%ncshape = 4
     var_to%ncshape = 4
     var_from%ncdims(1:4) = (/ 3, 3, 3, 2 /)
     var_to%ncdims(1:4) = (/ 3, 3, 3, 2 /)
-    call etsf_io_low_check_var(var_from, var_to, lstat, level = level, error_data = error)
-    call tests_read_status("field ncshape (nD): matching values", (lstat .and. level == 0), error)
+    call etsf_io_low_check_var(var_from, var_to, block, lstat, error_data = error)
+    call tests_read_status("field ncshape (nD): matching values", lstat, error)
 
+    
     var_from%ncdims(1:4) = (/ 3, 3, 3, 2 /)
     var_to%ncdims(1:4) = (/ 3, 3, 2, 2 /)
-    call etsf_io_low_check_var(var_from, var_to, lstat, level = level, error_data = error, sub = 3)
-    call tests_read_status("sub: incompatible values", (.not. lstat), error)
+    block%count(1:4) = (/ 3, 3, 3, 1 /)
+    call etsf_io_low_check_var(var_from, var_to, block, lstat, error_data = error)
+    call tests_read_status("block%count: incompatible values", (.not. lstat), error)
 
     var_from%ncdims(1:4) = (/ 3, 3, 3, 2 /)
-    var_to%ncdims(1:4) = (/ 3, 3, 5, 5 /)
-    call etsf_io_low_check_var(var_from, var_to, lstat, level = level, error_data = error, sub = 2)
-    call tests_read_status("sub: compatible values", lstat, error)
-
-    var_from%ncdims(1:4) = (/ 3, 3, 3, 2 /)
-    var_to%ncdims(1:4) = (/ 3, 3, 3, 2 /)
-    call etsf_io_low_check_var(var_from, var_to, lstat, level = level, error_data = error, sub = 4)
-    call tests_read_status("sub: compatible values (matching case)", lstat, error)
-
-    var_from%ncshape = 4
     var_to%ncshape = 2
-    var_from%ncdims(1:4) = (/ 3, 3, 3, 2 /)
-    var_to%ncdims(1:2) = (/ 27, 2 /)
-    call etsf_io_low_check_var(var_from, var_to, lstat, level = level, error_data = error, sub = 4)
-    call tests_read_status("sub: compatible values (diff shape)", lstat, error)
+    var_to%ncdims(1:2) = (/ 3, 3 /)
+    block%count(1:4) = (/ 3, 3, 1, 1 /)
+    call etsf_io_low_check_var(var_from, var_to, block, lstat, error_data = error)
+    call tests_read_status("block%count: compatible values", lstat, error)
+
+    var_to%ncdims(1:2) = (/ 3, 2 /)
+    block%count(1:4) = (/ 3, 2, 1, 1 /)
+    call etsf_io_low_check_var(var_from, var_to, block, lstat, error_data = error)
+    call tests_read_status("block%count: subpart compatible values", lstat, error)
+
+    var_from%ncdims(1:4) = (/ 3, 2, 5, 5 /)
+    var_to%ncshape = 4
+    var_to%ncdims(1:4) = (/ 3, 2, 5, 5 /)
+    block%start(1:4) = (/ 2, 2, 3, 4 /)
+    block%count(1:4) = (/ 3, 2, 1, 1 /)
+    call etsf_io_low_check_var(var_from, var_to, block, lstat, error_data = error)
+    call tests_read_status("block%start: incompatible values", (.not. lstat), error)
+
+    var_to%ncshape = 2
+    var_to%ncdims(1:2) = (/ 3, 2 /)
+    block%start(1:4) = (/ 1, 2, 3, 4 /)
+    block%count(1:4) = (/ 3, 2, 1, 1 /)
+    call etsf_io_low_check_var(var_from, var_to, block, lstat, error_data = error)
+    call tests_read_status("block%start: compatible values", lstat, error)
+
+    var_to%ncshape = 4
+    var_to%ncdims(1:4) = (/ 3, 2, 5, 5 /)
+    block%start(1:4) = (/ 1, 1, 1, 1 /)
+    block%count(1:4) = (/ 3, 2, 5, 5 /)
+    block%map(1:4) = (/ 1, 3, 35, 6 /)
+    call etsf_io_low_check_var(var_from, var_to, block, lstat, error_data = error)
+    call tests_read_status("block%map: incompatible values", (.not. lstat), error)
+
+    var_to%ncdims(1:4) = (/ 3, 2, 5, 5 /)
+    block%start(1:4) = (/ 1, 1, 1, 1 /)
+    block%count(1:4) = (/ 3, 2, 5, 5 /)
+    block%map(1:4) = (/ 1, 3, 30, 6 /)
+    call etsf_io_low_check_var(var_from, var_to, block, lstat, error_data = error)
+    call tests_read_status("block%map: compatible values", lstat, error)
                          
     write(*,*) 
   end subroutine tests_check_var
@@ -377,6 +394,7 @@ contains
     logical :: lstat
     type(etsf_io_low_error) :: error
     type(etsf_io_low_var_integer) :: atom_species
+    type(etsf_io_low_block) :: block
     
     write(*,*)
     write(*,*) "Testing etsf_io_low_read_var_integer()..."
@@ -402,7 +420,7 @@ contains
 
     call etsf_io_low_read_var(ncid, "atom_species", var(1:4), lstat, error_data = error)
     call tests_read_status("argument var: wrong dimensions", (.not. lstat .and. &
-      & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
+      & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_ARG), &
       & error)
 
     call etsf_io_low_read_var(ncid, "space_group", var(1), lstat, error_data = error)
@@ -430,33 +448,68 @@ contains
                          & bigvar(1) == 1 .and. bigvar(2) == 2 .and. &
                          & bigvar(3) == 3 .and. bigvar(4) == 4), error)
 
+    block%ncshape = 3
+    block%start(:) = 1
+    block%count(1:3) = (/ 2, 2, 2 /)
+    block%map(1:3) = (/ 1, 2, 4 /)
     call etsf_io_low_read_var(ncid, "test_integer_2d", bigvar(1:2), &
-                            & lstat, sub = (/ 0, 2, 3 /), error_data = error)
-    call tests_read_status("argument sub: wrong size", (.not. lstat), error)
+                            & lstat, block = block, error_data = error)
+    call tests_read_status("argument block%ncshape: wrong size", (.not. lstat), error)
 
+    block%ncshape = 2
+    block%start(1:2) = (/ 1, 5 /)
+    block%count(1:2) = (/ 2, 1 /)
     call etsf_io_low_read_var(ncid, "test_integer_2d", bigvar(1:2), &
-                            & lstat, sub = (/ 0, 3 /), error_data = error)
-    call tests_read_status("argument sub: out-of-bounds", (.not. lstat), error)
+                            & lstat, block = block, error_data = error)
+    call tests_read_status("argument block%start: out-of-bounds", (.not. lstat), error)
 
+    block%ncshape = 2
+    block%start(1:2) = (/ 1, 2 /)
+    block%count(1:2) = (/ 2, 1 /)
     call etsf_io_low_read_var(ncid, "test_integer_2d", bigvar(1:3), &
-                            & lstat, sub = (/ 0, 2 /), error_data = error)
-    call tests_read_status("argument sub: wrong dimensions", (.not. lstat), error)
+                            & lstat, block = block, error_data = error)
+    call tests_read_status("argument var + block: wrong number of elements", (.not. lstat), error)
 
     call etsf_io_low_read_var(ncid, "test_integer_2d", bigvar(1:2), &
-                            & lstat, sub = (/ 0, 2 /), error_data = error)
-    call tests_read_status("argument sub: good dimensions", (lstat .and. &
+                            & lstat, block = block, error_data = error)
+    call tests_read_status("argument var + block: good match (sub part)", (lstat .and. &
                          & bigvar(1) == 3 .and. bigvar(2) == 4), error)
 
+    block%ncshape = 2
+    block%start(1:2) = (/ 1, 1 /)
+    block%count(1:2) = (/ 2, 2 /)
     call etsf_io_low_read_var(ncid, "test_integer_2d", bigvar, &
-                            & lstat, sub = (/ 0, 0 /), error_data = error)
-    call tests_read_status("argument sub: all reading", (lstat .and. &
+                            & lstat, block = block, error_data = error)
+    call tests_read_status("argument var + block: good match (all reading)", (lstat .and. &
                          & bigvar(1) == 1 .and. bigvar(2) == 2 .and. &
                          & bigvar(3) == 3 .and. bigvar(4) == 4), error)
 
+    block%ncshape = 2
+    block%start(1:2) = (/ 1, 1 /)
+    block%count(1:2) = (/ 2, 2 /)
+    call etsf_io_low_read_var(ncid, "test_integer_2d", bigvar, &
+                            & lstat, block = block, error_data = error)
+    call tests_read_status("argument var + block: good match (all reading)", (lstat .and. &
+                         & bigvar(1) == 1 .and. bigvar(2) == 2 .and. &
+                         & bigvar(3) == 3 .and. bigvar(4) == 4), error)
+
+    block%ncshape = 4
+    block%start(1:4) = (/ 1, 1, 2, 2 /)
+    block%count(1:4) = (/ 2, 3, 1, 1 /)
+    block%map(1:4) = (/ 1, 2, 6, 18 /)
     call etsf_io_low_read_var(ncid, "test_integer_4d", var2d_snd, &
-                            & lstat, sub = (/ 0, 0, 2, 2 /), error_data = error)
-    call tests_read_status("argument sub: two sub reading", (lstat .and. &
+                            & lstat, block = block, error_data = error)
+    call tests_read_status("argument block: two sub reading", (lstat .and. &
                          & var2d_snd(1, 1) == -7 .and. var2d_snd(2, 1) == -8), error)
+
+    block%ncshape = 4
+    block%start(1:4) = (/ 1, 1, 1, 1 /)
+    block%count(1:4) = (/ 2, 2, 1, 1 /)
+    block%map(1:4) = (/ 2, 1, 6, 18 /)
+    call etsf_io_low_read_var(ncid, "test_integer_4d", var2d, &
+                            & lstat, block = block, error_data = error)
+    call tests_read_status("argument block: exchanging dimensions", (lstat .and. &
+                         & var2d(1, 1) == 1 .and. var2d(2, 1) == 3), error)
 
     atom_species%data1D => var
     call etsf_io_low_read_var(ncid, "atom_species", atom_species, lstat, error_data = error)
@@ -471,10 +524,14 @@ contains
                          & var2d(1, 1) == 1 .and. var2d(2, 1) == 2 .and. &
                          & var2d(1, 2) == 3 .and. var2d(2, 2) == 4), error)
 
+    block%ncshape = 2
+    block%start(1:2) = (/ 1, 2 /)
+    block%count(1:2) = (/ 2, 1 /)
+    block%map(1:2) = (/ 1, 2 /)
     atom_species%data1D => var2d(2, :)
     call etsf_io_low_read_var(ncid, "test_integer_2d", atom_species, &
-                            & lstat, sub = (/ 0, 2 /), error_data = error)
-    call tests_read_status("argument var + sub: generic pointer", (lstat .and. &
+                            & lstat, block = block, error_data = error)
+    call tests_read_status("argument var + block: generic pointer", (lstat .and. &
                          & var2d(2, 1) == 3 .and. var2d(2, 2) == 4), error)
 
     call etsf_io_low_close(ncid, lstat)
@@ -490,6 +547,7 @@ contains
     logical :: lstat
     type(etsf_io_low_error) :: error
     type(etsf_io_low_var_double) :: var_gen
+    type(etsf_io_low_block) :: block
     
     write(*,*)
     write(*,*) "Testing etsf_io_low_read_var_double()..."
@@ -515,7 +573,7 @@ contains
 
     call etsf_io_low_read_var(ncid, "test_double_1d", var(1:2), lstat, error_data = error)
     call tests_read_status("argument var: wrong dimensions", (.not. lstat .and. &
-      & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
+      & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_ARG), &
       & error)
 
     call etsf_io_low_read_var(ncid, "test_double_0d", var(1), lstat, error_data = error)
@@ -545,8 +603,12 @@ contains
                          & bigvar(1) == 0.5d0 .and. bigvar(2) == 0.5d0 .and. &
                          & bigvar(3) == 0.5d0 .and. bigvar(4) == 0.6d0), error)
 
+    block%ncshape = 4
+    block%start(1:4) = (/ 1, 1, 1, 2 /)
+    block%count(1:4) = (/ 3, 3, 3, 1 /)
+    block%map(1:4) = (/ 1, 3, 9, 27 /)
     call etsf_io_low_read_var(ncid, "density", density, &
-                            & lstat, sub = (/ 0, 0, 0, 2 /), error_data = error)
+                            & lstat, block = block, error_data = error)
     call tests_read_status("argument var + sub: good matching (3D <-> 1D)", (lstat .and. &
                          & density(1) == -0.d0 .and. density(2) == -1.d0 .and. &
                          & density(3) == -0.d0 .and. density(4) == -1.d0 .and. &
@@ -561,9 +623,13 @@ contains
                          & bigvar(1) == 0.5d0 .and. bigvar(2) == 0.5d0 .and. &
                          & bigvar(3) == 0.5d0 .and. bigvar(4) == 0.6d0), error)
 
+    block%ncshape = 2
+    block%start(1:2) = (/ 1, 2 /)
+    block%count(1:2) = (/ 3, 1 /)
+    block%map(1:2) = (/ 1, 3 /)
     var_gen%data1D => var2d(2, :)
     call etsf_io_low_read_var(ncid, "primitive_vectors", var_gen, &
-                            & lstat, sub = (/ 0, 2 /), error_data = error)
+                            & lstat, block = block, error_data = error)
     call tests_read_status("argument var + sub: generic pointer", (lstat .and. &
                          & var2d(2, 1) == 0. .and. var2d(2, 2) == 10. .and. &
                          & var2d(2, 3) == 0.), error)
@@ -605,7 +671,7 @@ contains
 
     call etsf_io_low_read_var(ncid, "atom_species_names", var(1:1), 80, lstat, error_data = error)
     call tests_read_status("argument var: wrong dimensions", (.not. lstat .and. &
-      & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
+      & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_ARG), &
       & error)
 
     call etsf_io_low_read_var(ncid, "atom_species_names", var, 80, lstat, error_data = error)
