@@ -379,21 +379,24 @@ end if
     else:
       raise ValueError
 
-    # If variable may be splitted, we build a sub optional argument
+    # If variable may be splitted, we build a block optional argument
     if (splitted):
-      ret += "allocate(sub(%d))\n" % (len(var_desc) - 1)
-      ret += "sub(:) = 0\n"
+      ret += "allocate(start(%d), count(%d))\n" % (len(var_desc) - 1, len(var_desc) - 1)
+      ret += "start(:) = 1\n"
+      ret += "count(:) = 0\n"
       for i in [1, 2]:
         if (var_desc[i] == "number_of_spins"):
           ret += "if (folder%%%s%%spin_splitted) then\n" % var
-          ret += "  sub(%d) = folder%%%s%%spin_id\n" % (len(var_desc) - i, var)
+          ret += "  start(%d) = folder%%%s%%spin_id\n" % (len(var_desc) - i, var)
+          ret += "  count(%d) = 1\n" % (len(var_desc) - i)
           ret += "end if\n"
         if (var_desc[i] == "number_of_kpoints"):
           ret += "if (folder%%%s%%k_splitted) then\n" % var
-          ret += "  sub(%d) = folder%%%s%%k_id\n" % (len(var_desc) - i, var)
+          ret += "  start(%d) = folder%%%s%%k_id\n" % (len(var_desc) - i, var)
+          ret += "  count(%d) = 1\n" % (len(var_desc) - i)
           ret += "end if\n"
-      sub_arg = ", sub = sub"
-      sub_array = "%array"
+        sub_arg = ", start = start, count = count"
+        sub_array = "%array"
     else:
       sub_arg = ""
       sub_array = ""
@@ -443,7 +446,7 @@ end if
 
     # If variable may be splitted
     if (splitted):
-      ret += "deallocate(sub)\n"
+      ret += "deallocate(start, count)\n"
 
  # Add attribute code if some
  if (ret_att is not ""):

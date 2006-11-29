@@ -1,3 +1,19 @@
+* Wed Nov 29 2006 Damien Caliste <caliste@pcpm.ucl.ac.be> 0.5
+- Completely change the low level sub-part access, using now the start, count and map
+  argument as in NetCDF (with small modifications). This has been required to be able
+  to have sub access on every dimensions, not only the last and to have access to
+  part of one dimension (not only one element or the all set of elements of one
+  dimension). With the map attribute, it will be possible to swap dimensions
+  on the fly when reading or writing.
+- change the status of the main group in the group level access. The main group is now part
+  of the etsf_groups folder as others. When defining, it is still possible to choose one
+  or several variables of this main group.
+- add partial support for the units attribute (writing is done with default values and 
+  reading only load the values but do nothing with them) and the k_dependant attribute
+  for number_of_coefficients and number_of_states.
+- correct a bug in the implementation while still using the old number_of_symmetries
+  dimension.
+
 * Fri Nov 17 2006 Damien Caliste <caliste@pcpm.ucl.ac.be> 0.4
 - create a type for variables that can have a partial access. Update the code
   routine to cope with this new type.

@@ -111,24 +111,6 @@
   end type etsf_io_low_var_infos
   !!***
   
-  !!****d* etsf_io_low_read_group/FLAGS_MATCHING
-  !! NAME
-  !!  FLAGS_MATCHING
-  !!
-  !! FUNCTION
-  !!  These flags are used when comparing to variables (see etsf_io_low_check_var()).
-  !!   * etsf_io_low_var_match: is used when two variables have the same type,
-  !!                            shape and dimensions.
-  !!   * etsf_io_low_var_type_dif: is used when the type is compatible but conversions
-  !!                               will be done (between numerical values for instance).
-  !!   * etsf_io_low_var_shape_dif: is used when the shape is different but the number
-  !!                                of elements is still compatible.
-  !!
-  !! SOURCE
-  integer, parameter :: etsf_io_low_var_match = 0, etsf_io_low_var_type_dif = 1, &
-                      & etsf_io_low_var_shape_dif = 2
-  !!***
-
   !!****s* etsf_io_low_level/etsf_io_low_var_double
   !! NAME
   !!  etsf_io_low_var_double
@@ -172,10 +154,3 @@
     integer, pointer :: data7D(:, :, :, :, :, :, :) => null()
   end type etsf_io_low_var_integer
   !!***
-
-  type etsf_io_low_block
-    integer :: ncshape
-    integer :: start(16)
-    integer :: count(16)
-    integer :: map(16)
-  end type etsf_io_low_block

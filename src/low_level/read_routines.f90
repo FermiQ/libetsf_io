@@ -150,18 +150,144 @@
   end subroutine etsf_io_low_read_var_infos
   !!***
   
-  subroutine etsf_io_low_block_set_default(block, var_infos)
-    type(etsf_io_low_block), intent(out)    :: block
-    type(etsf_io_low_var_infos), intent(in) :: var_infos
+  subroutine etsf_io_low_make_access(start, count, map, var_infos, lstat, &
+                                   & opt_start, opt_count, opt_map, error_data)
+    integer, intent(out)                           :: start(16), count(16), map(16)
+    type(etsf_io_low_var_infos), intent(in)        :: var_infos
+    logical, intent(out)                           :: lstat
+    integer, intent(in), optional                  :: opt_start(:), opt_count(:), opt_map(:)
+    type(etsf_io_low_error), intent(out), optional :: error_data
     
-    integer :: i
+    !Local
+    character(len = *), parameter :: me = "etsf_io_low_make_access"
+    integer :: i, val(16), j
+    logical :: permut
     
-    ! Create the access arrays from the given variable description.
-    block%ncshape = var_infos%ncshape
-    block%start(1:max(1, block%ncshape)) = 1
-    block%count(1:max(1, block%ncshape)) = var_infos%ncdims(1:max(1, block%ncshape))
-    block%map(1:max(1, block%ncshape))   = (/ 1, (product(var_infos%ncdims(1:i)), i = 1, block%ncshape - 1) /)
-  end subroutine etsf_io_low_block_set_default
+    lstat = .true.
+    if (var_infos%ncshape < 1) then
+      return
+    end if
+    
+    ! We create the start, count and map arguments required by NetCDF.
+    if (present(opt_start)) then
+      ! Size checks.
+      if (size(opt_start) /= var_infos%ncshape) then
+        if (present(error_data)) then
+          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+                                    & tgtname = "opt_start", errmess = "inconsistent length")
+        end if
+        lstat = .false.
+        return
+      end if
+      ! Copy start
+      start(1:var_infos%ncshape) = opt_start(1:var_infos%ncshape)
+    else
+      start(1:max(1, var_infos%ncshape)) = 1
+    end if
+    ! The count array
+    if (present(opt_count)) then
+      ! Size checks.
+      if (size(opt_count) /= var_infos%ncshape) then
+        if (present(error_data)) then
+          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+                                    & tgtname = "opt_count", errmess = "inconsistent length")
+        end if
+        lstat = .false.
+        return
+      end if
+      ! Copy count excempt when negative
+      do i = 1, var_infos%ncshape, 1
+        if (opt_count(i) > 0) then
+          count(i) = opt_count(i)
+        else
+          count(i) = var_infos%ncdims(i)
+        end if
+      end do
+    else
+      count(1:max(1, var_infos%ncshape)) = var_infos%ncdims(1:max(1, var_infos%ncshape))
+    end if
+    ! The map array
+    if (present(opt_map)) then
+      ! Size checks.
+      if (size(opt_map) /= var_infos%ncshape) then
+        if (present(error_data)) then
+          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+                                    & tgtname = "opt_map", errmess = "inconsistent length")
+        end if
+        lstat = .false.
+        return
+      end if
+      ! Copy map if all positive, else apply permutations
+      do i = 1, var_infos%ncshape, 1
+        permut = .false.
+        if (opt_map(i) <= 0) then
+          permut = .true.
+        end if
+        if (permut .and. opt_map(i) > 0) then
+          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+                                    & tgtname = "opt_map", errmess = "inconsistent values")
+        end if
+      end do
+      if (permut) then
+        ! Create a map from the count information
+        val(1) = 1
+        ! j is the index of previous non unity count value
+        if (count(1) > 1) then
+          j = 1
+        else
+          j = 0
+        end if
+        do i = 2, var_infos%ncshape, 1
+          if (count(i) > 1) then
+            if (j > 0) then
+              val(i) = val(i - 1) * count(j)
+            else
+              val(i) = val(i - 1)
+            end if
+            j = i
+          else
+            val(i) = val(i - 1)
+          end if
+        end do
+        ! We do the permutations.
+        do i = 1, var_infos%ncshape, 1
+          if (-opt_map(i) <= 0 .or. -opt_map(i) > var_infos%ncshape) then
+            if (present(error_data)) then
+              call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
+                                        & tgtname = "opt_map", errmess = "out of bounds permutation")
+            end if
+            lstat = .false.
+            return
+          end if
+          map(i) = val(-opt_map(i))
+        end do
+      else
+        ! Copy map
+        map(1:var_infos%ncshape) = opt_map(1:var_infos%ncshape)
+      end if
+    else
+      ! Create a map from the count information
+      map(1) = 1
+      ! j is the index of previous non unity count value
+      if (count(1) > 1) then
+        j = 1
+      else
+        j = 0
+      end if
+      do i = 2, var_infos%ncshape, 1
+        if (count(i) > 1) then
+          if (j > 0) then
+            map(i) = map(i - 1) * count(j)
+          else
+            map(i) = map(i - 1)
+          end if
+          j = i
+        else
+          map(i) = map(i - 1)
+        end if
+      end do
+    end if
+  end subroutine etsf_io_low_make_access
   
   !!****m* etsf_io_low_check_group/etsf_io_low_check_var
   !! NAME
@@ -191,10 +317,10 @@
   !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
   !!
   !! SOURCE
-  subroutine etsf_io_low_check_var(var_ref, var, block, lstat, error_data)
+  subroutine etsf_io_low_check_var(var_ref, var, start, count, map, lstat, error_data)
     type(etsf_io_low_var_infos), intent(in)        :: var_ref
     type(etsf_io_low_var_infos), intent(in)        :: var
-    type(etsf_io_low_block), intent(in)            :: block
+    integer, intent(in)                            :: start(:), count(:), map(:)
     logical, intent(out)                           :: lstat
     type(etsf_io_low_error), intent(out), optional :: error_data
 
@@ -218,22 +344,23 @@
     end if
 
     ! Size checks.
-    if (var_ref%ncshape > 1 .and. block%ncshape /= var_ref%ncshape) then
+    if (var_ref%ncshape > 1 .and. (size(start) /= var_ref%ncshape .or. &
+      & size(count) /= var_ref%ncshape .or. size(map) /= var_ref%ncshape)) then
       if (present(error_data)) then
         call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                                  & tgtname = "block%ncshape", errmess = "inconsistent length")
+                                  & tgtname = "start | count | map", errmess = "inconsistent length")
       end if
       lstat = .false.
       return
     end if
     ! Checks on start.
     do i = 1, var_ref%ncshape, 1
-      if (block%start(i) <= 0 .or. block%start(i) > var_ref%ncdims(i)) then
+      if (start(i) <= 0 .or. start(i) > var_ref%ncdims(i)) then
         if (present(error_data)) then
           write(err, "(A,I0,A,I5,A)") "wrong start value for index ", i, &
-                                    & " (start(i) = ", block%start(i), ")"
+                                    & " (start(i) = ", start(i), ")"
           call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                                   & tgtname = "block%start", errmess = err)
+                                   & tgtname = "start", errmess = err)
         end if
         lstat = .false.
         return
@@ -241,12 +368,12 @@
     end do
     ! Checks on count.
     do i = 1, var_ref%ncshape, 1
-      if (block%count(i) <= 0 .or. block%count(i) > var_ref%ncdims(i)) then
+      if (count(i) <= 0 .or. count(i) > var_ref%ncdims(i)) then
         if (present(error_data)) then
           write(err, "(A,I0,A,I5,A)") "wrong count value for index ", i, &
-                                    & " (count(i) = ", block%count(i), ")"
+                                    & " (count(i) = ", count(i), ")"
           call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                                   & tgtname = "block%count", errmess = err)
+                                   & tgtname = "count", errmess = err)
         end if
         lstat = .false.
         return
@@ -262,7 +389,7 @@
     ! We check that the mapping will not exceed the number of destination elements.
     nb_ele_ref = 1
     do i = 1, var_ref%ncshape, 1
-      nb_ele_ref = nb_ele_ref + block%map(i) * (block%count(i) - 1)
+      nb_ele_ref = nb_ele_ref + map(i) * (count(i) - 1)
     end do
     if (nb_ele_ref > nb_ele) then
       if (present(error_data)) then
@@ -270,7 +397,7 @@
                                   & " (map address = ", nb_ele_ref, &
                                   & " & max address = ", nb_ele , ")"
         call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                                  & tgtname = "block%map", errmess = err)
+                                  & tgtname = "map", errmess = err)
       end if
       lstat = .false.
       return
@@ -281,7 +408,7 @@
     if (var_ref%ncshape == 0) then
       nb_ele_ref = 1
     else
-      nb_ele_ref = product(block%count(1:block%ncshape))
+      nb_ele_ref = product(count(1:var_ref%ncshape))
     end if
     if (nb_ele_ref /= nb_ele) then
       write(err, "(A,I5,A,I5,A)") "incompatible number of data (var_ref = ", &
@@ -547,12 +674,13 @@
   !!***
 
   ! Generic routine, documented in the module file.
-  subroutine read_var_double_var(ncid, varname, var, lstat, block, ncvarid, error_data)
+  subroutine read_var_double_var(ncid, varname, var, lstat, &
+                               & start, count, map, ncvarid, error_data)
     integer, intent(in)                            :: ncid
     character(len = *), intent(in)                 :: varname
     type(etsf_io_low_var_double), intent(inout)    :: var
     logical, intent(out)                           :: lstat
-    type(etsf_io_low_block), intent(in), optional  :: block
+    integer, intent(in), optional                  :: start(:), count(:), map(:)
     integer, intent(out), optional                 :: ncvarid
     type(etsf_io_low_error), intent(out), optional :: error_data
 
@@ -563,60 +691,214 @@
     type(etsf_io_low_error) :: error
     
     if (associated(var%data1D)) then
-      if (present(block)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call read_var_double_1D(ncid, varname, var%data1D, lstat, &
-                              & block = block, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call read_var_double_1D(ncid, varname, var%data1D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call read_var_double_1D(ncid, varname, var%data1D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call read_var_double_1D(ncid, varname, var%data1D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call read_var_double_1D(ncid, varname, var%data1D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call read_var_double_1D(ncid, varname, var%data1D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call read_var_double_1D(ncid, varname, var%data1D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call read_var_double_1D(ncid, varname, var%data1D, lstat, &
-                              & ncvarid = varid, error_data = error)
+                               & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data2D)) then
-      if (present(block)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call read_var_double_2D(ncid, varname, var%data2D, lstat, &
-                              & block = block, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call read_var_double_2D(ncid, varname, var%data2D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call read_var_double_2D(ncid, varname, var%data2D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call read_var_double_2D(ncid, varname, var%data2D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call read_var_double_2D(ncid, varname, var%data2D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call read_var_double_2D(ncid, varname, var%data2D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call read_var_double_2D(ncid, varname, var%data2D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call read_var_double_2D(ncid, varname, var%data2D, lstat, &
-                              & ncvarid = varid, error_data = error)
+                               & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data3D)) then
-      if (present(block)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call read_var_double_3D(ncid, varname, var%data3D, lstat, &
-                              & block = block, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call read_var_double_3D(ncid, varname, var%data3D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call read_var_double_3D(ncid, varname, var%data3D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call read_var_double_3D(ncid, varname, var%data3D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call read_var_double_3D(ncid, varname, var%data3D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call read_var_double_3D(ncid, varname, var%data3D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call read_var_double_3D(ncid, varname, var%data3D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call read_var_double_3D(ncid, varname, var%data3D, lstat, &
-                              & ncvarid = varid, error_data = error)
+                               & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data4D)) then
-      if (present(block)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call read_var_double_4D(ncid, varname, var%data4D, lstat, &
-                              & block = block, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call read_var_double_4D(ncid, varname, var%data4D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call read_var_double_4D(ncid, varname, var%data4D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call read_var_double_4D(ncid, varname, var%data4D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call read_var_double_4D(ncid, varname, var%data4D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call read_var_double_4D(ncid, varname, var%data4D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call read_var_double_4D(ncid, varname, var%data4D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call read_var_double_4D(ncid, varname, var%data4D, lstat, &
-                              & ncvarid = varid, error_data = error)
+                               & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data5D)) then
-      if (present(block)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call read_var_double_5D(ncid, varname, var%data5D, lstat, &
-                              & block = block, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call read_var_double_5D(ncid, varname, var%data5D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call read_var_double_5D(ncid, varname, var%data5D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call read_var_double_5D(ncid, varname, var%data5D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call read_var_double_5D(ncid, varname, var%data5D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call read_var_double_5D(ncid, varname, var%data5D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call read_var_double_5D(ncid, varname, var%data5D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call read_var_double_5D(ncid, varname, var%data5D, lstat, &
-                              & ncvarid = varid, error_data = error)
+                               & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data6D)) then
-      if (present(block)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call read_var_double_6D(ncid, varname, var%data6D, lstat, &
-                              & block = block, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call read_var_double_6D(ncid, varname, var%data6D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call read_var_double_6D(ncid, varname, var%data6D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call read_var_double_6D(ncid, varname, var%data6D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call read_var_double_6D(ncid, varname, var%data6D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call read_var_double_6D(ncid, varname, var%data6D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call read_var_double_6D(ncid, varname, var%data6D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call read_var_double_6D(ncid, varname, var%data6D, lstat, &
-                              & ncvarid = varid, error_data = error)
+                               & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data7D)) then
-      if (present(block)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call read_var_double_7D(ncid, varname, var%data7D, lstat, &
-                              & block = block, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call read_var_double_7D(ncid, varname, var%data7D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call read_var_double_7D(ncid, varname, var%data7D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call read_var_double_7D(ncid, varname, var%data7D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call read_var_double_7D(ncid, varname, var%data7D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call read_var_double_7D(ncid, varname, var%data7D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call read_var_double_7D(ncid, varname, var%data7D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call read_var_double_7D(ncid, varname, var%data7D, lstat, &
-                              & ncvarid = varid, error_data = error)
+                               & ncvarid = varid, error_data = error)
       end if
     else
       write(err, "(A,F10.5)") "no data array associated"
@@ -633,13 +915,13 @@
   end subroutine read_var_double_var
   
   ! Generic routine, documented in the module file.
-  subroutine read_var_integer_var(ncid, varname, var, &
-                                & lstat, block, ncvarid, error_data)
+  subroutine read_var_integer_var(ncid, varname, var, lstat, &
+                                & start, count, map, ncvarid, error_data)
     integer, intent(in)                            :: ncid
     character(len = *), intent(in)                 :: varname
     type(etsf_io_low_var_integer), intent(inout)   :: var
     logical, intent(out)                           :: lstat
-    type(etsf_io_low_block), intent(in), optional  :: block
+    integer, intent(in), optional                  :: start(:), count(:), map(:)
     integer, intent(out), optional                 :: ncvarid
     type(etsf_io_low_error), intent(out), optional :: error_data
 
@@ -648,59 +930,213 @@
     character(len = 80) :: err
     integer :: varid
     type(etsf_io_low_error) :: error
-    
+   
     if (associated(var%data1D)) then
-      if (present(block)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call read_var_integer_1D(ncid, varname, var%data1D, lstat, &
-                               & block = block, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call read_var_integer_1D(ncid, varname, var%data1D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call read_var_integer_1D(ncid, varname, var%data1D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call read_var_integer_1D(ncid, varname, var%data1D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call read_var_integer_1D(ncid, varname, var%data1D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call read_var_integer_1D(ncid, varname, var%data1D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call read_var_integer_1D(ncid, varname, var%data1D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call read_var_integer_1D(ncid, varname, var%data1D, lstat, &
                                & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data2D)) then
-      if (present(block)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call read_var_integer_2D(ncid, varname, var%data2D, lstat, &
-                               & block = block, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call read_var_integer_2D(ncid, varname, var%data2D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call read_var_integer_2D(ncid, varname, var%data2D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call read_var_integer_2D(ncid, varname, var%data2D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call read_var_integer_2D(ncid, varname, var%data2D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call read_var_integer_2D(ncid, varname, var%data2D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call read_var_integer_2D(ncid, varname, var%data2D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call read_var_integer_2D(ncid, varname, var%data2D, lstat, &
                                & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data3D)) then
-      if (present(block)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call read_var_integer_3D(ncid, varname, var%data3D, lstat, &
-                               & block = block, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call read_var_integer_3D(ncid, varname, var%data3D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call read_var_integer_3D(ncid, varname, var%data3D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call read_var_integer_3D(ncid, varname, var%data3D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call read_var_integer_3D(ncid, varname, var%data3D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call read_var_integer_3D(ncid, varname, var%data3D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call read_var_integer_3D(ncid, varname, var%data3D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call read_var_integer_3D(ncid, varname, var%data3D, lstat, &
                                & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data4D)) then
-      if (present(block)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call read_var_integer_4D(ncid, varname, var%data4D, lstat, &
-                               & block = block, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call read_var_integer_4D(ncid, varname, var%data4D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call read_var_integer_4D(ncid, varname, var%data4D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call read_var_integer_4D(ncid, varname, var%data4D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call read_var_integer_4D(ncid, varname, var%data4D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call read_var_integer_4D(ncid, varname, var%data4D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call read_var_integer_4D(ncid, varname, var%data4D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call read_var_integer_4D(ncid, varname, var%data4D, lstat, &
                                & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data5D)) then
-      if (present(block)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call read_var_integer_5D(ncid, varname, var%data5D, lstat, &
-                               & block = block, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call read_var_integer_5D(ncid, varname, var%data5D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call read_var_integer_5D(ncid, varname, var%data5D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call read_var_integer_5D(ncid, varname, var%data5D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call read_var_integer_5D(ncid, varname, var%data5D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call read_var_integer_5D(ncid, varname, var%data5D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call read_var_integer_5D(ncid, varname, var%data5D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call read_var_integer_5D(ncid, varname, var%data5D, lstat, &
                                & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data6D)) then
-      if (present(block)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call read_var_integer_6D(ncid, varname, var%data6D, lstat, &
-                               & block = block, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call read_var_integer_6D(ncid, varname, var%data6D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call read_var_integer_6D(ncid, varname, var%data6D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call read_var_integer_6D(ncid, varname, var%data6D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call read_var_integer_6D(ncid, varname, var%data6D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call read_var_integer_6D(ncid, varname, var%data6D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call read_var_integer_6D(ncid, varname, var%data6D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call read_var_integer_6D(ncid, varname, var%data6D, lstat, &
                                & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data7D)) then
-      if (present(block)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call read_var_integer_7D(ncid, varname, var%data7D, lstat, &
-                               & block = block, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call read_var_integer_7D(ncid, varname, var%data7D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call read_var_integer_7D(ncid, varname, var%data7D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call read_var_integer_7D(ncid, varname, var%data7D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call read_var_integer_7D(ncid, varname, var%data7D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call read_var_integer_7D(ncid, varname, var%data7D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call read_var_integer_7D(ncid, varname, var%data7D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call read_var_integer_7D(ncid, varname, var%data7D, lstat, &
                                & ncvarid = varid, error_data = error)

@@ -299,7 +299,7 @@ def readwrite_grp(grp_name, grp_id, action):
   write(*,*) "Testing etsf_io_data_%s()..."
 
   dims%%number_of_grid_points_vector3 = 5
-  dims%%number_of_symmetries = 4
+  dims%%number_of_symmetry_operations = 4
   dims%%max_number_of_coefficients = 6
   dims%%max_number_of_projectors = 2
   dims%%max_number_of_states = 8

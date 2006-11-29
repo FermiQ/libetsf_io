@@ -694,7 +694,7 @@ contains
 
     call etsf_io_low_write_var(ncid, "atom_species", var(1:3), lstat, error_data = error)
     call tests_write_status("argument var: wrong dimensions", (.not. lstat .and. &
-      & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
+      & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_ARG), &
       & error)
 
     call etsf_io_low_write_var(ncid, "number_of_electrons", 12, lstat, error_data = error)
@@ -743,21 +743,23 @@ contains
 
     var = (/ 7, 5, 3, 9 /)
     call etsf_io_low_write_var(ncid, "test_integer_2d", var, &
-                            & lstat, sub = (/ 0, 2, 3 /), error_data = error)
+                            & lstat, start = (/ 1, 2, 3 /), count = (/ 0, 1, 1 /), &
+                            & error_data = error)
     call tests_write_status("argument sub: wrong size", (.not. lstat), error)
 
     call etsf_io_low_write_var(ncid, "test_integer_2d", var, &
-                            & lstat, sub = (/ 0, 6 /), error_data = error)
+                            & lstat, start = (/ 1, 6 /), count = (/ 0, 1 /), error_data = error)
     call tests_write_status("argument sub: out-of-bounds", (.not. lstat), error)
 
     call etsf_io_low_write_var(ncid, "test_integer_2d", var(1:3), &
-                            & lstat, sub = (/ 0, 2 /), error_data = error)
+                            & lstat, start = (/ 1, 2 /), count = (/ 0, 1 /), error_data = error)
     call tests_write_status("argument sub: wrong dimensions", (.not. lstat), error)
 
     call etsf_io_low_write_var(ncid, "test_integer_2d", var, &
-                            & lstat, sub = (/ 0, 2 /), error_data = error)
+                            & lstat, start = (/ 1, 2 /), count = (/ 0, 1 /), error_data = error)
     call tests_write_status("argument sub: good dimensions", lstat, error)
-    call etsf_io_low_read_var(ncid, "test_integer_2d", var, lstat, sub = (/ 0, 2 /), error_data = error)
+    call etsf_io_low_read_var(ncid, "test_integer_2d", var, lstat, &
+                            & start = (/ 1, 2 /), count = (/ 0, 1 /), error_data = error)
     call tests_write_status(" | reading variable", lstat, error)
     if (.not. (var(1) == 7 .and. var(2) == 5 .and. var(3) == 3 .and. var(4) == 9)) then
       error%access_mode_id = ERROR_MODE_SPEC
@@ -829,7 +831,7 @@ contains
 
     call etsf_io_low_write_var(ncid, "reduced_atom_positions", var(:, 1:3), lstat, error_data = error)
     call tests_write_status("argument var: wrong dimensions", (.not. lstat .and. &
-      & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
+      & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_ARG), &
       & error)
 
     var = reshape((/ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 /), (/ 3, 4 /))
@@ -871,9 +873,12 @@ contains
 
     density = (/ (-real(i) / 2.d0, i = 1, 27) /)
     call etsf_io_low_write_var(ncid, "density", density, &
-                            & lstat, sub = (/ 0, 0, 0, 2 /), error_data = error)
+                            & lstat, start = (/ 1, 1, 1, 2 /), count = (/ 0, 0, 0, 1 /), &
+                            & error_data = error)
     call tests_write_status("argument var + sub: good matching (3D <-> 1D)", lstat, error)
-    call etsf_io_low_read_var(ncid, "density", density, lstat, sub = (/ 0, 0, 0, 2 /), error_data = error)
+    call etsf_io_low_read_var(ncid, "density", density, lstat, &
+                            & start = (/ 1, 1, 1, 2 /), count = (/ 0, 0, 0, 1 /), &
+                            & error_data = error)
     call tests_write_status(" | reading variable", lstat, error)
     if (.not. (density(1) == -0.5d0 .and. density(2) == -1.d0 .and. density(3) == -1.5d0) ) then
       error%access_mode_id = ERROR_MODE_SPEC
@@ -943,7 +948,7 @@ contains
 
     call etsf_io_low_write_var(ncid, "exchange_functional", var(1:50), 50, lstat, error_data = error)
     call tests_write_status("argument var: wrong dimensions", (.not. lstat .and. &
-      & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_VAR), &
+      & error%access_mode_id == ERROR_MODE_SPEC .and. error%target_type_id == ERROR_TYPE_ARG), &
       & error)
 
     write(var, "(A)") "This is a wonderful functional"

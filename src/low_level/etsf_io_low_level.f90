@@ -63,8 +63,10 @@ module etsf_io_low_level
   !!  etsf_io_low_read_var
   !!
   !! SYNOPSIS
-  !!  * call etsf_io_low_read_var(ncid, varname, var, lstat, ncvarid, sub, error_data)
-  !!  * call etsf_io_low_read_var(ncid, varname, var, charlen, lstat, ncvarid, sub, error_data)
+  !!  * call etsf_io_low_read_var(ncid, varname, var, lstat, &
+  !!                            & ncvarid, start, count, map, error_data)
+  !!  * call etsf_io_low_read_var(ncid, varname, var, charlen, lstat, &
+  !!                            & ncvarid, start, count, map, error_data)
   !!
   !! FUNCTION
   !!  This is a generic interface to read values of a variables (either integer
@@ -84,11 +86,23 @@ module etsf_io_low_level
   !!  of the size (see example below).
   !!
   !!  It is also possible to read some particular dimensions of one variable using
-  !!  the optional @sub argument. This is only possible for multi-dimensional variables
-  !!  and is compatible with a shape modification. See the following examples. The @sub
-  !!  argument is an array specifying for each dimension of the NetCDF variable, if
-  !!  all values of that dimension are read or if only one index is accessed. The order
-  !!  of dimensions are given in the Fortran order (inverse of the specification
+  !!  the optional @start, @count and @map arguments. These are identical to their
+  !!  counterpart in NetCDF, with small differences and improvements:
+  !!  * start is used to define for each dimensions of the ETSF variable where to
+  !!    start reading. Indexes are numbered from 1 to the size of their dimension.
+  !!  * count is used to given the number of elements to be read for each dimenion.
+  !!    The sum start(i) + count(i) - 1 must be lower than the size of the i dimension.
+  !!    As an improvement compared to NetCDF count argument, if one wants to read all
+  !!    values from the dimension i, one can put count(i) = 0 instead of the size
+  !!    of the dimension itself which is not always easily accessible.
+  !!  * map is used to describe where to write data in memory when reading an ETSF
+  !!    variable. It gives for each dimension how many elements must be skip in memory.
+  !!    It also can used to switch order of dimensions. For instance, for an ETSF
+  !!    variable etsf_var(3,2) that we want to put in a variable my_var(2,3), we
+  !!    will use a map (/ 2, 1 /) which means that all values from first index of the
+  !!    etsf_var will put put every 2 elements in memory, while values from the second index
+  !!    will be put every single element.
+  !!  The order of dimensions are given in the Fortran order (inverse of the specification
   !!  order).
   !!
   !! COPYRIGHT
@@ -104,9 +118,15 @@ module etsf_io_low_level
   !! OUTPUT
   !!  * var = an allocated array to store the read values (or a simple scalar).
   !!  * lstat = .true. if operation succeed.
-  !!  * sub = (optional) an array, with the same size than the shape of the NetCDF
-  !!          variable to be read. When sub(i) == 0, then the data for that dimension
-  !!          are totally read, else for sub(i) > 0, only the data at this index are read.
+  !!  * start = (optional) an array, with the same size than the shape of the NetCDF
+  !!            variable to be read. Give the first index to be read for each dimension.
+  !!            By default value is 1 for each dimension.
+  !!  * count = (optional) an array, with the same size than the shape of the NetCDF
+  !!            variable to be read. Give the number of indexes to be read for each dimension.
+  !!            By default value is the size for each dimension.
+  !!  * map = (optional) an array, with the same size than the shape of the NetCDF
+  !!          variable to be read. Give how values are written into memory. By default
+  !!          map = (/ 1, (product(dims(1:i), i = 1, shape - 1) /)
   !!  * ncvarid = (optional) the id used by NetCDF to identify the read variable.
   !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
   !!
@@ -133,13 +153,15 @@ module etsf_io_low_level
   !!   NetCDF def: density(2, 3, 4, 5) # dimensions in NetCDF are reverted
   !!                                   # compared to Fortran style
   !!   double precision :: density_down(5, 4, 3)
-  !!   call etsf_io_low_read_var(ncid, "density", density_down, lstat, sub = (/ 0, 0, 0, 2 /))
+  !!   call etsf_io_low_read_var(ncid, "density", density_down, lstat, &
+  !!                           & start = (/ 1, 1, 1, 2 /), count = (/ 0, 0, 0, 1 /))
   !!
   !!  Get the last 3 dimensions of a 4D array and store them into a 1D array:
   !!   NetCDF def: density(2, 3, 3, 3) # dimensions in NetCDF are reverted
   !!                                   # compared to Fortran style
   !!   double precision :: density_up(27)
-  !!   call etsf_io_low_read_var(ncid, "density", density_up, lstat, sub = (/ 0, 0, 0, 1 /))
+  !!   call etsf_io_low_read_var(ncid, "density", density_up, lstat, &
+  !!                           & start = (/ 1, 1, 1, 2 /), count = (/ 0, 0, 0, 1 /))
   !!
   !!  Read data to a dimension stored in the main program, without duplication
   !!  of data in memory:
@@ -363,8 +385,10 @@ module etsf_io_low_level
   !!  etsf_io_low_write_var
   !!
   !! SYNOPSIS
-  !!  * call etsf_io_low_write_var(ncid, varname, var, lstat, ncvarid, sub, error_data)
-  !!  * call etsf_io_low_write_var(ncid, varname, var, charlen, lstat, ncvarid, sub, error_data)
+  !!  * call etsf_io_low_write_var(ncid, varname, var, lstat, &
+  !!                             & ncvarid, start, count, map, error_data)
+  !!  * call etsf_io_low_write_var(ncid, varname, var, charlen, lstat, &
+  !!                             & ncvarid, start, count, map, error_data)
   !!
   !! FUNCTION
   !!  This is a generic interface to write values of a variables (either integer
@@ -385,11 +409,23 @@ module etsf_io_low_level
   !!  of the size (see example below).
   !!
   !!  It is also possible to write some particular dimensions of one variable using
-  !!  the optional @sub argument. This is only possible for multi-dimensional variables
-  !!  and is compatible with a shape modification. See the following examples. The @sub
-  !!  argument is an array specifying for each dimension of the NetCDF variable, if
-  !!  all values of that dimension are written or if only one index is accessed. The order
-  !!  of dimensions are given in the Fortran order (inverse of the specification
+  !!  the optional @start, @count and @map arguments. These are identical to their
+  !!  counterpart in NetCDF, with small differences and improvements:
+  !!  * start is used to define for each dimensions of the ETSF variable where to
+  !!    start writing. Indexes are numbered from 1 to the size of their dimension.
+  !!  * count is used to given the number of elements to be read for each dimenion.
+  !!    The sum start(i) + count(i) - 1 must be lower than the size of the i dimension.
+  !!    As an improvement compared to NetCDF count argument, if one wants to write all
+  !!    values from the dimension i, one can put count(i) = 0 instead of the size
+  !!    of the dimension itself which is not always easily accessible.
+  !!  * map is used to describe where to read data in memory when writing an ETSF
+  !!    variable. It gives for each dimension how many elements must be skip in memory.
+  !!    It also can used to switch order of dimensions. For instance, for an ETSF
+  !!    variable etsf_var(3,2) that we want to be put from a variable my_var(2,3), we
+  !!    will use a map (/ 2, 1 /) which means that all values of first index of the
+  !!    etsf_var will read from every 2 elements in memory, while values of the second index
+  !!    will be read from every single element.
+  !!  The order of dimensions are given in the Fortran order (inverse of the specification
   !!  order).
   !!
   !! COPYRIGHT
@@ -407,9 +443,15 @@ module etsf_io_low_level
   !!
   !! OUTPUT
   !!  * lstat = .true. if operation succeed.
-  !!  * sub = (optional) an array, with the same size than the shape of the NetCDF
-  !!          variable to be read. When sub(i) == 0, then the data for that dimension
-  !!          are totally read, else for sub(i) > 0, only the data at this index are read.
+  !!  * start = (optional) an array, with the same size than the shape of the NetCDF
+  !!            variable to be read. Give the first index to be read for each dimension.
+  !!            By default value is 1 for each dimension.
+  !!  * count = (optional) an array, with the same size than the shape of the NetCDF
+  !!            variable to be read. Give the number of indexes to be read for each dimension.
+  !!            By default value is the size for each dimension.
+  !!  * map = (optional) an array, with the same size than the shape of the NetCDF
+  !!          variable to be read. Give how values are written into memory. By default
+  !!          map = (/ 1, (product(dims(1:i), i = 1, shape - 1) /)
   !!  * ncvarid = (optional) the id used by NetCDF to identify the written variable.
   !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
   !!
@@ -433,13 +475,15 @@ module etsf_io_low_level
   !!   NetCDF def: density(2, 3, 4, 5) # dimensions in NetCDF are reverted
   !!                                   # compared to Fortran style
   !!   double precision :: density_down(5, 4, 3)
-  !!   call etsf_io_low_write_var(ncid, "density", density_down, lstat, sub = (/ 0, 0, 0, 2 /))
+  !!   call etsf_io_low_write_var(ncid, "density", density_down, lstat, &
+  !!                            & start = (/ 1, 1, 1, 2 /), count = (/ 0, 0, 0, 1 /))
   !!
   !!  Write the last 3 dimensions of a 4D array and read them from a 1D array:
   !!   NetCDF def: density(2, 3, 3, 3) # dimensions in NetCDF are reverted
   !!                                   # compared to Fortran style
   !!   double precision :: density_up(27)
-  !!   call etsf_io_low_write_var(ncid, "density", density_up, lstat, sub = (/ 0, 0, 0, 1 /))
+  !!   call etsf_io_low_write_var(ncid, "density", density_up, lstat, &
+  !!                            & start = (/ 1, 1, 1, 2 /), count = (/ 0, 0, 0, 1 /))
   !!
   !!  Write data from a dimension stored in the main program, without duplication
   !!  of data in memory:

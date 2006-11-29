@@ -9,7 +9,7 @@ dnl  - PACKAGE_TARNAME, the name used for the tarball ;
 dnl  - PACKAGE_VERSION, the version ;
 dnl  - PACKAGE_STRING, the name + the version ;
 dnl  - PACKAGE_BUGREPORT, the mail.
-AC_INIT([ETSF - IO library], [0.4], [caliste@pcpm.ucl.ac.be], [etsf_io])
+AC_INIT([ETSF - IO library], [0.5], [caliste@pcpm.ucl.ac.be], [etsf_io])
 
 dnl All temporary building files are put in this directory.
 dnl his must be called before AM_INIT_AUTOMAKE

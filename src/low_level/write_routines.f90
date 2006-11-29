@@ -497,12 +497,13 @@
   end subroutine etsf_io_low_def_var_nD
   
   ! Generic routine, documented in the module file.
-  subroutine write_var_double_var(ncid, varname, var, lstat, sub, ncvarid, error_data)
+  subroutine write_var_double_var(ncid, varname, var, lstat, &
+                                & start, count, map, ncvarid, error_data)
     integer, intent(in)                            :: ncid
     character(len = *), intent(in)                 :: varname
     type(etsf_io_low_var_double), intent(in)       :: var
     logical, intent(out)                           :: lstat
-    integer, intent(in), optional                  :: sub(:)
+    integer, intent(in), optional                  :: start(:), count(:), map(:)
     integer, intent(out), optional                 :: ncvarid
     type(etsf_io_low_error), intent(out), optional :: error_data
 
@@ -512,60 +513,214 @@
     type(etsf_io_low_error) :: error
     
     if (associated(var%data1D)) then
-      if (present(sub)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call write_var_double_1D(ncid, varname, var%data1D, lstat, &
-                              & sub = sub, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call write_var_double_1D(ncid, varname, var%data1D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call write_var_double_1D(ncid, varname, var%data1D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call write_var_double_1D(ncid, varname, var%data1D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call write_var_double_1D(ncid, varname, var%data1D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call write_var_double_1D(ncid, varname, var%data1D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call write_var_double_1D(ncid, varname, var%data1D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call write_var_double_1D(ncid, varname, var%data1D, lstat, &
-                              & ncvarid = varid, error_data = error)
+                               & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data2D)) then
-      if (present(sub)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call write_var_double_2D(ncid, varname, var%data2D, lstat, &
-                              & sub = sub, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call write_var_double_2D(ncid, varname, var%data2D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call write_var_double_2D(ncid, varname, var%data2D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call write_var_double_2D(ncid, varname, var%data2D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call write_var_double_2D(ncid, varname, var%data2D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call write_var_double_2D(ncid, varname, var%data2D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call write_var_double_2D(ncid, varname, var%data2D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call write_var_double_2D(ncid, varname, var%data2D, lstat, &
-                              & ncvarid = varid, error_data = error)
+                               & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data3D)) then
-      if (present(sub)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call write_var_double_3D(ncid, varname, var%data3D, lstat, &
-                              & sub = sub, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call write_var_double_3D(ncid, varname, var%data3D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call write_var_double_3D(ncid, varname, var%data3D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call write_var_double_3D(ncid, varname, var%data3D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call write_var_double_3D(ncid, varname, var%data3D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call write_var_double_3D(ncid, varname, var%data3D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call write_var_double_3D(ncid, varname, var%data3D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call write_var_double_3D(ncid, varname, var%data3D, lstat, &
-                              & ncvarid = varid, error_data = error)
+                               & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data4D)) then
-      if (present(sub)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call write_var_double_4D(ncid, varname, var%data4D, lstat, &
-                              & sub = sub, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call write_var_double_4D(ncid, varname, var%data4D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call write_var_double_4D(ncid, varname, var%data4D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call write_var_double_4D(ncid, varname, var%data4D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call write_var_double_4D(ncid, varname, var%data4D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call write_var_double_4D(ncid, varname, var%data4D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call write_var_double_4D(ncid, varname, var%data4D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call write_var_double_4D(ncid, varname, var%data4D, lstat, &
-                              & ncvarid = varid, error_data = error)
+                               & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data5D)) then
-      if (present(sub)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call write_var_double_5D(ncid, varname, var%data5D, lstat, &
-                              & sub = sub, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call write_var_double_5D(ncid, varname, var%data5D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call write_var_double_5D(ncid, varname, var%data5D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call write_var_double_5D(ncid, varname, var%data5D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call write_var_double_5D(ncid, varname, var%data5D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call write_var_double_5D(ncid, varname, var%data5D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call write_var_double_5D(ncid, varname, var%data5D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call write_var_double_5D(ncid, varname, var%data5D, lstat, &
-                              & ncvarid = varid, error_data = error)
+                               & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data6D)) then
-      if (present(sub)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call write_var_double_6D(ncid, varname, var%data6D, lstat, &
-                              & sub = sub, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call write_var_double_6D(ncid, varname, var%data6D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call write_var_double_6D(ncid, varname, var%data6D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call write_var_double_6D(ncid, varname, var%data6D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call write_var_double_6D(ncid, varname, var%data6D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call write_var_double_6D(ncid, varname, var%data6D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call write_var_double_6D(ncid, varname, var%data6D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call write_var_double_6D(ncid, varname, var%data6D, lstat, &
-                              & ncvarid = varid, error_data = error)
+                               & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data7D)) then
-      if (present(sub)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call write_var_double_7D(ncid, varname, var%data7D, lstat, &
-                              & sub = sub, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call write_var_double_7D(ncid, varname, var%data7D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call write_var_double_7D(ncid, varname, var%data7D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call write_var_double_7D(ncid, varname, var%data7D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call write_var_double_7D(ncid, varname, var%data7D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call write_var_double_7D(ncid, varname, var%data7D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call write_var_double_7D(ncid, varname, var%data7D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call write_var_double_7D(ncid, varname, var%data7D, lstat, &
-                              & ncvarid = varid, error_data = error)
+                               & ncvarid = varid, error_data = error)
       end if
     else
       call etsf_io_low_error_set(error, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
@@ -581,12 +736,13 @@
   end subroutine write_var_double_var
   
   ! Generic routine, documented in the module file.
-  subroutine write_var_integer_var(ncid, varname, var, lstat, sub, ncvarid, error_data)
+  subroutine write_var_integer_var(ncid, varname, var, lstat, &
+                                 & start, count, map, ncvarid, error_data)
     integer, intent(in)                            :: ncid
     character(len = *), intent(in)                 :: varname
     type(etsf_io_low_var_integer), intent(in)      :: var
     logical, intent(out)                           :: lstat
-    integer, intent(in), optional                  :: sub(:)
+    integer, intent(in), optional                  :: start(:), count(:), map(:)
     integer, intent(out), optional                 :: ncvarid
     type(etsf_io_low_error), intent(out), optional :: error_data
 
@@ -596,57 +752,211 @@
     type(etsf_io_low_error) :: error
     
     if (associated(var%data1D)) then
-      if (present(sub)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call write_var_integer_1D(ncid, varname, var%data1D, lstat, &
-                               & sub = sub, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call write_var_integer_1D(ncid, varname, var%data1D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call write_var_integer_1D(ncid, varname, var%data1D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call write_var_integer_1D(ncid, varname, var%data1D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call write_var_integer_1D(ncid, varname, var%data1D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call write_var_integer_1D(ncid, varname, var%data1D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call write_var_integer_1D(ncid, varname, var%data1D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call write_var_integer_1D(ncid, varname, var%data1D, lstat, &
                                & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data2D)) then
-      if (present(sub)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call write_var_integer_2D(ncid, varname, var%data2D, lstat, &
-                               & sub = sub, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call write_var_integer_2D(ncid, varname, var%data2D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call write_var_integer_2D(ncid, varname, var%data2D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call write_var_integer_2D(ncid, varname, var%data2D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call write_var_integer_2D(ncid, varname, var%data2D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call write_var_integer_2D(ncid, varname, var%data2D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call write_var_integer_2D(ncid, varname, var%data2D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call write_var_integer_2D(ncid, varname, var%data2D, lstat, &
                                & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data3D)) then
-      if (present(sub)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call write_var_integer_3D(ncid, varname, var%data3D, lstat, &
-                               & sub = sub, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call write_var_integer_3D(ncid, varname, var%data3D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call write_var_integer_3D(ncid, varname, var%data3D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call write_var_integer_3D(ncid, varname, var%data3D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call write_var_integer_3D(ncid, varname, var%data3D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call write_var_integer_3D(ncid, varname, var%data3D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call write_var_integer_3D(ncid, varname, var%data3D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call write_var_integer_3D(ncid, varname, var%data3D, lstat, &
                                & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data4D)) then
-      if (present(sub)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call write_var_integer_4D(ncid, varname, var%data4D, lstat, &
-                               & sub = sub, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call write_var_integer_4D(ncid, varname, var%data4D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call write_var_integer_4D(ncid, varname, var%data4D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call write_var_integer_4D(ncid, varname, var%data4D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call write_var_integer_4D(ncid, varname, var%data4D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call write_var_integer_4D(ncid, varname, var%data4D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call write_var_integer_4D(ncid, varname, var%data4D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call write_var_integer_4D(ncid, varname, var%data4D, lstat, &
                                & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data5D)) then
-      if (present(sub)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call write_var_integer_5D(ncid, varname, var%data5D, lstat, &
-                               & sub = sub, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call write_var_integer_5D(ncid, varname, var%data5D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call write_var_integer_5D(ncid, varname, var%data5D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call write_var_integer_5D(ncid, varname, var%data5D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call write_var_integer_5D(ncid, varname, var%data5D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call write_var_integer_5D(ncid, varname, var%data5D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call write_var_integer_5D(ncid, varname, var%data5D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call write_var_integer_5D(ncid, varname, var%data5D, lstat, &
                                & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data6D)) then
-      if (present(sub)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call write_var_integer_6D(ncid, varname, var%data6D, lstat, &
-                               & sub = sub, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call write_var_integer_6D(ncid, varname, var%data6D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call write_var_integer_6D(ncid, varname, var%data6D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call write_var_integer_6D(ncid, varname, var%data6D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call write_var_integer_6D(ncid, varname, var%data6D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call write_var_integer_6D(ncid, varname, var%data6D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call write_var_integer_6D(ncid, varname, var%data6D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call write_var_integer_6D(ncid, varname, var%data6D, lstat, &
                                & ncvarid = varid, error_data = error)
       end if
     else if (associated(var%data7D)) then
-      if (present(sub)) then
+      if (present(start) .and. present(count) .and. present(map)) then
         call write_var_integer_7D(ncid, varname, var%data7D, lstat, &
-                               & sub = sub, ncvarid = varid, error_data = error)
+                               & start = start, count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(count)) then
+        call write_var_integer_7D(ncid, varname, var%data7D, lstat, &
+                               & start = start, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start) .and. present(map)) then
+        call write_var_integer_7D(ncid, varname, var%data7D, lstat, &
+                               & start = start, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count) .and. present(map)) then
+        call write_var_integer_7D(ncid, varname, var%data7D, lstat, &
+                               & count = count, map = map, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(start)) then
+        call write_var_integer_7D(ncid, varname, var%data7D, lstat, start = start, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(count)) then
+        call write_var_integer_7D(ncid, varname, var%data7D, lstat, count = count, &
+                               & ncvarid = varid, error_data = error)
+      else if (present(map)) then
+        call write_var_integer_7D(ncid, varname, var%data7D, lstat, map = map, &
+                               & ncvarid = varid, error_data = error)
       else
         call write_var_integer_7D(ncid, varname, var%data7D, lstat, &
                                & ncvarid = varid, error_data = error)

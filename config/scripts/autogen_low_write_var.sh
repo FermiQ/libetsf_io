@@ -62,13 +62,13 @@ for ((i=0;i<3;i++)) ; do
       addcomment='!'
     fi
     cat >> $TARGET_FILE << EOF
-  subroutine write_var_${type}_${dim}D(ncid, varname, var${addarg}, &
-                                          & lstat, sub, ncvarid, error_data)
+  subroutine write_var_${type}_${dim}D(ncid, varname, var${addarg}, lstat, &
+                                     & start, count, map, ncvarid, error_data)
     integer, intent(in)                            :: ncid${addarg}
     character(len = *), intent(in)                 :: varname
     ${fortrantype}, intent(in) :: var${vardims}
     logical, intent(out)                           :: lstat
-    integer, intent(in), optional                  :: sub(:)
+    integer, intent(in), optional                  :: start(:), count(:), map(:)
     integer, intent(out), optional                 :: ncvarid
     type(etsf_io_low_error), intent(out), optional :: error_data
 
@@ -76,97 +76,76 @@ for ((i=0;i<3;i++)) ; do
     character(len = *), parameter :: me = "etsf_io_low_write_var_${type}_${dim}D"
     character(len = 80) :: err
     type(etsf_io_low_var_infos) :: var_nc, var_user
-    integer :: s, lvl, i, sub_value
-    integer :: start(1:16), count(1:16)
+    type(etsf_io_low_error) :: error
+    integer :: s, i
+    integer :: my_start(16), my_count(16), my_map(16)
     logical :: stat, sub_set
 
     lstat = .false.
-    ! We get the dimensions and shape of the ref variable in the NetCDF file.
-    if (present(error_data)) then
-      call etsf_io_low_read_var_infos(ncid, varname, var_nc, stat, error_data = error_data)
-    else
-      call etsf_io_low_read_var_infos(ncid, varname, var_nc, stat)
-    end if
+    call etsf_io_low_read_var_infos(ncid, varname, var_nc, stat, error_data = error)
     if (.not. stat) then
+      if (present(error_data)) then
+        error_data = error
+      end if
       return
     end if
-    ! Consistency checks, when sub is present
-    if (present(sub)) then
-      if (size(sub) /= var_nc%ncshape) then
-        write(err, "(A)") "inconsistent length (must be the shape of the ETSF variable)"
-        if (present(error_data)) then
-          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                       & tgtname = "sub", errmess = err)
-        end if
-        return
-      end if
-      ! Build the start and count argument for the nf90_get_var() routine
-      sub_value = var_nc%ncshape
-      sub_set = .false.
-      do i = 1, var_nc%ncshape, 1
-        if (sub(i) == 0) then
-          if (sub_set) then
-            write(err, "(A)") "sub argument must not contain zero values after non-zero values."
-            if (present(error_data)) then
-              call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                                       & tgtname = "sub", errmess = err)
-            end if
-            return
-          end if
-          start(i) = 1
-          count(i) = var_nc%ncdims(i)
-        else
-          if (.not. sub_set) then
-            sub_value = i - 1
-            sub_set = .true.
-          end if
-          start(i) = sub(i)
-          count(i) = 1
-          if (sub(i) < 0 .or. sub(i) > var_nc%ncdims(i)) then
-            write(err, "(A,I0,A,I0,A)") "inconsistent value at index ", i, &
-                                      & " (must be within ]0;", var_nc%ncdims(i), "])"
-            if (present(error_data)) then
-              call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                           & tgtname = "sub", errmess = err)
-            end if
-            return
-          end if
-        end if
-      end do
-    else
-      ! Normal case, no sub reading
-      start(:) = 1
-      count = var_nc%ncdims
-      sub_value = var_nc%ncshape
-    end if
+    var_user%name = varname
     var_user%nctype = ${nctype}
     var_user%ncshape = ${dim}
     ${addcomment}var_user%ncdims(${start}:${dim}) = shape(var)
     ${charcomment}var_user%ncdims(1) = charlen
-    !if (present(error_data)) then
-    !  call etsf_io_low_check_var(var_nc, var_user, stat, level = lvl, sub = sub_value, &
-    !                           & error_data = error_data)
-    !else
-    !  call etsf_io_low_check_var(var_nc, var_user, stat, level = lvl, sub = sub_value)
-    !end if
-    !if (.not. stat) then
-    !  return
-    !end if
 
+    ! Create the access arrays from optional arguments.
+    if (present(start) .and. present(count) .and. present(map)) then
+      call etsf_io_low_make_access(my_start, my_count, my_map, var_nc, stat, &
+                                 & opt_start = start, opt_count = count, opt_map = map, &
+                                 & error_data = error)
+    else if (present(start) .and. present(count)) then
+      call etsf_io_low_make_access(my_start, my_count, my_map, var_nc, stat, &
+                                 & opt_start = start, opt_count = count, error_data = error)
+    else if (present(start) .and. present(map)) then
+      call etsf_io_low_make_access(my_start, my_count, my_map, var_nc, stat, &
+                                 & opt_start = start, opt_map = map, error_data = error)
+    else if (present(count) .and. present(map)) then
+      call etsf_io_low_make_access(my_start, my_count, my_map, var_nc, stat, &
+                                 & opt_count = count, opt_map = map, error_data = error)
+    else if (present(start)) then
+      call etsf_io_low_make_access(my_start, my_count, my_map, var_nc, stat, &
+                                 & opt_start = start, error_data = error)
+    else if (present(count)) then
+      call etsf_io_low_make_access(my_start, my_count, my_map, var_nc, stat, &
+                                 & opt_count = count, error_data = error)
+    else if (present(map)) then
+      call etsf_io_low_make_access(my_start, my_count, my_map, var_nc, stat, &
+                                 & opt_map = map, error_data = error)
+    else
+      call etsf_io_low_make_access(my_start, my_count, my_map, var_nc, stat, error_data = error)
+    end if
+    if (.not. stat) then
+      if (present(error_data)) then
+        error_data = error
+      end if
+      return
+    end if
+
+    ! Number of elements checks
+    call etsf_io_low_check_var(var_nc, var_user, my_start(1:var_nc%ncshape), &
+                             & my_count(1:var_nc%ncshape), my_map(1:var_nc%ncshape), &
+                             & stat, error_data = error)
+    if (.not. stat) then
+      if (present(error_data)) then
+        error_data = error
+      end if
+      return
+    end if
+    
     ! Now that we are sure that the written var has the same type and dimension
     ! that the argument one, we can do the put action securely.
-    if (modulo(lvl / etsf_io_low_var_shape_dif, 2) == 1 .or. present(sub)) then
-      ! The shape differs but is compatible, we then give the count and ma
-      ! arguments.
-      s = nf90_put_var(ncid, var_nc%ncid, values = var, &
-                      & start = start(1:var_nc%ncshape) &
-      ${addcomment}                & ,count = count(1:var_nc%ncshape) &
-      ${addcomment}                & ,map = (/ 1, (product(var_nc%ncdims(:i)), &
-      ${addcomment}                & i = 1, var_nc%ncshape - 1) /) &
-                      &       )
-    else
-      s = nf90_put_var(ncid, var_nc%ncid, values = var)
-    end if
+    s = nf90_put_var(ncid, var_nc%ncid, values = var, &
+                   & start = my_start(1:max(1, var_nc%ncshape)) &
+    ${addcomment}               & ,count = my_count(1:max(1, var_nc%ncshape)) &
+    ${addcomment}               & ,map = my_map(1:max(1, var_nc%ncshape)) &
+                   &       )
     if (s /= nf90_noerr) then
       if (present(error_data)) then
         call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_VAR, me, &
