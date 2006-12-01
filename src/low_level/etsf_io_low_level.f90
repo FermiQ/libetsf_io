@@ -550,6 +550,32 @@ module etsf_io_low_level
     module procedure var_integer_associated
     module procedure var_double_associated
   end interface etsf_io_low_var_associated
+
+  !!****f* etsf_io_low_level/etsf_io_low_var_multiply
+  !! NAME
+  !!  etsf_io_low_var_multiply
+  !!
+  !! FUNCTION
+  !!  This subroutine is used to multiply the array of an unformatted pointer.
+  !!  The factor must be of the same kind (integer or double) than the array.
+  !!
+  !! SYNOPSIS
+  !!  call etsf_io_low_var_multiply(array, factor)
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!
+  !! INPUTS
+  !!  * array <type(etsf_io_low_var_*)> = an undefined shape array.
+  !!  * factor = the multiplying factor (either integr or double).
+  !!***
+  interface etsf_io_low_var_multiply
+    module procedure var_integer_multiply
+    module procedure var_double_multiply
+  end interface etsf_io_low_var_multiply
   
   !!****g* etsf_io_low_level/etsf_io_low_error_group
   !! FUNCTION
@@ -623,6 +649,8 @@ module etsf_io_low_level
   ! Private variables & methods.
   private :: var_integer_associated
   private :: var_double_associated
+  private :: var_integer_multiply
+  private :: var_double_multiply
 contains
 
   !!****m* etsf_io_low_error_group/etsf_io_low_error_set
@@ -1007,5 +1035,31 @@ contains
                            & associated(array%data6D) .or. &
                            & associated(array%data7D))
   end function var_double_associated
+
+  subroutine var_integer_multiply(array, factor)
+    type(etsf_io_low_var_integer), intent(inout) :: array
+    integer                                      :: factor
+    
+    if (associated(array%data1D)) array%data1D = array%data1D * factor
+    if (associated(array%data2D)) array%data2D = array%data2D * factor
+    if (associated(array%data3D)) array%data3D = array%data3D * factor
+    if (associated(array%data4D)) array%data4D = array%data4D * factor
+    if (associated(array%data5D)) array%data5D = array%data5D * factor
+    if (associated(array%data6D)) array%data6D = array%data6D * factor
+    if (associated(array%data7D)) array%data7D = array%data7D * factor
+  end subroutine var_integer_multiply
+
+  subroutine var_double_multiply(array, factor)
+    type(etsf_io_low_var_double), intent(inout) :: array
+    double precision                            :: factor
+    
+    if (associated(array%data1D)) array%data1D = array%data1D * factor
+    if (associated(array%data2D)) array%data2D = array%data2D * factor
+    if (associated(array%data3D)) array%data3D = array%data3D * factor
+    if (associated(array%data4D)) array%data4D = array%data4D * factor
+    if (associated(array%data5D)) array%data5D = array%data5D * factor
+    if (associated(array%data6D)) array%data6D = array%data6D * factor
+    if (associated(array%data7D)) array%data7D = array%data7D * factor
+  end subroutine var_double_multiply
 
 end module etsf_io_low_level

@@ -243,6 +243,8 @@ def code_dims(action):
  
 
 # Code for global attributes
+# WARNING! this definition is obsolete since
+# all global attributes are handled by the low level part.
 def code_globals(action):
   ret = ""
 
@@ -277,6 +279,7 @@ def code_globals(action):
         ret += "if (.not. lstat) return\n"
 
   return ret
+# WARNING! this definition is obsolete
 
 
 
@@ -294,7 +297,7 @@ def code_group_generic(group,action):
  # Store main code
  ret = ""
  
- # Consistency check.
+ # Consistency check in def mode
  if (group == "main" and action == "def"):
   ret += """! Consistency checks.
 if (mains < 0 .or. mains >= 2 ** etsf_main_nvars) then
@@ -305,6 +308,15 @@ if (mains < 0 .or. mains >= 2 ** etsf_main_nvars) then
 end if
 
 """
+
+ # Handling of optional variables in get mode
+ if (action == "get"):
+   ret += "! Get values for optional arguments, set default.\n"
+   ret += "if (present(use_atomic_units)) then\n"
+   ret += "  my_use_atomic_units = use_atomic_units\n"
+   ret += "else\n"
+   ret += "  my_use_atomic_units = .true.\n"
+   ret += "end if\n"
 
  ret += "allocate(varid(%d))\n" % len(etsf_groups[group])
  if (action == "put"):
@@ -365,7 +377,7 @@ end if
 
     # Print the variable definition        
     if (group == "main"):
-      ret += "if (iand(mains, etsf_main_%s) /= 0) then\n" % etsf_main_names[var]
+      ret += "if (iand(mains, etsf_main_%s) /= 0) then\n" % var_shortname(var)
       ret += indent_code(buf, 1)
       ret += "end if\n"
     else:
@@ -379,28 +391,6 @@ end if
     else:
       raise ValueError
 
-    # If variable may be splitted, we build a block optional argument
-    if (splitted):
-      ret += "allocate(start(%d), count(%d))\n" % (len(var_desc) - 1, len(var_desc) - 1)
-      ret += "start(:) = 1\n"
-      ret += "count(:) = 0\n"
-      for i in [1, 2]:
-        if (var_desc[i] == "number_of_spins"):
-          ret += "if (folder%%%s%%spin_splitted) then\n" % var
-          ret += "  start(%d) = folder%%%s%%spin_id\n" % (len(var_desc) - i, var)
-          ret += "  count(%d) = 1\n" % (len(var_desc) - i)
-          ret += "end if\n"
-        if (var_desc[i] == "number_of_kpoints"):
-          ret += "if (folder%%%s%%k_splitted) then\n" % var
-          ret += "  start(%d) = folder%%%s%%k_id\n" % (len(var_desc) - i, var)
-          ret += "  count(%d) = 1\n" % (len(var_desc) - i)
-          ret += "end if\n"
-        sub_arg = ", start = start, count = count"
-        sub_array = "%array"
-    else:
-      sub_arg = ""
-      sub_array = ""
-    
     # Variable are read or write, only if associated.
     if (splitted):
       code_if = "if (etsf_io_low_var_associated(folder%%%s%%array)) then\n" % var
@@ -409,6 +399,34 @@ end if
     else:
       code_if = "if (associated(folder%%%s)) then\n" % var
     ret += code_if
+    
+    # If variable may be splitted, we build a block optional argument
+    if (splitted):
+      spl  = "allocate(start(%d), count(%d))\n" % (len(var_desc) - 1, len(var_desc) - 1)
+      spl += "start(:) = 1\n"
+      spl += "count(:) = 0\n"
+      # For each max_something dimension, use the provided value.
+      i = len(var_desc) - 1
+      for dim in var_desc[1:]:
+        if (dim.startswith("max_")):
+          spl += "count(%d) = folder%%%s__%s\n" % (i, var_shortname(var), dim[4:])
+        if (dim == "number_of_spins"):
+          spl += "if (folder%%%s%%spin_splitted) then\n" % var
+          spl += "  start(%d) = folder%%%s%%spin_id\n" % (i, var)
+          spl += "  count(%d) = 1\n" % (i)
+          spl += "end if\n"
+        if (dim == "number_of_kpoints"):
+          spl += "if (folder%%%s%%k_splitted) then\n" % var
+          spl += "  start(%d) = folder%%%s%%k_id\n" % (i, var)
+          spl += "  count(%d) = 1\n" % (i)
+          spl += "end if\n"
+        i -= 1
+        sub_arg = ", start = start, count = count"
+        sub_array = "%array"
+      ret += indent_code(spl, 1)
+    else:
+      sub_arg = ""
+      sub_array = ""
     
     # Treat the k_dependent attribute
     if (action == "get" and att_kdep):
@@ -434,47 +452,57 @@ end if
     else:
       ret += buf
     
+    # If variable may be splitted
+    if (splitted):
+      ret += "  deallocate(start, count)\n"
+
     # End the if associated
     ret += "end if\n"
 
     # Handle attributes of the variable
     if (att_units and action == "get"):
       ret_att += code_if
-      ret_att += indent_code(code_attribute_units(action_str, "folder%%%s__units" % var, \
-                               "folder%%%s__scale_to_atomic_units" % var, ivar), 1)
+      ret_att += indent_code(code_attribute_units(action_str, \
+                             "folder%%%s__units" % var_shortname(var), \
+                             "folder%%%s__scale_to_atomic_units" % var_shortname(var), \
+                             ivar, var, splitted, unformatted), 1)
       ret_att += "end if\n\n"
-
-    # If variable may be splitted
-    if (splitted):
-      ret += "deallocate(start, count)\n"
 
  # Add attribute code if some
  if (ret_att is not ""):
    ret += "\n! Handle all attributes for the group.\n"
    ret += ret_att
- ret += "deallocate(varid)\n"
+ ret += "\ndeallocate(varid)"
  return ret
 
 # Code for the unit attribute, testing its value
 # and the scale_to_atomic_units attribute.
-def code_attribute_units(action, att_unit, att_scale, ivar):
+def code_attribute_units(action, att_unit, att_scale, ivar, \
+                         var = None, var_split = False, var_unform = False):
   ret = "! handle the units attribute.\n"
   ret += code_attributes(action, "varid(%d)" % ivar, "units", \
                          att_unit, "etsf_charlen")
   ret += "if (.not. lstat) return\n"
   # If unit exists, we test its value in the reading case.
   if (action == "read"):
-    ret += "if (lstat) then\n"
-    ret += "  if (trim(%s) /= \"atomic units\") then\n" % att_unit
+    ret += "if (trim(%s) /= \"atomic units\") then\n" % att_unit
     ret += indent_code(code_attributes("read", "varid(%d)" % ivar, \
-                       "scale_to_atomic_units", att_scale, ""), 2)
-    ret += "    if (.not. lstat) return\n"
-    ret += "  else\n"
-    ret += "    %s = 1.0d0\n" % att_scale
-    ret += "  end if\n"
+                       "scale_to_atomic_units", att_scale, ""), 1)
+    ret += "  if (.not. lstat) return\n"
     ret += "else\n"
-    ret += "  %s = \"atomic units\"\n" % att_unit
     ret += "  %s = 1.0d0\n" % att_scale
+    ret += "end if\n"
+    ret += "if (my_use_atomic_units .and. &\n"
+    ret += "  & %s /= 1.0d0) then\n" % att_scale
+    if (var_unform or var_split):
+      sub = ""
+      if (var_split):
+        sub = "%array"
+      ret += "  call etsf_io_low_var_multiply(folder%%%s%s, &\n" % (var, sub)
+      ret += "                              & %s)\n" % att_scale
+    else:
+      ret += "  folder%%%s = folder%%%s * &\n" % (var, var)
+      ret += "    & %s\n" % att_scale
     ret += "end if\n"
   else:
     ret += code_attributes("write", "varid(%d)" % ivar, \
@@ -617,7 +645,7 @@ def init_routine(name,template,info,script,args,type="subroutine"):
  ret = re.sub("@SCRIPT@",script,ret)
 
  arg_list = ""
- arg_move = len(name)+16
+ arg_move = len(name)+19
  arg_stop = 0
 
  # Process arguments
@@ -642,7 +670,7 @@ def init_routine(name,template,info,script,args,type="subroutine"):
 
    # Optional arguments
    if ( (len(arg_info) > 3) and (arg_info[3] == "optional") ):
-    opt = ",optional"
+    opt = ", optional"
    else:
     opt = ""
 
@@ -651,12 +679,12 @@ def init_routine(name,template,info,script,args,type="subroutine"):
     dim = ":"
     for i in range(int(arg_info[4])-1):
      dim += ",:"
-    arg_desc += "  %s%s,pointer :: %s(%s)\n" % \
+    arg_desc += "  %s%s, pointer :: %s(%s)\n" % \
      (arg_info[1],opt,arg,dim)
     if ( (arg_info[3] == "optional") or (arg_info[3] == "local") ):
-     loc_vars += "  %s,allocatable :: my_%s(%s)\n" % (arg_info[1],arg,dim)
+     loc_vars += "  %s, allocatable :: my_%s(%s)\n" % (arg_info[1],arg,dim)
    else:
-    arg_desc += "  %s%s,intent(%s) :: %s\n" % (arg_info[1],opt,arg_info[2],arg)
+    arg_desc += "  %s%s, intent(%s) :: %s\n" % (arg_info[1],opt,arg_info[2],arg)
     if ( (len(arg_info) > 3) and 
          ((arg_info[3] == "optional") or (arg_info[3] == "local")) ):
      loc_vars += "  %s :: my_%s\n" % (arg_info[1],arg)

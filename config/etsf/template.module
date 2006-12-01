@@ -41,14 +41,21 @@ module etsf_io
   !!  ETSF_IO_CONSTANTS
   !!
   !! FUNCTION
-  !!  These values are fixed by the specifications.
+  !!  These values are fixed by the specifications or are static values.
+  !!   * etsf_spec_dimension = to be used in a count argument (see
+  !!                           etsf_io_low_read_var() for instance) when
+  !!                           one wants to read all the values of one
+  !!                           dimension. For example count = (/ 1, etsf_spec_dimension /)
+  !!                           will read one element from the first dimension and
+  !!                           all for the second.
   !!
   !! SOURCE
   ! Constants for internal dimensions
-  integer,parameter :: etsf_charlen = 80
-  integer,parameter :: etsf_histlen = 1024
-  integer,parameter :: etsf_chemlen = 2
-  integer,parameter :: etsf_3dimlen = 3
+  integer, parameter :: etsf_charlen = 80
+  integer, parameter :: etsf_histlen = 1024
+  integer, parameter :: etsf_chemlen = 2
+  integer, parameter :: etsf_3dimlen = 3
+  integer, parameter :: etsf_spec_dimension = 0
 
 @CONSTANTS@
   !!***

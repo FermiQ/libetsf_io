@@ -348,7 +348,7 @@
       & size(count) /= var_ref%ncshape .or. size(map) /= var_ref%ncshape)) then
       if (present(error_data)) then
         call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                                  & tgtname = "start | count | map", errmess = "inconsistent length")
+                                  & tgtname = trim(var_ref%name)//" (start | count | map)", errmess = "inconsistent length")
       end if
       lstat = .false.
       return
@@ -357,10 +357,10 @@
     do i = 1, var_ref%ncshape, 1
       if (start(i) <= 0 .or. start(i) > var_ref%ncdims(i)) then
         if (present(error_data)) then
-          write(err, "(A,I0,A,I5,A)") "wrong start value for index ", i, &
-                                    & " (start(i) = ", start(i), ")"
+          write(err, "(A,I0,A,I0,A,I5,A)") "wrong start value for index ", i, &
+                                         & " (start(", i, ") = ", start(i), ")"
           call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                                   & tgtname = "start", errmess = err)
+                                   & tgtname = trim(var_ref%name)//" (start)", errmess = err)
         end if
         lstat = .false.
         return
@@ -370,10 +370,10 @@
     do i = 1, var_ref%ncshape, 1
       if (count(i) <= 0 .or. count(i) > var_ref%ncdims(i)) then
         if (present(error_data)) then
-          write(err, "(A,I0,A,I5,A)") "wrong count value for index ", i, &
-                                    & " (count(i) = ", count(i), ")"
+          write(err, "(A,I0,A,I0,A,I5,A)") "wrong count value for index ", i, &
+                                         & " (count(", i, ") = ", count(i), ")"
           call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                                   & tgtname = "count", errmess = err)
+                                   & tgtname = trim(var_ref%name)//" (count)", errmess = err)
         end if
         lstat = .false.
         return
@@ -388,16 +388,22 @@
     end if
     ! We check that the mapping will not exceed the number of destination elements.
     nb_ele_ref = 1
-    do i = 1, var_ref%ncshape, 1
-      nb_ele_ref = nb_ele_ref + map(i) * (count(i) - 1)
-    end do
+    if (var%ncshape == 0) then
+      ! if the destination variable is a scalar,
+      ! we can ignore the map argument.
+      nb_ele_ref = 1
+    else
+      do i = 1, var_ref%ncshape, 1
+        nb_ele_ref = nb_ele_ref + map(i) * (count(i) - 1)
+      end do
+    end if
     if (nb_ele_ref > nb_ele) then
       if (present(error_data)) then
         write(err, "(A,A,I5,A,I5,A)") "wrong map value ", &
                                   & " (map address = ", nb_ele_ref, &
                                   & " & max address = ", nb_ele , ")"
         call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                                  & tgtname = "map", errmess = err)
+                                  & tgtname = trim(var_ref%name)//" (map)", errmess = err)
       end if
       lstat = .false.
       return
@@ -405,7 +411,8 @@
     
     ! The argument has a different shape that the store variable.
     ! We check the compatibility, product(var_to%ncdims) == product(var_from%ncdims)
-    if (var_ref%ncshape == 0) then
+    if (var_ref%ncshape == 0 .or. var%ncshape == 0) then
+      ! If var shape is scalar, then always one element will be accessed.
       nb_ele_ref = 1
     else
       nb_ele_ref = product(count(1:var_ref%ncshape))

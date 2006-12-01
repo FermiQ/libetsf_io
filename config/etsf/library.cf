@@ -26,10 +26,6 @@ etsf_modules = {
 # Descriptions of the subprograms
 # <name> : [ <template>, <info>, <action(s)>, <return type>]
 etsf_subprograms = {
-   "globals":[
-      "low_level",
-      "@ACTION_TEXT@ all ETSF global attributes.",
-      "get put"],
    "dims":[
       "low_level",
       "@ACTION_TEXT@ all ETSF dimensions.",
@@ -62,32 +58,37 @@ etsf_subs_actions = {
 # Descriptions of the subprogram arguments for the "def" action
 etsf_subs_def_args = {
    "dims":[
-      "dims type(etsf_dims) in"],
+      "dims type(etsf_dims) in",
+      "lstat logical out",
+      "error_data type(etsf_io_low_error) out"],
    "main":[
-      "mains integer in"]
+      "mains integer in",
+      "lstat logical out",
+      "error_data type(etsf_io_low_error) out"],
+   "@GROUP@":[
+      "lstat logical out",
+      "error_data type(etsf_io_low_error) out"]
 }
 
 # Descriptions of the subprogram arguments for the "get" action
 etsf_subs_get_args = {
-   "globals":[
-      "conventions character(len=etsf_charlen) out",
-      "file_format character(len=etsf_charlen) out",
-      "file_format_version real out",
-      "title character(len=etsf_charlen) out",
-      "history character(len=etsf_histlen) out"],
    "dims":[
-      "dims type(etsf_dims) out"],
+      "dims type(etsf_dims) out",
+      "lstat logical out",
+      "error_data type(etsf_io_low_error) out"],
    "@GROUP@":[
-      "folder type(etsf_@GROUP@) inout"]
+      "folder type(etsf_@GROUP@) inout",
+      "lstat logical out",
+      "error_data type(etsf_io_low_error) out",
+      "use_atomic_units logical in optional"]
 }
 
 # Descriptions of the subprogram arguments for the "put" action
 etsf_subs_put_args = {
-   "globals":[
-      "title character(len=etsf_charlen) in",
-      "history character(len=etsf_histlen) in"],
    "@GROUP@":[
-      "folder type(etsf_@GROUP@) in"]
+      "folder type(etsf_@GROUP@) in",
+      "lstat logical out",
+      "error_data type(etsf_io_low_error) out"]
 }
 
 # Descriptions of the subprogram arguments for the "init" action

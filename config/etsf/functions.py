@@ -54,3 +54,9 @@ def nf90_type(var_desc):
     raise ValueError
 
   return ret
+
+def var_shortname(var):
+  if (var in etsf_variables_shortnames):
+    return etsf_variables_shortnames[var]
+  else:
+    return var

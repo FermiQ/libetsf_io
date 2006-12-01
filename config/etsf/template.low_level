@@ -24,13 +24,11 @@
 !!  overwritten.
 !!
 !! SOURCE
-subroutine etsf_io_@NAME@(ncid, @ARG_LIST@, lstat, error_data)
+subroutine etsf_io_@NAME@(ncid, @ARG_LIST@)
 
   !Arguments ------------------------------------
   integer, intent(in) :: ncid
 @ARG_DESC@
-  logical, intent(out) :: lstat
-  type(etsf_io_low_error), intent(out) :: error_data
 
   !Local variables-------------------------------
   character(len = *), parameter :: my_name = 'etsf_io_@NAME@'

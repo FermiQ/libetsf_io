@@ -86,43 +86,42 @@ for grp in etsf_group_list:
  egn += 1
   
  out_str = "\n\n ! Data type for %s\n type etsf_%s\n" % (grp,grp)
- out_att = ""
+ out_att = ""  # Attributes code
+ out_spe = ""  # Additional specific code
  
  for var in etsf_groups[grp]:
-  dsc = etsf_variables[var]
-  if ( len(dsc) > 1 ):
-   if ( re.match("string",dsc[0]) ):
-    dim_offset = 3
-   else:
-    dim_offset = 2
-   # Retrieve variable properties of interest.
-   unformatted = False
-   splitted = False
-   if (var in etsf_properties):
-    props = etsf_properties[var]
-    unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
-    splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
+   dsc = etsf_variables[var]
+   if ( len(dsc) > 1 ):
+     if ( re.match("string",dsc[0]) ):
+      dim_offset = 3
+     else:
+      dim_offset = 2
+     # Retrieve variable properties of interest.
+     unformatted = False
+     splitted = False
+     if (var in etsf_properties):
+      props = etsf_properties[var]
+      unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
+      splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
 
-   if (unformatted or splitted):
-    # Unformatted pointer case
-    out_str += "  %s :: %s\n" % (fortran_type(dsc, props),var)
+     if (unformatted or splitted):
+      # Unformatted pointer case
+      out_str += "  %s :: %s\n" % (fortran_type(dsc, props),var)
+     else:
+      if ( len(dsc) >= dim_offset ):
+       dim = ":"
+       for i in range(len(dsc)-dim_offset):
+        dim += ",:"
+       # Dimension case (either string or numbers).
+       out_str += "  %s, pointer :: %s(%s) => null()\n" % (fortran_type(dsc),var,dim)
+      else:
+       # String case (dimension less)
+       out_str += "  %s, pointer :: %s => null()\n" % (fortran_type(dsc),var)
    else:
-    if ( len(dsc) >= dim_offset ):
-     dim = ":"
-     for i in range(len(dsc)-dim_offset):
-      dim += ",:"
-     # Dimension case (either string or numbers).
-     out_str += "  %s, pointer :: %s(%s) => null()\n" % (fortran_type(dsc),var,dim)
-    else:
-     # String case (dimension less)
+     # Numbers
      out_str += "  %s, pointer :: %s => null()\n" % (fortran_type(dsc),var)
-  else:
-   # Numbers
-   out_str += "  %s, pointer :: %s => null()\n" % (fortran_type(dsc),var)
 
- # Deals with attributes for variable of this group.
- for var in etsf_groups[grp]:
-   # Retrieve variable properties of interest.
+   # Retrieve properties of interest.
    att_units = False
    if (var in etsf_properties):
     props = etsf_properties[var]
@@ -132,12 +131,25 @@ for grp in etsf_group_list:
     att_desc = etsf_attributes["units"]
     att_desc2 = etsf_attributes["scale_to_atomic_units"]
     out_att += "  ! Units attributes for variable %s\n" % var
-    out_att += "  %s :: %s__%s = %s\n" % (fortran_type(att_desc), var, "units", att_desc[1])
-    out_att += "  %s :: %s__%s = %s\n" % (fortran_type(att_desc2), var, "scale_to_atomic_units", att_desc2[1])
+    out_att += "  %s :: %s__%s = %s\n" % (fortran_type(att_desc), var_shortname(var), \
+                                          "units", att_desc[1])
+    out_att += "  %s :: %s__%s = %s\n" % (fortran_type(att_desc2), var_shortname(var), \
+                                          "scale_to_atomic_units", att_desc2[1])
     
- if (out_att is not ""):
+   # Check for a max_something dimension
+   for dim in dsc[1:]:
+     if (dim.startswith("max_")):
+       out_spe += "  integer :: %s__%s = etsf_spec_dimension\n" % (var_shortname(var), dim[4:])
+    
+ if (out_att != ""):
    out_str += "\n  ! Attributes\n"
    out_str += out_att
+ if (out_spe != ""):
+   out_str += "\n  ! Specific dimensions (etsf_spec_dimension get the value\n"
+   out_str += "  !  of the max_number_of_something when the variable is get\n"
+   out_str += "  !  or put, change it to a lower value if less values are to\n"
+   out_str += "  !  be accessed).\n"
+   out_str += out_spe
  out_str += " end type etsf_%s" % (grp)
 
  est += """
@@ -169,7 +181,7 @@ egv  = 1
 egn  = 0
 for var in etsf_groups["main"]:
  emc += "\n integer, parameter :: etsf_main_%-15s = %d" % \
-         (etsf_main_names[var],egv)
+         (var_shortname(var),egv)
  egv *= 2
  egn += 1
 
