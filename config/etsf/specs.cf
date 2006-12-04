@@ -20,8 +20,9 @@ ETSF_PROP_ATT_GLOBAL      = 1    # Attribute is global
 ETSF_PROP_VAR_UNITS       = 2    # Variable has "units" attribute
 ETSF_PROP_VAR_KDEP        = 4    # Variable is k-point dependent
 ETSF_PROP_VAR_UNFORMATTED = 8    # Type of the variable is etsf_io_low_* unformatted pointer
-ETSF_PROP_VAR_SPLITTED    = 16   # Variable can be accessed on single k point & spin values
-                                 # Splitted variables are always unformatted.
+ETSF_PROP_VAR_SUB_ACCESS  = 16   # Variable can be accessed on single k point & spin values
+                                 # Variables with sub access are always unformatted.
+ETSF_PROP_VAR_SYMMORPHIC  = 32   # Variable has the "symmorphic" flag
 
 # ETSF constants
 etsf_constants = {
@@ -39,11 +40,11 @@ etsf_properties = {
    "file_format_version":ETSF_PROP_ATT_GLOBAL,
    "title":ETSF_PROP_ATT_GLOBAL,
    "history":ETSF_PROP_ATT_GLOBAL,
-   "coefficients_of_wavefunctions":ETSF_PROP_VAR_SPLITTED,
-   "eigenvalues":ETSF_PROP_VAR_SPLITTED + ETSF_PROP_VAR_UNITS,
-   "occupations":ETSF_PROP_VAR_SPLITTED,
-   "real_space_wavefunctions":ETSF_PROP_VAR_SPLITTED,
-   "reduced_coordinates_of_plane_waves":ETSF_PROP_VAR_SPLITTED,
+   "coefficients_of_wavefunctions":ETSF_PROP_VAR_SUB_ACCESS,
+   "eigenvalues":ETSF_PROP_VAR_SUB_ACCESS + ETSF_PROP_VAR_UNITS,
+   "occupations":ETSF_PROP_VAR_SUB_ACCESS,
+   "real_space_wavefunctions":ETSF_PROP_VAR_SUB_ACCESS,
+   "reduced_coordinates_of_plane_waves":ETSF_PROP_VAR_SUB_ACCESS,
    "density":ETSF_PROP_VAR_UNFORMATTED + ETSF_PROP_VAR_UNITS,
    "correlation_potential":ETSF_PROP_VAR_UNFORMATTED + ETSF_PROP_VAR_UNITS,
    "exchange_correlation_potential":ETSF_PROP_VAR_UNFORMATTED + ETSF_PROP_VAR_UNITS,
@@ -53,10 +54,13 @@ etsf_properties = {
    "kinetic_energy_cutoff":ETSF_PROP_VAR_UNITS,
    "gw_corrections":ETSF_PROP_VAR_UNITS,
    "kb_formfactor_sign":ETSF_PROP_VAR_UNFORMATTED,
-   "kb_formfactors":ETSF_PROP_VAR_SPLITTED,
-   "kb_formfactor_derivative":ETSF_PROP_VAR_SPLITTED,
+   "kb_formfactors":ETSF_PROP_VAR_SUB_ACCESS,
+   "kb_formfactor_derivative":ETSF_PROP_VAR_SUB_ACCESS,
    "number_of_states":ETSF_PROP_VAR_KDEP,
-   "number_of_coefficients":ETSF_PROP_VAR_KDEP}
+   "number_of_coefficients":ETSF_PROP_VAR_KDEP,
+   "gw_corrections":ETSF_PROP_VAR_SUB_ACCESS,
+   "number_of_states":ETSF_PROP_VAR_UNFORMATTED,
+   "reduced_symmetry_matrices":ETSF_PROP_VAR_SYMMORPHIC}
 
 # ETSF attributes
 etsf_attributes = {
@@ -222,6 +226,7 @@ etsf_variables = {
       "integer"],
    "number_of_states":[
       "integer",
+      "number_of_spins",
       "number_of_kpoints"],
    "occupations":[
       "real double_precision",

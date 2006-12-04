@@ -102,7 +102,7 @@ for grp in etsf_group_list:
      if (var in etsf_properties):
       props = etsf_properties[var]
       unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
-      splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
+      splitted    = ( props & ETSF_PROP_VAR_SUB_ACCESS == ETSF_PROP_VAR_SUB_ACCESS)
 
      if (unformatted or splitted):
       # Unformatted pointer case
@@ -140,6 +140,10 @@ for grp in etsf_group_list:
    for dim in dsc[1:]:
      if (dim.startswith("max_")):
        out_spe += "  integer :: %s__%s = etsf_spec_dimension\n" % (var_shortname(var), dim[4:])
+     if (splitted and dim == "number_of_spins"):
+       out_spe += "  integer :: %s__spin_access = etsf_no_sub_access\n" % var_shortname(var)
+     if (splitted and dim == "number_of_kpoints"):
+       out_spe += "  integer :: %s__kpoint_access = etsf_no_sub_access\n" % var_shortname(var)
     
  if (out_att != ""):
    out_str += "\n  ! Attributes\n"

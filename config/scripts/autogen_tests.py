@@ -101,7 +101,7 @@ def create_variables(grp_name, grp_id):
     if (var in etsf_properties):
       props = etsf_properties[var]
       unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
-      splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
+      splitted    = ( props & ETSF_PROP_VAR_SUB_ACCESS == ETSF_PROP_VAR_SUB_ACCESS)
     # All variables for the test will be allocatable arrays.
     ret += "%s, allocatable, target :: %s(" % (fortran_type(var_dsc), var)
     
@@ -125,7 +125,7 @@ def output_allocate_init_statement(var):
   if (var in etsf_properties):
     props = etsf_properties[var]
     unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
-    splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
+    splitted    = ( props & ETSF_PROP_VAR_SUB_ACCESS == ETSF_PROP_VAR_SUB_ACCESS)
 
   ret = ""
   var_dsc = etsf_variables[var]
@@ -185,12 +185,10 @@ def output_associate_statement(var):
   if (var in etsf_properties):
     props = etsf_properties[var]
     unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
-    splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
+    splitted    = ( props & ETSF_PROP_VAR_SUB_ACCESS == ETSF_PROP_VAR_SUB_ACCESS)
 
   ret = ""
-  if (splitted):
-    ret += "group%%%s%%array%%data1D => %s\n" % (var, var)
-  elif (unformatted):
+  if (unformatted or splitted):
     ret += "group%%%s%%data1D => %s\n" % (var, var)
   else:
     var_dsc = etsf_variables[var]
@@ -208,7 +206,7 @@ def output_check_statement(var, action):
   if (var in etsf_properties):
     props = etsf_properties[var]
     unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
-    splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
+    splitted    = ( props & ETSF_PROP_VAR_SUB_ACCESS == ETSF_PROP_VAR_SUB_ACCESS)
 
   ret = ""
   var_dsc = etsf_variables[var]
@@ -406,7 +404,7 @@ out.close()
 # =============================
 write_grp_src = ""
 call_grp_src = ""
-for grp in etsf_group_list[1:]:
+for grp in etsf_group_list:
   # Load template
   write_grp_src += readwrite_grp(grp, "etsf_grp_" + grp, "write")
   call_grp_src += "  call test_write_%s()\n" % grp
@@ -426,7 +424,7 @@ out.close()
 # =============================
 read_grp_src = ""
 call_grp_src = ""
-for grp in etsf_group_list[1:]:
+for grp in etsf_group_list:
   # Load template
   read_grp_src += readwrite_grp(grp, "etsf_grp_" + grp, "read")
   call_grp_src += "  call test_read_%s()\n" % grp

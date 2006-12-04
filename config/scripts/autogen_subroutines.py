@@ -31,9 +31,17 @@ def code_data(action):
 # Code for grouped data initialization
 def code_data_init():
 
+ # Handle optional variables
+ ret  = "! Get values for optional arguments, set default.\n"
+ ret += "if (present(k_dependent)) then\n"
+ ret += "  my_k_dependent = k_dependent\n"
+ ret += "else\n"
+ ret += "  my_k_dependent = .true.\n"
+ ret += "end if\n"
+
  # Create a New NetCDF file and the constant dimensions values
  # and save all the dimensions to the file.
- ret = """
+ ret += """
 ! Create the NetCDF file
 call etsf_io_low_open_create(ncid, filename, etsf_file_format_version, lstat, &
                            & title = trim(title), history = trim(history), &
@@ -120,24 +128,32 @@ call etsf_io_low_close(ncid, lstat, error_data = error_data)"""
 # It read a main group and as much as other group as specified.
 def code_data_read():
 
- # Open a NetCDF file for reading.
- ret = """! Open file for reading
+  # Handling of optional variables in get mode
+  ret  = "! Get values for optional arguments, set default.\n"
+  ret += "if (present(use_atomic_units)) then\n"
+  ret += "  my_use_atomic_units = use_atomic_units\n"
+  ret += "else\n"
+  ret += "  my_use_atomic_units = .true.\n"
+  ret += "end if\n"
+
+  # Open a NetCDF file for reading.
+  ret += """
+! Open file for reading
 call etsf_io_low_open_read(ncid, trim(filename), lstat, error_data = error_data)
 if (.not. lstat) return
 
-! Get Data
-"""
+! Get Data"""
 
- # Read the other groups.
- ret += code_data_select("get")
+  # Read the other groups.
+  ret += code_data_select("get")
 
- # Close the file.
- ret += """
+  # Close the file.
+  ret += """
 
 ! Close file
 call etsf_io_low_close(ncid, lstat, error_data = error_data)"""
 
- return ret
+  return ret
 
 
 
@@ -168,7 +184,8 @@ end if
     if (group == "main"):
      buf = "call etsf_io_main_def(ncid, mains, lstat, error_data)\n"
     else:
-     buf = "call etsf_io_%s_def(ncid, lstat, error_data)\n" % (group)
+     buf  = "call etsf_io_%s_def(ncid, lstat, error_data, &\n" % group
+     buf += "                     & k_dependent = my_k_dependent)\n"
     buf += "if (.not. lstat) return\n"
    else:
     # Check the association
@@ -179,7 +196,12 @@ end if
     buf += "  lstat = .false.\n"
     buf += "  return\n"
     buf += "end if\n"
-    buf += "call etsf_io_%s_%s(ncid, group_folder%%%s, lstat, error_data)\n" % (group, action, group)
+    # Call the action routine
+    if (action == "get"):
+     buf += "call etsf_io_%s_get(ncid, group_folder%%%s, lstat, error_data, &\n" % (group, group)
+     buf += "                       & use_atomic_units = my_use_atomic_units)\n"
+    else:
+     buf += "call etsf_io_%s_put(ncid, group_folder%%%s, lstat, error_data)\n" % (group, group)
     buf += "if (.not. lstat) return\n"
    ret += indent_code(buf,3)
  ret += "  end select\n"
@@ -309,13 +331,20 @@ end if
 
 """
 
- # Handling of optional variables in get mode
+ # Handling of different optional variables
  if (action == "get"):
    ret += "! Get values for optional arguments, set default.\n"
    ret += "if (present(use_atomic_units)) then\n"
    ret += "  my_use_atomic_units = use_atomic_units\n"
    ret += "else\n"
    ret += "  my_use_atomic_units = .true.\n"
+   ret += "end if\n"
+ if (action == "def"):
+   ret += "! Get values for optional arguments, set default.\n"
+   ret += "if (present(k_dependent)) then\n"
+   ret += "  my_k_dependent = k_dependent\n"
+   ret += "else\n"
+   ret += "  my_k_dependent = .true.\n"
    ret += "end if\n"
 
  ret += "allocate(varid(%d))\n" % len(etsf_groups[group])
@@ -326,9 +355,12 @@ end if
  
  # Process each variable in the group
  ivar = 0
+ ivar_sym_matrices = None
  for var in etsf_groups[group]:
   var_desc = etsf_variables[var]
   ivar += 1
+  if (var == "reduced_symmetry_matrices"):
+    ivar_sym_matrices = ivar
 
   if ( ret != "" ):
    ret += "\n"
@@ -345,10 +377,12 @@ end if
   splitted    = False
   att_units   = False
   att_kdep    = False
+  att_symm    = False
   if (var in etsf_properties):
     props = etsf_properties[var]
     unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
-    splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
+    splitted    = ( props & ETSF_PROP_VAR_SUB_ACCESS == ETSF_PROP_VAR_SUB_ACCESS)
+    att_symm    = ( props & ETSF_PROP_VAR_SYMMORPHIC == ETSF_PROP_VAR_SYMMORPHIC)
     att_units   = ( props & ETSF_PROP_VAR_UNITS == ETSF_PROP_VAR_UNITS)
     att_kdep    = ( props & ETSF_PROP_VAR_KDEP == ETSF_PROP_VAR_KDEP)
   
@@ -357,8 +391,14 @@ end if
     if ( len(var_desc) > 1 ):
       dims = "pad(\"" + var_desc[1] + "\")"
       for dim in var_desc[2:]:
-        dims = "pad(\""+ dim + "\"), &\n%4s& " % " " + dims
+        dims = "pad(\""+ dim + "\"), &\n  &    " + dims
       dims = "(/ " + dims + " /),"
+      # Treat the special case of reduced_coordinates_of_plane_waves
+      if (var == "reduced_coordinates_of_plane_waves"):
+        dims_kdep = "pad(\"" + var_desc[2] + "\")"
+        for dim in var_desc[3:]:
+          dims_kdep = "pad(\""+ dim + "\"), &\n    &    " + dims_kdep
+        dims_kdep = "(/ " + dims_kdep + " /),"
     else:
       dims = None
 
@@ -367,13 +407,27 @@ end if
         + "  & %s, &\n" % nf90_type(var_desc)
     if (dims is not None):
       buf += "  & %s &\n" % dims
-    buf += "  & lstat, ncvarid = varid(%d), error_data = error_data)\n" % ivar \
-        + "if (.not. lstat) return\n"
+    buf += "  & lstat, ncvarid = varid(%d), error_data = error_data)\n" % ivar
+    # The case of reduced_coordinates_of_plane_waves is special since
+    # the number of dimension vary.
+    if (var == "reduced_coordinates_of_plane_waves"):
+      buf_kdep  = "if (.not. my_k_dependent) then\n" 
+      buf_kdep += "  call etsf_io_low_def_var(ncid, \"%s\", &\n" % var \
+                + "    & %s, &\n" % nf90_type(var_desc)
+      buf_kdep += "    & %s &\n" % dims_kdep
+      buf_kdep += "    & lstat, ncvarid = varid(%d), error_data = error_data)\n" % ivar
+      buf_kdep += "else\n"
+      buf_kdep += indent_code(buf, 1)
+      buf_kdep += "end if\n"
+      buf = buf_kdep
+    buf += "if (.not. lstat) return\n"
     # Handle attributes of the variable
     if (att_units):
       buf += code_attribute_units("write", "\"atomic units\"", "1.0d0", ivar)
-    if (att_kdep):
-      buf += code_attribute_kdep("write", "\"yes\"", "varid(%d)" % ivar)
+    if (att_kdep or var == "reduced_coordinates_of_plane_waves"):
+      buf += code_attribute_kdep("write", "varid(%d)" % ivar)
+    if (att_symm):
+      buf += code_attribute_symm("write", ivar, "\"yes\"")
 
     # Print the variable definition        
     if (group == "main"):
@@ -392,17 +446,27 @@ end if
       raise ValueError
 
     # Variable are read or write, only if associated.
-    if (splitted):
-      code_if = "if (etsf_io_low_var_associated(folder%%%s%%array)) then\n" % var
-    elif (unformatted):
+    if (unformatted or splitted):
       code_if = "if (etsf_io_low_var_associated(folder%%%s)) then\n" % var
     else:
       code_if = "if (associated(folder%%%s)) then\n" % var
     ret += code_if
     
+    # Special treatment for reduced_coordinates_of_plane_waves
+    if (var == "reduced_coordinates_of_plane_waves"):
+      ret += indent_code(code_attribute_kdep("read", "\"%s\"" % var, "flag"), 1)
+
     # If variable may be splitted, we build a block optional argument
     if (splitted):
-      spl  = "allocate(start(%d), count(%d))\n" % (len(var_desc) - 1, len(var_desc) - 1)
+      # Special treatment for reduced_coordinates_of_plane_waves
+      if (var == "reduced_coordinates_of_plane_waves"):
+        spl  = "if (flag(1:2) == \"no\") then\n"
+        spl += "  allocate(start(%d), count(%d))\n" % (len(var_desc) - 2, len(var_desc) - 2)
+        spl += "else\n"
+        spl += "  allocate(start(%d), count(%d))\n" % (len(var_desc) - 1, len(var_desc) - 1)
+        spl += "end if\n"
+      else:
+        spl  = "allocate(start(%d), count(%d))\n" % (len(var_desc) - 1, len(var_desc) - 1)
       spl += "start(:) = 1\n"
       spl += "count(:) = 0\n"
       # For each max_something dimension, use the provided value.
@@ -411,39 +475,40 @@ end if
         if (dim.startswith("max_")):
           spl += "count(%d) = folder%%%s__%s\n" % (i, var_shortname(var), dim[4:])
         if (dim == "number_of_spins"):
-          spl += "if (folder%%%s%%spin_splitted) then\n" % var
-          spl += "  start(%d) = folder%%%s%%spin_id\n" % (i, var)
+          spl += "if (folder%%%s__spin_access /= etsf_no_sub_access) then\n" % var_shortname(var)
+          spl += "  start(%d) = folder%%%s__spin_access\n" % (i, var_shortname(var))
           spl += "  count(%d) = 1\n" % (i)
           spl += "end if\n"
         if (dim == "number_of_kpoints"):
-          spl += "if (folder%%%s%%k_splitted) then\n" % var
-          spl += "  start(%d) = folder%%%s%%k_id\n" % (i, var)
+          # Special treatment for reduced_coordinates_of_plane_waves
+          if (var == "reduced_coordinates_of_plane_waves"):
+            spl += "if (flag(1:3) == \"yes\" .and. &\n"
+            spl += "  & folder%%%s__kpoint_access /= etsf_no_sub_access) then\n" % var_shortname(var)
+          else:
+            spl += "if (folder%%%s__kpoint_access /= etsf_no_sub_access) then\n" % var_shortname(var)
+          spl += "  start(%d) = folder%%%s__kpoint_access\n" % (i, var_shortname(var))
           spl += "  count(%d) = 1\n" % (i)
           spl += "end if\n"
         i -= 1
         sub_arg = ", start = start, count = count"
-        sub_array = "%array"
       ret += indent_code(spl, 1)
     else:
       sub_arg = ""
-      sub_array = ""
     
     # Treat the k_dependent attribute
     if (action == "get" and att_kdep):
-      ret += indent_code(code_attribute_kdep("read", "flag", "\"%s\"" % var), 1)
+      ret += indent_code(code_attribute_kdep("read", "\"%s\"" % var, "flag"), 1)
       ret += "  if (flag(1:2) == \"no\") then\n"
       ret += "    call etsf_io_low_read_dim(ncid, \"%s\", len, &\n" % etsf_kdep_fallback[var]
       ret += "                            & lstat, error_data = error_data)\n"
-      ret += "    if (.not. lstat) return\n"
-      ret += "    folder%%%s%s = len\n" % (var, sub_array)
+      ret += "    folder%%%s = len\n" % var
       ret += "  else\n"
       
-    # If variable may be splitted, we append the sub optional argument
+    # If variable may be splitted, we append the start/count optional arguments
     buf =  "  call etsf_io_low_%s_var(ncid, \"%s\", &\n" % (action_str, var) \
-        +  "                          & folder%%%s%s, %s&\n" % (var, sub_array, char_len) \
+        +  "                          & folder%%%s, %s&\n" % (var, char_len) \
         +  "                          & lstat, ncvarid = varid(%d), &\n" % ivar \
         +  "                          & error_data = error_data%s)\n" % sub_arg \
-        +  "  if (.not. lstat) return\n"
 
     # Treat the k_dependent attribute
     if (action == "get" and att_kdep):
@@ -455,6 +520,7 @@ end if
     # If variable may be splitted
     if (splitted):
       ret += "  deallocate(start, count)\n"
+    ret += "  if (.not. lstat) return\n"
 
     # End the if associated
     ret += "end if\n"
@@ -467,10 +533,17 @@ end if
                              "folder%%%s__scale_to_atomic_units" % var_shortname(var), \
                              ivar, var, splitted, unformatted), 1)
       ret_att += "end if\n\n"
+    if (att_symm and action == "put"):
+      ret_att += "if (associated(folder%reduced_symmetry_translations)) then\n"
+      ret_att += indent_code(code_attribute_symm("test", ivar_sym_matrices), 1)
+      ret_att += "end if\n\n"
 
  # Add attribute code if some
  if (ret_att is not ""):
    ret += "\n! Handle all attributes for the group.\n"
+   if (action == "put"):
+     ret += "call etsf_io_low_set_define_mode(ncid, lstat, error_data = error_data)\n"
+     ret += "if (.not. lstat) return\n"
    ret += ret_att
  ret += "\ndeallocate(varid)"
  return ret
@@ -479,7 +552,7 @@ end if
 # and the scale_to_atomic_units attribute.
 def code_attribute_units(action, att_unit, att_scale, ivar, \
                          var = None, var_split = False, var_unform = False):
-  ret = "! handle the units attribute.\n"
+  ret = "! Handle the units attribute.\n"
   ret += code_attributes(action, "varid(%d)" % ivar, "units", \
                          att_unit, "etsf_charlen")
   ret += "if (.not. lstat) return\n"
@@ -495,10 +568,7 @@ def code_attribute_units(action, att_unit, att_scale, ivar, \
     ret += "if (my_use_atomic_units .and. &\n"
     ret += "  & %s /= 1.0d0) then\n" % att_scale
     if (var_unform or var_split):
-      sub = ""
-      if (var_split):
-        sub = "%array"
-      ret += "  call etsf_io_low_var_multiply(folder%%%s%s, &\n" % (var, sub)
+      ret += "  call etsf_io_low_var_multiply(folder%%%s, &\n" % var
       ret += "                              & %s)\n" % att_scale
     else:
       ret += "  folder%%%s = folder%%%s * &\n" % (var, var)
@@ -512,11 +582,37 @@ def code_attribute_units(action, att_unit, att_scale, ivar, \
   return ret
   
 # Code for the k_dependent attribute.
-def code_attribute_kdep(action, att_value, ivar):
-  ret  = "! handle the k_dependent attribute.\n"
-  ret += code_attributes(action, ivar, "k_dependent", att_value, "etsf_charlen")
+def code_attribute_kdep(action, ivar, att_value = None):
+  ret  = "! Handle the k_dependent attribute.\n"
+  if (action == "write"):
+    ret += "if (my_k_dependent) then\n"
+    ret += indent_code(code_attributes(action, ivar, "k_dependent", "\"yes\"", "etsf_charlen"), 1)
+    ret += "else\n"
+    ret += indent_code(code_attributes(action, ivar, "k_dependent", "\"no\"", "etsf_charlen"), 1)
+    ret += "end if\n"
+  else:
+    ret += code_attributes(action, ivar, "k_dependent", att_value, "etsf_charlen")
   ret += "if (.not. lstat) return\n"
     
+  return ret
+
+# Code for the symmorphic attribute.
+def code_attribute_symm(action, ivar, att_value = None):
+  ret  = "! Handle the symmorphic attribute.\n"
+  if (action == "test"):
+    ret += "! We test if translations are not nul\n"
+    ret += "flag = \"yes\"\n"
+    ret += "do len = 1, size(folder%reduced_symmetry_translations, 2), 1\n"
+    ret += "  if (folder%reduced_symmetry_translations(1, len) /= 0.d0 .or. &\n"
+    ret += "    & folder%reduced_symmetry_translations(2, len) /= 0.d0 .or. &\n"
+    ret += "    & folder%reduced_symmetry_translations(3, len) /= 0.d0) then\n"
+    ret += "  flag = \"no\"\n"
+    ret += "  end if\n"
+    ret += "end do\n"
+    att_value = "trim(flag)"
+    action = "write"
+  ret += code_attributes(action, "varid(%d)" % ivar, "symmorphic", att_value, "etsf_charlen")
+  ret += "if (.not. lstat) return\n"
   return ret
 
 # Code for read/write attributes.
@@ -525,9 +621,10 @@ def code_attributes(action, varid, attname, attvalue, attlen):
     lenarg = attlen + ", "
   else:
     lenarg = ""
-  ret = "call etsf_io_low_%s_att(ncid, %s, \"%s\", &\n" % (action, varid, attname) \
-      + "                         & %s%s, &\n" % (lenarg, attvalue) \
-      + "                         & lstat, error_data = error_data)\n"
+  ret = "call etsf_io_low_%s_att(ncid, %s, &\n" % (action, varid) \
+      + "                        & \"%s\", &\n" % attname \
+      + "                        & %s%s, &\n" % (lenarg, attvalue) \
+      + "                        & lstat, error_data = error_data)\n"
   return ret
     
 

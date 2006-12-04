@@ -48,6 +48,10 @@ module etsf_io
   !!                           dimension. For example count = (/ 1, etsf_spec_dimension /)
   !!                           will read one element from the first dimension and
   !!                           all for the second.
+  !!   * etsf_no_sub_access = some variable can be accessed only for one index in a
+  !!                          specific dimension (usually spin or k points). This
+  !!                          value is used to tell the library to access all the values
+  !!                          of that dimension.
   !!
   !! SOURCE
   ! Constants for internal dimensions
@@ -56,6 +60,7 @@ module etsf_io
   integer, parameter :: etsf_chemlen = 2
   integer, parameter :: etsf_3dimlen = 3
   integer, parameter :: etsf_spec_dimension = 0
+  integer, parameter :: etsf_no_sub_access = 0
 
 @CONSTANTS@
   !!***
@@ -98,62 +103,6 @@ module etsf_io
 @DIMENSIONS@
   !!***
 
-  !!****s* etsf_io_basics_group/etsf_io_splitted_var_integer
-  !! NAME
-  !!  etsf_io_splitted_var_integer
-  !!
-  !! FUNCTION
-  !!  This structure is a container for all variables that can be splitted
-  !!  over spin or k points. It is used for instance in the group #etsf_wavedata.
-  !!  This type works for integer data. See #etsf_io_splitted_var_double to
-  !!  split arrays of double precision. It contains:
-  !!   - array = an array with undefined shape. It contains a pointer to
-  !!     the memory areawhere data are stored or can be stored.
-  !!   - k_splitted = when .true., it indicates that the target of @array is allocated
-  !!     only for one given k point value defined by @k_id.
-  !!   - spin_splitted = when .true., it indicates that the target of @array is allocated
-  !!     only for one given spin value defined by @spin_id.
-  !!   - k_id = the index of k point for which the target of @array is allocated.
-  !!   - spin_id = the index of spin for which the target of @array is allocated.
-  !!  If the target of @array is not splitted, then put @k_splitted and @spin_splitted
-  !!  to .false.. By default, the array is not splitted.
-  !!
-  !! SOURCE
-  type etsf_io_splitted_var_integer
-    type(etsf_io_low_var_integer) :: array
-    logical                       :: k_splitted = .false., spin_splitted = .false.
-    integer                       :: k_id, spin_id
-  end type etsf_io_splitted_var_integer
-  !!***
-
-  !!****s* etsf_io_basics_group/etsf_io_splitted_var_double
-  !! NAME
-  !!  etsf_io_splitted_var_double
-  !!
-  !! FUNCTION
-  !!  This structure is a container for all variables that can be splitted
-  !!  over spin or k points. It is used for instance in the group #etsf_electrons.
-  !!  This type works for double precision data. See #etsf_io_splitted_var_integer to
-  !!  split arrays of integer. It contains:
-  !!   - array = an array with undefined shape. It contains a pointer to
-  !!     the memory areawhere data are stored or can be stored.
-  !!   - k_splitted = when .true., it indicates that the target of @array is allocated
-  !!     only for one given k point value defined by @k_id.
-  !!   - spin_splitted = when .true., it indicates that the target of @array is allocated
-  !!     only for one given spin value defined by @spin_id.
-  !!   - k_id = the index of k point for which the target of @array is allocated.
-  !!   - spin_id = the index of spin for which the target of @array is allocated.
-  !!  If the target of @array is not splitted, then put @k_splitted and @spin_splitted
-  !!  to .false.. By default, the array is not splitted.
-  !!
-  !! SOURCE
-  type etsf_io_splitted_var_double
-    type(etsf_io_low_var_double) :: array
-    logical                      :: k_splitted = .false., spin_splitted = .false.
-    integer                      :: k_id, spin_id
-  end type etsf_io_splitted_var_double
-  !!***
-
 @STRUCTURES@
 
   !!****s* etsf_io/etsf_groups
@@ -193,8 +142,6 @@ module etsf_io
   !!
   !! SOURCE
   public :: etsf_dims
-  public :: etsf_io_splitted_var_double
-  public :: etsf_io_splitted_var_integer
   !!***
 
 contains

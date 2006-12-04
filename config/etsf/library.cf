@@ -64,10 +64,12 @@ etsf_subs_def_args = {
    "main":[
       "mains integer in",
       "lstat logical out",
-      "error_data type(etsf_io_low_error) out"],
+      "error_data type(etsf_io_low_error) out",
+      "k_dependent logical in optional"],
    "@GROUP@":[
       "lstat logical out",
-      "error_data type(etsf_io_low_error) out"]
+      "error_data type(etsf_io_low_error) out",
+      "k_dependent logical in optional"]
 }
 
 # Descriptions of the subprogram arguments for the "get" action
@@ -99,8 +101,10 @@ etsf_subs_init_args = {
       "groups integer in",
       "dims type(etsf_dims) inout",
       "title character(len=*) in",
-      "history character(len=*) in"]
-      
+      "history character(len=*) in",
+      "lstat logical out",
+      "error_data type(etsf_io_low_error) out",
+      "k_dependent logical in optional"]      
 }
 
 # Descriptions of the subprogram arguments for the "contents" action
@@ -117,7 +121,10 @@ etsf_subs_read_args = {
    "data":[
       "filename character(len=*) in",
       "groups integer in",
-      "group_folder type(etsf_groups) inout"]
+      "group_folder type(etsf_groups) inout",
+      "lstat logical out",
+      "error_data type(etsf_io_low_error) out",
+      "use_atomic_units logical in optional"]
 }
 
 # Descriptions of the subprogram arguments for the "write" action
@@ -125,5 +132,7 @@ etsf_subs_write_args = {
    "data":[
       "filename character(len=*) in",
       "groups integer in",
-      "group_folder type(etsf_groups) in"]
+      "group_folder type(etsf_groups) in",
+      "lstat logical out",
+      "error_data type(etsf_io_low_error) out"]
 }

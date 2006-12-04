@@ -2,12 +2,9 @@ def fortran_type(var_desc, props = ETSF_PROP_NONE):
 
   values = var_desc[0].split()
   unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
-  splitted    = ( props & ETSF_PROP_VAR_SPLITTED == ETSF_PROP_VAR_SPLITTED)
+  splitted    = ( props & ETSF_PROP_VAR_SUB_ACCESS == ETSF_PROP_VAR_SUB_ACCESS)
   if (unformatted or splitted):
-    if (unformatted):
-      ret = "type(etsf_io_low_var_"
-    if (splitted):
-      ret = "type(etsf_io_splitted_var_"
+    ret = "type(etsf_io_low_var_"
     if ( values[0] == "integer" ):
       ret += "integer)"
     elif ( values[0] == "real" ):
