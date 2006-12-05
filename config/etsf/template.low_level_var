@@ -1,0 +1,94 @@
+subroutine @SUB_NAME@(@ARG_LIST@)
+@ARG_DESC@
+  character(len = *), intent(in)                 :: varname
+  logical, intent(out)                           :: lstat
+  integer, intent(in), optional                  :: start(:), count(:), map(:)
+  integer, intent(out), optional                 :: ncvarid
+  type(etsf_io_low_error), intent(out), optional :: error_data
+
+  !Local
+  character(len = *), parameter :: me = "@SUB_NAME@"
+  character(len = 80) :: err
+  type(etsf_io_low_var_infos) :: var_nc, var_user
+  type(etsf_io_low_error) :: error
+  integer :: s, i
+  integer :: my_start(16), my_count(16), my_map(16)
+  logical :: stat
+
+  lstat = .false.
+  ! We get the dimensions and shape of the ref variable in the NetCDF file.
+  call etsf_io_low_read_var_infos(ncid, varname, var_nc, &
+                                & stat, error_data = error)
+  if (.not. stat) then
+    if (present(error_data)) then
+      error_data = error
+    end if
+    return
+  end if
+@USER_VAR_DESC@
+  
+  ! Create the access arrays from optional arguments.
+  if (present(start) .and. present(count) .and. present(map)) then
+    call etsf_io_low_make_access(my_start, my_count, my_map, var_nc, stat, &
+                               & opt_start = start, opt_count = count, &
+                               & opt_map = map, error_data = error)
+  else if (present(start) .and. present(count)) then
+    call etsf_io_low_make_access(my_start, my_count, my_map, var_nc, stat, &
+                               & opt_start = start, opt_count = count, &
+                               & error_data = error)
+  else if (present(start) .and. present(map)) then
+    call etsf_io_low_make_access(my_start, my_count, my_map, var_nc, stat, &
+                               & opt_start = start, opt_map = map, &
+                               & error_data = error)
+  else if (present(count) .and. present(map)) then
+    call etsf_io_low_make_access(my_start, my_count, my_map, var_nc, stat, &
+                               & opt_count = count, opt_map = map, &
+                               & error_data = error)
+  else if (present(start)) then
+    call etsf_io_low_make_access(my_start, my_count, my_map, var_nc, stat, &
+                               & opt_start = start, error_data = error)
+  else if (present(count)) then
+    call etsf_io_low_make_access(my_start, my_count, my_map, var_nc, stat, &
+                               & opt_count = count, error_data = error)
+  else if (present(map)) then
+    call etsf_io_low_make_access(my_start, my_count, my_map, var_nc, stat, &
+                               & opt_map = map, error_data = error)
+  else
+    call etsf_io_low_make_access(my_start, my_count, my_map, var_nc, &
+                               & stat, error_data = error)
+  end if
+  if (.not. stat) then
+    if (present(error_data)) then
+      error_data = error
+    end if
+    return
+  end if
+    
+  ! Number of elements checks
+  call etsf_io_low_check_var(var_nc, var_user, my_start(1:var_nc%ncshape), &
+                           & my_count(1:var_nc%ncshape), &
+                           & my_map(1:var_nc%ncshape), &
+                           & stat, error_data = error)
+  if (.not. stat) then
+    if (present(error_data)) then
+      error_data = error
+    end if
+    return
+  end if
+  
+  ! Now that we are sure that the read var has compatible type and dimension
+  ! that the argument one, we can do the get action securely.
+@ACTION@
+  if (s /= nf90_noerr) then
+    if (present(error_data)) then
+      call etsf_io_low_error_set(error_data, ERROR_MODE_GET, ERROR_TYPE_VAR, &
+                    & me, tgtname = varname, tgtid = var_nc%ncid, errid = s, &
+                    & errmess = nf90_strerror(s))
+    end if
+    return
+  end if
+  if (present(ncvarid)) then
+    ncvarid = var_nc%ncid
+  end if
+  lstat = .true.
+end subroutine @SUB_NAME@

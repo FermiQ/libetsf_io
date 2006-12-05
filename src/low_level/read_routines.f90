@@ -638,18 +638,23 @@
   !!  * version_min = (optional) the number of minimal version to be read.
   !                   when not specified, 1.3 is the minimum value by default.
   !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!  * with_etsf_header = (optional) if true, will check that there is a header
+  !!                       as defined in the ETSF specifications (default is .true.).
   !!
   !! SOURCE
-  subroutine etsf_io_low_open_read(ncid, filename, lstat, version_min, error_data)
+  subroutine etsf_io_low_open_read(ncid, filename, lstat, version_min, &
+                                 & error_data, with_etsf_header)
     integer, intent(out)                           :: ncid
     character(len = *), intent(in)                 :: filename
     logical, intent(out)                           :: lstat
     real, intent(in), optional                     :: version_min
     type(etsf_io_low_error), intent(out), optional :: error_data
+    logical, intent(in), optional                  :: with_etsf_header
 
     !Local
     character(len = *), parameter :: me = "etsf_io_low_open_read"
     integer :: s
+    logical :: my_with_etsf_header
     
     lstat = .false.
     ! Open file for reading
@@ -664,17 +669,24 @@
     ! From now on the file is open. If an error occur,
     ! we should close it.
 
-    if (present(error_data)) then
-      if (present(version_min)) then
-        call etsf_io_low_check_header(ncid, lstat, version_min, error_data)
-      else
-        call etsf_io_low_check_header(ncid, lstat, error_data = error_data)
-      end if
+    if (present(with_etsf_header)) then
+      my_with_etsf_header = with_etsf_header
     else
-      if (present(version_min)) then
-        call etsf_io_low_check_header(ncid, lstat, version_min = version_min)
+      my_with_etsf_header = .true.
+    end if
+    if (my_with_etsf_header) then
+      if (present(error_data)) then
+        if (present(version_min)) then
+          call etsf_io_low_check_header(ncid, lstat, version_min, error_data)
+        else
+          call etsf_io_low_check_header(ncid, lstat, error_data = error_data)
+        end if
       else
-        call etsf_io_low_check_header(ncid, lstat)
+        if (present(version_min)) then
+          call etsf_io_low_check_header(ncid, lstat, version_min = version_min)
+        else
+          call etsf_io_low_check_header(ncid, lstat)
+        end if
       end if
     end if
   end subroutine etsf_io_low_open_read

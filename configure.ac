@@ -98,6 +98,20 @@ if test "$withnetcdf" = "no" ; then
   AC_MSG_ERROR(["No 'NetCDF' library found."])
 fi
 
+dnl Test if only the library must be built
+ac_build_tests="yes"
+AC_ARG_ENABLE(build-tests,
+              AS_HELP_STRING([--disable-build-tests],
+                             [Don't create the tests binaries (enable by default).]),
+              ac_build_tests=$enableval, ac_build_tests="yes")
+AM_CONDITIONAL(BUILD_TESTS, test "$ac_build_tests" = "yes")
+ac_build_tutorials="no"
+AC_ARG_ENABLE(build-tutorials,
+              AS_HELP_STRING([--enable-build-tutorials],
+                             [Create the tutorial binaries (disable by default).]),
+              ac_build_tutorials=$enableval, ac_build_tutorials="no")
+AM_CONDITIONAL(BUILD_TUTORIALS, test "$ac_build_tutorials" = "yes")
+
 dnl default installation directories
 fc_basename=`echo $FC | cut -d" " -f1`
 moduledir=${includedir}/$fc_basename
@@ -112,6 +126,7 @@ AC_CONFIG_FILES([
 Makefile
 src/low_level/Makefile
 src/group_level/Makefile
+src/tutorials/Makefile
 tests/low_level/Makefile
 tests/group_level/Makefile
 ])

@@ -59,6 +59,7 @@ options:
     --syntaxcolors
 headertypes:
     g  "Sub categories"  robo_sub_cat
+    e  "Tutorials"  robo_tuto_cat
 ignore files:
     ChangeLog
     Makefile*

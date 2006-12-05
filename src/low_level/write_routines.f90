@@ -32,10 +32,14 @@
   !!  * ncid = the NetCDF handler, opened with write access (define mode).
   !!  * lstat = .true. if operation succeed.
   !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!  * with_etsf_header = (optional) if true, will create a header
+  !!                       as defined in the ETSF specifications (default is .true.).
+  !!                       When value is .false., arguments title, history and version
+  !!                       are ignored.
   !!
   !! SOURCE
   subroutine etsf_io_low_open_create(ncid, filename, version, lstat, &
-                                   & title, history, error_data)
+                                   & title, history, error_data, with_etsf_header)
     integer, intent(out)                           :: ncid
     character(len = *), intent(in)                 :: filename
     real, intent(in)                               :: version
@@ -43,6 +47,7 @@
     character(len = *), intent(in), optional       :: title
     character(len = *), intent(in), optional       :: history
     type(etsf_io_low_error), intent(out), optional :: error_data
+    logical, intent(in), optional                  :: with_etsf_header
     
     !Local
     character(len = *), parameter :: me = "etsf_io_low_open_create"
@@ -74,7 +79,13 @@
     ! From now on the file is open. If an error occur,
     ! we should close it.
     
-    ! We create the header.
+    ! We create the header if required.
+    if (present(with_etsf_header)) then
+      if (.not. with_etsf_header) then
+        lstat = .true.
+        return
+      end if
+    end if
     ! The file format
     s = nf90_put_att(ncid, NF90_GLOBAL, "file_format", etsf_io_low_file_format)
     if (s /= nf90_noerr) then
@@ -140,7 +151,8 @@
   !!
   !! FUNCTION
   !!  This method is used to open a NetCDF file for modifications. The file should
-  !!  already exist and have a valid ETSF header.
+  !!  already exist and have a valid ETSF header (if @with_etsf_header is not set to
+  !!  .false.).
   !!
   !!  When finished, the file handled by @ncid, is in define mode, which means
   !!  that dimensions (see etsf_io_low_write_dim()), variables (see
@@ -170,10 +182,12 @@
   !!  * ncid = the NetCDF handler, opened with write access (define mode).
   !!  * lstat = .true. if operation succeed.
   !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!  * with_etsf_header = (optional) if true, will check that there is a header
+  !!                       as defined in the ETSF specifications (default is .true.).
   !!
   !! SOURCE
   subroutine etsf_io_low_open_modify(ncid, filename, lstat, &
-                                   & title, history, version, error_data)
+                                   & title, history, version, error_data, with_etsf_header)
     integer, intent(out)                           :: ncid
     character(len = *), intent(in)                 :: filename
     logical, intent(out)                           :: lstat
@@ -181,6 +195,7 @@
     character(len = *), intent(in), optional       :: history
     real, intent(in), optional                     :: version
     type(etsf_io_low_error), intent(out), optional :: error_data
+    logical, intent(in), optional                  :: with_etsf_header
     
     !Local
     character(len = *), parameter :: me = "etsf_io_low_open_modify"
@@ -188,6 +203,7 @@
     character(len = 1024) :: current_history
     integer :: s
     logical :: stat
+    logical :: my_with_etsf_header
     
     lstat = .false.
     ! Checking that @version argument is valid.
@@ -215,14 +231,21 @@
     
     ! Before according access to modifications, we check
     ! that the header is valid.
-    if (present(error_data)) then
-      call etsf_io_low_check_header(ncid, stat, error_data = error_data)
+    if (present(with_etsf_header)) then
+      my_with_etsf_header = with_etsf_header
     else
-      call etsf_io_low_check_header(ncid, stat)
+      my_with_etsf_header = .true.
     end if
-    if (.not. stat) then
-      call etsf_io_low_close(ncid, stat)
-      return
+    if (my_with_etsf_header) then
+      if (present(error_data)) then
+        call etsf_io_low_check_header(ncid, stat, error_data = error_data)
+      else
+        call etsf_io_low_check_header(ncid, stat)
+      end if
+      if (.not. stat) then
+        call etsf_io_low_close(ncid, stat)
+        return
+      end if
     end if
 
     ! We switch to define mode to set attributes.
@@ -235,14 +258,8 @@
       call etsf_io_low_close(ncid, stat)
       return
     end if
-    ! We switch to define mode to set attributes.
-    if (present(error_data)) then
-      call etsf_io_low_set_define_mode(ncid, stat, error_data = error_data)
-    else
-      call etsf_io_low_set_define_mode(ncid, stat)
-    end if
-    if (.not. stat) then
-      call etsf_io_low_close(ncid, stat)
+    if (.not. my_with_etsf_header) then
+      lstat = .true.
       return
     end if
 
@@ -251,8 +268,9 @@
       s = nf90_put_att(ncid, NF90_GLOBAL, "title", title(1:min(80, len(title))))
       if (s /= nf90_noerr) then
         if (present(error_data)) then
-          call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, tgtname = "title", &
-                       & errid = s, errmess = nf90_strerror(s))
+          call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, &
+                                   & ERROR_TYPE_ATT, me, tgtname = "title", &
+                                   & errid = s, errmess = nf90_strerror(s))
         end if
         call etsf_io_low_close(ncid, stat)
         return

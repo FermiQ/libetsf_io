@@ -1,0 +1,29 @@
+subroutine @SUB_NAME@(@ARG_LIST@)
+@ARG_DESC@
+  integer, intent(in)                            :: ncid
+  character(len = *), intent(in)                 :: attname
+  logical, intent(out)                           :: lstat
+  type(etsf_io_low_error), intent(out), optional :: error_data
+
+  !Local
+  character(len = *), parameter :: me = "@SUB_NAME@"
+  integer :: s
+@ARG_LOCAL@
+
+  lstat = .false.
+  @INIT@
+  
+@VAR_GET_ID@
+  
+@CHECKS@
+  ! Now that we are sure that the read attribute has the same type and dimension
+  ! that the argument one, we can do the get action securely.
+@ACTION@
+  if (s /= nf90_noerr) then
+    if (present(error_data)) then
+@SET_ERROR@
+    end if
+    return
+  end if
+  lstat = .true.
+end subroutine @SUB_NAME@

@@ -370,13 +370,20 @@ module etsf_io_low_level
   !!***
   !Generic interface of the routines etsf_io_low_write_att
   interface etsf_io_low_write_att
-    module procedure write_att_integer
-    module procedure write_att_real
-    module procedure write_att_double
+    module procedure write_att_integer_0D
+    module procedure write_att_real_0D
+    module procedure write_att_double_0D
     module procedure write_att_integer_1D
     module procedure write_att_real_1D
     module procedure write_att_double_1D
     module procedure write_att_character_1D
+    module procedure write_att_id_integer_0D
+    module procedure write_att_id_real_0D
+    module procedure write_att_id_double_0D
+    module procedure write_att_id_integer_1D
+    module procedure write_att_id_real_1D
+    module procedure write_att_id_double_1D
+    module procedure write_att_id_character_1D
   end interface etsf_io_low_write_att
   !End of the generic interface of etsf_io_low_write_att
 

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+                      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html  xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" href="./robodoc.css" type="text/css" />
+  <title>ETSF_IO library</title>
+</head>
+
+<body>
+  <div id="logo">
+    <a name="robo_top_of_doc">ETSF_IO library - documentation pages</a>
+  </div> <!-- logo -->
+  <div id="navigation">
+    <a class="menuitem" href="#top">Library documentation page</a>
+    <a class="menuitem" href="low_level/etsf_io_low_level_f90.html">Low level API</a>
+    <a class="menuitem" href="group_level/etsf_io_f90.html">Group level API</a>
+    <a class="menuitem" href="tutorials/">Tutorials & examples</a>
+  </div> <!-- navigation -->
+  <div id="content">
+    <h1>What is it</h1>
+    <p>TODO: Put some description here</p>
+    <h1>License</h1>
+    <p>The library and all its contents (source files and documentation files) is released under the Lesser General Public License as it can be found the <a href="../../COPYING">COPYING file</a> of the distribution.</p>
+    <h1>Contents of this documentation</h1>
+    <p>The documentation of the library is made of two parts:</p>
+    <ul>
+      <li>One appropriated for beginners who would like to know how to read and write some ETSF files using this library. See the <a href="tutorials/">tutorials pages</a>. Several examples are explained step by step.</li>
+      <li>The other is the description of all public routines that can be used. Their functions, their arguments and some examples are given, as much as the code itself when relevant.</li>
+    </ul>
+    <h2>The library</h2>
+    <h3>etsf_io_low_level</h3>
+    <p>The library is divided into two modules. The first is a wrapper around NetCDF calls to be able to do in one call what requires several NetCDF calls, such as get the id of a variable, check its shape and dimensions definition and read it. This module is not specific to the ETSF specifications and can be used as a stand-alone library to easily handle NetCDF files.</p>
+    <h3>etsf_io</h3>
+    <p>The main module, called <code>etsf_io</code>, contains specific routines to the ETSF specifications. All variables from the specifications have been gathered into structured called <em>group</em> (see the etsf_groups <a href="group_level/etsf_io_f90.html#robo7">page</a> and related ones).</p>
+    <p>For each group, one can define a file with these variables using methods with a name like <code>etsf_io_&lt;group_name&gt;_def()</code>. This will alocate the disk space required to store all the variables of the group. Then, to write data, methods called <code>etsf_io_&lt;group_name&gt;_put()</code> are available. For reading actions, the routines are suffixed with get instead of put. To access several groups at one time a high level routine has been created and is called <code>etsf_io_data_&lt;action&gt;</code>.</p>
+    <h2>Attributes</h2>
+    <p>The support for attributes as defined in the specifications is transparent for the user of the library:</p>
+    <ul>
+      <li>The units attribute is defined by default to "atomic units". When a file is read, all returned values are automatically converted to atomic units when required, thanks to the scale_to-atomic_units attribute. To get the true value from the file, one can give an optional argument to prevent to convert into atomic units, called <em>use_atomic_units (logical)</em></li>
+      <li>The k_dependent attribute is set to "yes" by default. When a variable with the k_dependent attribute is read, the value from the array is read except if the attribute is false. Then the fallback value specified in the ETSF specifications is given.</li>
+      <li>The symmorphic attribute is set to "no" automatically as soon as reduced_symmetry_translations is set to non zero values.</li>
+    </ul>
+  </div> <!-- content -->
+  <div id="footer">
+  <p>Manually maintained file, last edition 2006-12-05 by Damien Caliste.</p>
+  </div> <!-- footer -->
+</body>
+</html>

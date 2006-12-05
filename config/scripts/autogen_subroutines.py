@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 #
-# Copyright (c) 2005-2006 The ABINIT Group (Yann Pouillon)
+# Copyright (c) 2006
 # All rights reserved.
 #
-# This file is part of the ABINIT software package. For license information,
-# please see the COPYING file in the top-level directory of the ABINIT source
+# This file is part of the ETSF_IO software package. For license information,
+# please see the COPYING file in the top-level directory of the library source
 # distribution.
 #
 
@@ -761,9 +761,33 @@ def init_routine(name,template,info,script,args,type="subroutine"):
 
   arg_desc = ""
   loc_vars = ""
+  arg_doc = ["", "", ""]
   for arg_str in args:
    arg_info = arg_str.split()
    arg = arg_info[0]
+   
+   # Build the documentation for in, out, inout
+   inout = None
+   if (arg_info[2] == "in"):
+    inout = 0
+   elif (arg_info[2] == "out"):
+    inout = 1
+   elif (arg_info[2] == "inout"):
+    inout = 2
+   arg_doc[inout] += "!! * %s" % arg
+   if (arg_info[1].startswith("type")):
+     arg_doc[inout] += " <%s>" % arg_info[1]
+   arg_doc[inout] += " = "
+   if ( (len(arg_info) > 3) and (arg_info[3] == "optional") ):
+     arg_doc[inout] += "(optional) "
+   key = arg + "-" + name
+   if (key in etsf_subs_doc_args):
+     arg_doc[inout] += re.sub("\n", "\n!!", etsf_subs_doc_args[key])
+   else:
+     key = arg + "-*"
+     if (key in etsf_subs_doc_args):
+       arg_doc[inout] += re.sub("\n", "\n!!", etsf_subs_doc_args[key])
+   arg_doc[inout] += "\n"
 
    # Optional arguments
    if ( (len(arg_info) > 3) and (arg_info[3] == "optional") ):
@@ -771,29 +795,31 @@ def init_routine(name,template,info,script,args,type="subroutine"):
    else:
     opt = ""
 
-   # Arrays
-   if ( len(arg_info) > 4 ):
-    dim = ":"
-    for i in range(int(arg_info[4])-1):
-     dim += ",:"
-    arg_desc += "  %s%s, pointer :: %s(%s)\n" % \
-     (arg_info[1],opt,arg,dim)
-    if ( (arg_info[3] == "optional") or (arg_info[3] == "local") ):
-     loc_vars += "  %s, allocatable :: my_%s(%s)\n" % (arg_info[1],arg,dim)
-   else:
-    arg_desc += "  %s%s, intent(%s) :: %s\n" % (arg_info[1],opt,arg_info[2],arg)
-    if ( (len(arg_info) > 3) and 
-         ((arg_info[3] == "optional") or (arg_info[3] == "local")) ):
-     loc_vars += "  %s :: my_%s\n" % (arg_info[1],arg)
+   # The fortran definition
+   arg_desc += "  %s%s, intent(%s) :: %s\n" % (arg_info[1],opt,arg_info[2],arg)
+   if ( (len(arg_info) > 3) and 
+        ((arg_info[3] == "optional") or (arg_info[3] == "local")) ):
+    loc_vars += "  %s :: my_%s\n" % (arg_info[1],arg)
+
+   # Build the documentation string
+   arg_doc_str = ""
+   if (arg_doc[0] != ""):
+     arg_doc_str += "!! INPUTS\n" + arg_doc[0]
+   if (arg_doc[1] != ""):
+     arg_doc_str += "!! OUTPUT\n" + arg_doc[1]
+   if (arg_doc[2] != ""):
+     arg_doc_str += "!! SIDE EFFECTS\n" + arg_doc[2]
 
   if ( type != "subroutine" ):
    loc_vars += "  %s :: etsf_%s\n" % (type,name)
 
   ret = re.sub("@ARG_DESC@\n",arg_desc,ret)
+  ret = re.sub("@ARG_DOC@\n",arg_doc_str,ret)
   ret = re.sub("@LOCAL_VARS@",loc_vars,ret)
  else:
   ret = re.sub(", @ARG_LIST@","",ret)
   ret = re.sub("@ARG_DESC@\n","",ret)
+  ret = re.sub("@ARG_DOC@\n", "",ret)
   ret = re.sub("@LOCAL_VARS@","",ret)
 
  return ret
@@ -813,7 +839,7 @@ my_configs = ["config/etsf/specs.cf",
               "config/etsf/code.cf",
               "config/etsf/functions.py"]
 
-# Check if we are in the top of the ABINIT source tree
+# Check if we are in the top of the ETSF_IO source tree
 if ( not os.path.exists("configure.ac") ):
  print "%s: You must be in the top of the library source tree." % my_name
  print "%s: Aborting now." % my_name

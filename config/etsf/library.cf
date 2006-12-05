@@ -28,11 +28,11 @@ etsf_modules = {
 etsf_subprograms = {
    "dims":[
       "low_level",
-      "@ACTION_TEXT@ all ETSF dimensions.",
+      """!!  @ACTION_TEXT@ all ETSF dimensions.""",
       "def get"],
    "@GROUP@":[
       "low_level",
-      "@ACTION_TEXT@ ETSF variables for @GROUP@.",
+      """!!  @ACTION_TEXT@ ETSF variables for @GROUP@.""",
       "def get put"],
    "data":[
       "data",
@@ -58,15 +58,18 @@ etsf_subs_actions = {
 # Descriptions of the subprogram arguments for the "def" action
 etsf_subs_def_args = {
    "dims":[
+      "ncid integer in",
       "dims type(etsf_dims) in",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out"],
    "main":[
+      "ncid integer in",
       "mains integer in",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out",
       "k_dependent logical in optional"],
    "@GROUP@":[
+      "ncid integer in",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out",
       "k_dependent logical in optional"]
@@ -75,10 +78,12 @@ etsf_subs_def_args = {
 # Descriptions of the subprogram arguments for the "get" action
 etsf_subs_get_args = {
    "dims":[
+      "ncid integer in",
       "dims type(etsf_dims) out",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out"],
    "@GROUP@":[
+      "ncid integer in",
       "folder type(etsf_@GROUP@) inout",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out",
@@ -88,6 +93,7 @@ etsf_subs_get_args = {
 # Descriptions of the subprogram arguments for the "put" action
 etsf_subs_put_args = {
    "@GROUP@":[
+      "ncid integer in",
       "folder type(etsf_@GROUP@) in",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out"]
@@ -135,4 +141,66 @@ etsf_subs_write_args = {
       "group_folder type(etsf_groups) in",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out"]
+}
+
+# Documentation for arguments. The key is build on (separated by dash)
+#  - the argument name ;
+#  - the target (dims, main, data, electrons...) 'underscore' the action (get, put, def...).
+# When looking for a documentation, specific values are looked for before
+# the wild card *.
+etsf_subs_doc_args = {
+   "ncid-*":"""
+     integer returned by an 'open' NetCDF call. The file can be 
+     either in define or write mode. This status can be changed
+     by the call.""",
+   "lstat-*":"""
+     return .true. if all the actions succeed, if not the status
+     of the file is undefined.""",
+   "error_data-*":"""
+     contains the details of the error is @lstat is false.""",
+   "dims-*":"""
+     contains all the dimensions required by the ETSF file. These values
+     will be used to allocate the disk space for variables, see
+     etsf_io_electrons_def() or routines of the same kind.""",
+   "dims-dims_get":"""
+     an allocated structure to put the read values for all dimensions
+     of the ETSF file pointed by @ncid.""",
+   "k_dependent-*":"""
+     use this argument to set the attribute flag 'k_dependent' to 'yes'
+     or 'no' on variables that have it. If no variable in the group has
+     the attribute 'k_dependent', this argument has no effect. The default
+     value is .true. (which puts 'yes' in the file).""",
+   "folder-*":"""
+     an allocated structure with pointers on allocated areas in memory.
+     These areas will be read or written if the pointer is associated, if
+     not, the variable will be ignored. It is possible to access to specific
+     dimensions of a variable using the <short_var_name>__kpoint_access or
+     <short_var_name>__spin_access of this @folder structure. The 
+     <short_var_name>__number_of_<something> can also been set if only a subpart
+     in one dimension should be accessed (this is possible when the specifications
+     have been declared with a max_number_of_<something>.""",
+   "use_atomic_units-*":"""
+     set this flag to .true. makes the library use the value of the attribute
+     scale_to_atomic_units to multiply the read variables (that are units dependent)
+     by this factor (if different from 1.0d0).""",
+   "mains-*":"""
+     unless other groups, one can choose the variables of the main group
+     that will be defined (and disk allocated) using this flag. This is a sum
+     of values taken from #FLAGS_MAIN.""",
+   "filename-*":"""
+     the path to the file to be accessed.""",
+   "groups-data_init":"""
+     choose the groups (from #etsf_groups) that will be used. This is a sum of
+     values taken from #FLAGS_GROUPS. Except for the main group, all variables
+     of the chosen groups will be defined (and disk allocated).""",
+   "title-data_init":"""
+     the title of the file (maybe null but should not).""",
+   "history-data_init":"""
+     some history information (maybe null).""",
+   "group_folder-*":"""
+     a container for different groups. All groups specified in the @groups argument
+     must be associated.""",
+   "groups-*":"""
+     choose the groups (from #etsf_groups) that will be accessed. This is a sum of
+     values taken from #FLAGS_GROUPS.""",
 }
