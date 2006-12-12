@@ -63,10 +63,10 @@ module etsf_io_low_level
   !!  etsf_io_low_read_var
   !!
   !! SYNOPSIS
-  !!  * call etsf_io_low_read_var(ncid, varname, var, lstat, &
-  !!                            & ncvarid, start, count, map, error_data)
-  !!  * call etsf_io_low_read_var(ncid, varname, var, charlen, lstat, &
-  !!                            & ncvarid, start, count, map, error_data)
+  !!  * call etsf_io_low_read_var(ncid, varname, var, lstat,
+  !!                              ncvarid, start, count, map, error_data)
+  !!  * call etsf_io_low_read_var(ncid, varname, var, charlen, lstat,
+  !!                              ncvarid, start, count, map, error_data)
   !!
   !! FUNCTION
   !!  This is a generic interface to read values of a variables (either integer
@@ -392,10 +392,10 @@ module etsf_io_low_level
   !!  etsf_io_low_write_var
   !!
   !! SYNOPSIS
-  !!  * call etsf_io_low_write_var(ncid, varname, var, lstat, &
-  !!                             & ncvarid, start, count, map, error_data)
-  !!  * call etsf_io_low_write_var(ncid, varname, var, charlen, lstat, &
-  !!                             & ncvarid, start, count, map, error_data)
+  !!  * call etsf_io_low_write_var(ncid, varname, var, lstat,
+  !!                               ncvarid, start, count, map, error_data)
+  !!  * call etsf_io_low_write_var(ncid, varname, var, charlen, lstat,
+  !!                               ncvarid, start, count, map, error_data)
   !!
   !! FUNCTION
   !!  This is a generic interface to write values of a variables (either integer

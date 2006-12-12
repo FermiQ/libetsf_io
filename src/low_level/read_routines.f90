@@ -218,8 +218,8 @@
         return
       end if
       ! Copy map if all positive, else apply permutations
+      permut = .false.
       do i = 1, var_infos%ncshape, 1
-        permut = .false.
         if (opt_map(i) <= 0) then
           permut = .true.
         end if

@@ -1,3 +1,22 @@
+* Tue Dec 12 2006 Damien Caliste <caliste@pcpm.ucl.ac.be> 0.6
+- rewrite the generating script for low access in Python for a better portability.
+- complete the implementation of all attributes (units, k_dependent and symmorphic).
+  The unit attributes change the reading behavior, getting the values into atomic
+  units, except if the optional argument use_atomic_units is set to false. The
+  k_dependent attribute change the size of the array reduced_coordinates_of_plane_waves
+  when set on creation. The symmorphic attribute is changed whenever the 
+  reduced_symmetry_translations are written.
+- modify the support for sub access in an array, using new elements in each groups
+  instead of a special type for selected variables. These new element are based on
+  a short name for the variable, followed by two underscore and spin_access or kpoint_access,
+  storing an integer corresponding to the spin or the k point to be read or written.
+  Whenever a variable has a dimension with max_number_of_something, such an element
+  is also created in the group to be able to read or write only a part in that dimension.
+- add a documentation for the argument of group level routines.
+- create an index.html page in the doc/www section.
+- create a tutorial section in the sources, being cases heavily documented. Only one example
+  is currently given.
+
 * Wed Nov 29 2006 Damien Caliste <caliste@pcpm.ucl.ac.be> 0.5
 - Completely change the low level sub-part access, using now the start, count and map
   argument as in NetCDF (with small modifications). This has been required to be able

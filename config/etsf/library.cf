@@ -110,7 +110,8 @@ etsf_subs_init_args = {
       "history character(len=*) in",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out",
-      "k_dependent logical in optional"]      
+      "k_dependent logical in optional",
+      "overwrite logical in optional"]      
 }
 
 # Descriptions of the subprogram arguments for the "contents" action
@@ -203,4 +204,6 @@ etsf_subs_doc_args = {
    "groups-*":"""
      choose the groups (from #etsf_groups) that will be accessed. This is a sum of
      values taken from #FLAGS_GROUPS.""",
+   "overwrite-data_init":"""
+     will overwrite an existing file with the same file name (default is .false.)."""
 }

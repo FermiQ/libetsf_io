@@ -27,19 +27,23 @@
   !!  * version = the number of version to be created.
   !!  * title = (optional) a title for the file (80 characters max).
   !!  * history = (optional) the first line of history (1024 characters max).
+  !!  * with_etsf_header = (optional) if true, will create a header
+  !!                       as defined in the ETSF specifications (default is .true.).
+  !!                       When value is .false., arguments title, history and version
+  !!                       are ignored.
+  !!  * overwrite = (optional) if true, an existing file with the same name as @filename
+  !!                would be overwritten. Default is .false., which means that an IO
+  !!                error is raised if a file already exists.
   !!
   !! OUTPUT
   !!  * ncid = the NetCDF handler, opened with write access (define mode).
   !!  * lstat = .true. if operation succeed.
   !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
-  !!  * with_etsf_header = (optional) if true, will create a header
-  !!                       as defined in the ETSF specifications (default is .true.).
-  !!                       When value is .false., arguments title, history and version
-  !!                       are ignored.
   !!
   !! SOURCE
   subroutine etsf_io_low_open_create(ncid, filename, version, lstat, &
-                                   & title, history, error_data, with_etsf_header)
+                                   & title, history, error_data, with_etsf_header, &
+                                   & overwrite)
     integer, intent(out)                           :: ncid
     character(len = *), intent(in)                 :: filename
     real, intent(in)                               :: version
@@ -48,11 +52,12 @@
     character(len = *), intent(in), optional       :: history
     type(etsf_io_low_error), intent(out), optional :: error_data
     logical, intent(in), optional                  :: with_etsf_header
+    logical, intent(in), optional                  :: overwrite
     
     !Local
     character(len = *), parameter :: me = "etsf_io_low_open_create"
     character(len = 256) :: err
-    integer :: s
+    integer :: s, cmode
     logical :: stat
     
     lstat = .false.
@@ -66,9 +71,15 @@
       return
     end if
     ! Open file for writing
+    cmode = NF90_NOCLOBBER
+    if (present(overwrite)) then
+      if (overwrite) then
+        cmode = NF90_CLOBBER
+      end if
+    end if
     ! We don't use the 64bits flag since the specifications advice
     ! to split huge quantities of data into several smaller files.
-    s = nf90_create(path = filename, cmode = NF90_NOCLOBBER, ncid = ncid)
+    s = nf90_create(path = filename, cmode = cmode, ncid = ncid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
         call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_OWR, me, tgtname = filename, &

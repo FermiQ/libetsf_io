@@ -38,6 +38,11 @@ def code_data_init():
  ret += "else\n"
  ret += "  my_k_dependent = .true.\n"
  ret += "end if\n"
+ ret += "if (present(overwrite)) then\n"
+ ret += "  my_overwrite = overwrite\n"
+ ret += "else\n"
+ ret += "  my_overwrite = .false.\n"
+ ret += "end if\n"
 
  # Create a New NetCDF file and the constant dimensions values
  # and save all the dimensions to the file.
@@ -45,7 +50,7 @@ def code_data_init():
 ! Create the NetCDF file
 call etsf_io_low_open_create(ncid, filename, etsf_file_format_version, lstat, &
                            & title = trim(title), history = trim(history), &
-                           & error_data = error_data)
+                           & error_data = error_data, overwrite = my_overwrite)
 if (.not. lstat) return
 
 ! Define dimensions
