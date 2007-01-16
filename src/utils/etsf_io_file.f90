@@ -3,7 +3,10 @@
 !!  etsf_io_file
 !!
 !! FUNCTION
-!!  This module contains 
+!!  This module contains different high level routines to access ETSF files. It
+!!  actually contains:
+!!  * etsf_io_file_merge(): a routine to read several files and merge their data
+!!                          into a single output file.
 !!
 !! COPYRIGHT
 !!  Copyright (C) 2006
@@ -23,6 +26,36 @@ module etsf_io_file
 
 contains
 
+!!****m* etsf_io_file/etsf_io_file_merge
+!! NAME
+!!  etsf_io_file_merge
+!!
+!! FUNCTION
+!!  This is a high level routine to merge several files into one single. The files
+!!  to be merged should conform to the ETSF specification on splitted files. The
+!!  given input files must not be a complete list to create a non-splitted file.
+!!  In the case some arrays are still partial, the created output file is a splitted
+!!  one again, gathering what was possible with respect to the given input files.
+!!
+!! COPYRIGHT
+!!  Copyright (C) 2006
+!!  This file is distributed under the terms of the
+!!  GNU General Public License, see ~abinit/COPYING
+!!  or http://www.gnu.org/copyleft/lesser.txt .
+!!
+!! INPUTS
+!! * dest_file = 
+!!     the path to the file to be created. It must not already exist.
+!! * source_files = 
+!!     a list of path where input files can be found.
+!! OUTPUT
+!! * lstat = 
+!!     return .true. if all the actions succeed, if not the status
+!!     of the output file is undefined.
+!! * error_data <type(etsf_io_low_error)> = 
+!!     contains the details of the error is @lstat is false.
+!!
+!! SOURCE
   subroutine etsf_io_file_merge(dest_file, source_files, lstat, error_data)
     character(len = *), intent(in) :: dest_file
     character(len = 256), intent(in) :: source_files(:)
@@ -130,5 +163,6 @@ contains
     call etsf_io_split_free(output_split)
     lstat = .true.
   end subroutine etsf_io_file_merge
+!!***
 
 end module etsf_io_file

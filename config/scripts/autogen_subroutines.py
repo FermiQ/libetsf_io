@@ -1334,9 +1334,13 @@ def init_routine(name,template,info,script,args,type="subroutine"):
      if (key in etsf_subs_doc_args):
        arg_doc[inout] += re.sub("\n", "\n!!", etsf_subs_doc_args[key])
      else:
-       key = arg + "-*"
+       key = arg + "-*_" + name.split("_", 2)[1]
        if (key in etsf_subs_doc_args):
          arg_doc[inout] += re.sub("\n", "\n!!", etsf_subs_doc_args[key])
+       else:
+         key = arg + "-*"
+         if (key in etsf_subs_doc_args):
+           arg_doc[inout] += re.sub("\n", "\n!!", etsf_subs_doc_args[key])
      arg_doc[inout] += "\n"
 
    # Optional arguments

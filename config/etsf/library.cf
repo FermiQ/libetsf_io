@@ -261,18 +261,58 @@ etsf_subs_doc_args = {
      integer returned by an 'open' NetCDF call. The file can be 
      either in define or write mode. This status can be changed
      by the call.""",
+   "ncid_from-*":"""
+     integer returned by an 'open' NetCDF call. This id must have read access
+     granted. It will be left untouched.""",
+   "ncid_to-*":"""
+     integer returned by an 'open' NetCDF call. This id must have write access
+     granted. It will be modified by the routine. The file must be in write
+     mode (see etsf_io_low_set_write_mode()).""",
    "lstat-*":"""
      return .true. if all the actions succeed, if not the status
      of the file is undefined.""",
    "error_data-*":"""
      contains the details of the error is @lstat is false.""",
-   "dims-*":"""
+   "dims-*_copy":"""
+     these dimensions correspond to the source_file ones and are used to allocate
+     temporary arrays in memory during the copy.""",
+   "dims-dims_def":"""
      contains all the dimensions required by the ETSF file. These values
-     will be used to allocate the disk space for variables, see
+     will be used later to allocate the disk space for variables, see
      etsf_io_electrons_def() or routines of the same kind.""",
    "dims-dims_get":"""
      an allocated structure to put the read values for all dimensions
      of the ETSF file pointed by @ncid.""",
+   "dims-*_trace":"""
+     the structure that should be output on screen.""",
+   "dims-dims_merge":"""
+     the dimensions to be merge into argument @output_dims. If the dimension begin
+     with my_something, if the value is different from the something dimension, it
+     is added into @output_dims. If the dimension is a regular one, the equity is
+     only checked between dims and output_dims.""",
+   "dims-split_def":"""
+     contains all the dimensions required by the special my_something arrays.""",
+   "dims-data_init":"""
+     contains all the dimensions required by the ETSF file. It will be modify
+     by setting the constant dimensions to their right values, and the my_something
+     dimensions will be set according to the @split optional argument (if not
+     present, they will be put to their none split values).""",
+   "dims-data_contents":"""
+     the dimensions will be read and stored, using etsf_io_dims_get().""",
+   "dims-split_init":"""
+     will be changed according to the @split argument. For each allocated array
+     in @split, their corresponding dimension will be put to the array size ;
+     else, the none-split value is used.""",
+   "dims-split_allocate":"""
+     these dimensions define which arrays of argument @split should be allocated ;
+     it give also the size for these arrays.""",
+   "dims-split_copy":"""
+     the special split arrays are copied if their corresponding dimension, read
+     from @dims, are different from etsf_no_dimension and different from their
+     non-split value.""",
+   "dims-data_copy":"""
+     these dimensions correspond to the source_file ones and are used to allocate
+     temporary arrays in memory during the copy.""",
    "k_dependent-*":"""
      use this argument to set the attribute flag 'k_dependent' to 'yes'
      or 'no' on variables that have it. If no variable in the group has
@@ -313,10 +353,54 @@ etsf_subs_doc_args = {
      values taken from #FLAGS_GROUPS.""",
    "overwrite-data_init":"""
      will overwrite an existing file with the same file name (default is .false.).""",
-   "split-*":"""
+   "split-*_def":"""
      for each array associated in the type, the dimension used to declared the
      variables sizes will be 'my_/something/'.""",
+   "split-split_put":"""
+     copy the allocated arrays from this argument to the disk.""",
+   "split-split_get":"""
+     read from the disk the values of each associated array of @split.""",
+   "split-split_allocate":"""
+     read the @dims argument to allocate the required split arrays, use
+     etsf_io_split_free() when the split structure is not needed anymore.""",
+   "split-split_free":"""
+     free all associated array in the split definition.""",
+   "output_split":"""
+     this split definition is modified according to the given @split one. Its arrays
+     must have been allocated at the right size and should have been initialised with
+     negative values (see etsf_io_split_allocate()). Eaqch values in the arrays of
+     @split are copied to those of output_split on first found negative values.
+     Use etsf_io_dims_merge() to get the right size for a merged split definition.""",
+   "split-split_merge":"""
+     the value from this structure are copied into the right arrays in
+     @output_split and the values are changed then to be the indexes used in
+     @output_split.""",
+   "split-data_contents":"""
+     if any, read the split array from the given file and put their values
+     in this argument. The array must be allocated (see etsf_io_split_allocated()
+     or do it manually).""",
+   "split-*_copy":"""
+     if this argument is given, the values in the split definition (e.g. my_kpoints)
+     are used to put the data in the destination file in a bigger array at the right
+     placed.""",
    "split_definition-*":"""
      give for each associated array the number of elements (given by the size)
-     and the values of these elements in a splitted file."""
+     and the values of these elements in a splitted file.""",
+   "etsf_main-*_contents":"""
+     this integer is on output a union of flags defining the main variables used
+     in the read file.""",
+   "etsf_group-*_contents":"""
+     this integer is on output a union of flags defining the groups used
+     in the read file.""",
+   "dest_file-*":"""
+     the path to the file to be written.""",
+   "source_files-*":"""
+     an array with all files to be read and copied to the @dest_file.""",
+   "etsf_main-*_get":"""
+     this integer is a flag corresponding to the given @varname.""",
+   "etsf_group-*_get":"""
+     this integer is a flag corresponding to the group in which the given
+     @varname is defined.""",
+   "varname-*":"""
+     the name of a variable, to know if it is part of ETSF or not."""
 }
