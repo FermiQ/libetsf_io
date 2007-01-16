@@ -43,6 +43,9 @@ def code_data_init():
  ret += "else\n"
  ret += "  my_overwrite = .false.\n"
  ret += "end if\n"
+ ret += "if (present(split_definition)) then\n"
+ ret += "  my_split_definition = split_definition\n"
+ ret += "end if\n"
 
  # Create a New NetCDF file and the constant dimensions values
  # and save all the dimensions to the file.
@@ -60,71 +63,136 @@ dims%number_of_reduced_dimensions   = etsf_3dimlen
 dims%number_of_vectors              = etsf_3dimlen
 dims%symbol_length                  = etsf_chemlen
 
+! We set the size of split arrays, if required.
+if (present(split_definition)) then
+  call etsf_io_split_init(dims, split_definition)
+end if
+
+! We write the dimensions to the file.
 call etsf_io_dims_def(ncid, dims, lstat, error_data)
 if (.not. lstat) return
-"""
- # Check the groups argument.
- ret += """
-! Define groups
+
 """
 
+ ret += "! Define groups\n"
+ # Call the def subroutine for possible splitted variables.
+ ret += "if (present(split_definition)) then\n"
+ ret += "  call etsf_io_split_def(ncid, dims, lstat, error_data)\n"
+ ret += "  if (.not. lstat) return\n"
+ ret += "end if\n"
  # Write the select case for the argument groups.
  ret += code_data_select("def")
  
  # Close the NetCDF file.
  ret += """
+! Write the split arrays.
+if (present(split_definition)) then
+  ! Begin by putting the file in write mode.
+  call etsf_io_low_set_write_mode(ncid, lstat, error_data = error_data)
+  if (.not. lstat) return
+  ! Write the arrays.
+  call etsf_io_split_put(ncid, split_definition, lstat, error_data)
+  if (.not. lstat) return
+end if
+
 ! End definitions and close file
-call etsf_io_low_close(ncid, lstat, error_data = error_data)"""
+call etsf_io_low_close(ncid, lstat, error_data = error_data)
+if (.not. lstat) return"""
 
  return ret
 
+# The copy code for data (all groups).
+# It call the copy routine for each group.
+def code_data_copy():
+  ret = "lstat = .false.\n\n"
 
+  # Open the files for reading and writing.
+  ret += "! Open file for writing\n"
+  ret += "call etsf_io_low_open_modify(ncid_to, trim(dest_file), &\n"
+  ret += "  & lstat, error_data = error_data)\n"
+  ret += "if (.not. lstat) return\n"
+  ret += "call etsf_io_low_set_write_mode(ncid_to, lstat, error_data = error_data)\n"
+  ret += "if (.not. lstat) return\n"
+  ret += "! Open file for reading\n"
+  ret += "call etsf_io_low_open_read(ncid, trim(source_file), &\n"
+  ret += "  & lstat, error_data = error_data)\n"
+  ret += "if (.not. lstat) return\n\n"
+  
+  for grp in etsf_groups:
+    ret += "if (present(split)) then\n"
+    ret += "  call etsf_io_%s_copy(ncid_to, ncid, dims, &\n" % grp
+    ret += "    & lstat, error_data, split)\n"
+    ret += "else\n"
+    ret += "  call etsf_io_%s_copy(ncid_to, ncid, dims, &\n" % grp
+    ret += "    & lstat, error_data)\n"
+    ret += "end if\n"
+    ret += "if (.not. lstat) return\n\n"
+
+  ret += "!Close files.\n"
+  ret += "call etsf_io_low_close(ncid_to, lstat, error_data = error_data)\n"
+  ret += "if (.not. lstat) return\n"
+  ret += "call etsf_io_low_close(ncid, lstat, error_data = error_data)\n"
+  ret += "if (.not. lstat) return\n"
+  
+  return ret
 
 # Code for data contents
 # Read a NetCDF file for main and one or several group.
-# WARNING: this definition is not used yet.
 def code_data_contents():
+  ret = "lstat = .false.\n"
+  ret += "if (present(var_list)) then\n"
+  ret += "  var_list => null()\n"
+  ret += "end if\n"
+  
+  # Open the file for reading.
+  ret += "! Open file for reading\n"
+  ret += "call etsf_io_low_open_read(ncid, trim(filename), &\n"
+  ret += "  & lstat, error_data = error_data)\n"
+  ret += "if (.not. lstat) return\n"
 
- # Open the file for reading and get the dimensions
- ret = """! Open file for reading
-call etsf_io_low_open_read(ncid, trim(filename), lstat, error_data = error_data)
-if (.not. lstat) return
+  # We read the dimensions.
+  ret += "! Get the dimensions.\n"
+  ret += "call etsf_io_dims_get(ncid, dims, lstat, error_data)\n"
+  ret += "if (.not. lstat) return\n"
 
-! Get Dimensions
-call etsf_io_dims_get(ncid, dims, lstat, error_data)
-if (.not. lstat) return
+  # We handle the split definition, if required.
+  ret += "! We allocate the split arrays.\n"
+  ret += "call etsf_io_split_allocate(split, dims)\n"
+  ret += "! We read the split informations.\n"
+  ret += "call etsf_io_split_get(ncid, split, lstat, error_data)\n"
+  ret += "if (.not. lstat) then\n"
+  ret += "  call etsf_io_split_free(split)\n"
+  ret += "  return\n"
+  ret += "end if\n"
 
-"""
+  # List all variables of the file.
+  ret += "! Get all variables definitions\n"
+  ret += "call etsf_io_low_read_all_var_infos(ncid, my_var_list, lstat, error_data)\n"
+  ret += "if (.not. lstat) then\n"
+  ret += "  call etsf_io_split_free(split)\n"
+  ret += "  return\n"
+  ret += "end if\n\n"
 
- # Looking in the file for elements of groups.
- # Do that by looking for the first variable of each group
- # in the file. Then 'groups' contains all flags for present groups.
- ret += "! Get group names\ngroups = 0\n"
+  # Get for all variable its group and main id.
+  ret += "etsf_group = etsf_grp_none\n"
+  ret += "etsf_main  = etsf_main_none\n"
+  ret += "if (associated(my_var_list)) then\n"
+  ret += "  do i = 1, size(my_var_list), 1\n"
+  ret += "    call etsf_io_data_get(grp, main, my_var_list(i)%name)\n"
+  ret += "    etsf_group = ior(etsf_group, grp)\n"
+  ret += "    etsf_main  = ior(etsf_main, main)\n"
+  ret += "  end do\n"
+  ret += "end if\n"
+  ret += "if (present(var_list)) then\n"
+  ret += "  var_list => my_var_list\n"
+  ret += "else if (associated(my_var_list)) then\n"
+  ret += "  deallocate(my_var_list)\n"
+  ret += "end if\n\n"
 
- for grp in etsf_group_list:
-  if ( grp != "main" ):
-   ret += """
-call etsf_io_low_read_var_infos(ncid, "%s", var_infos, lstat)
-if ( lstat ) groups = groups + etsf_grp_%s
-""" % (etsf_groups[grp][0],grp)
+  ret += "! Close file\n"
+  ret += "call etsf_io_low_close(ncid, lstat, error_data = error_data)\n"
 
- # Look for the main variable
- ret += "\n! Get main variable name\nmain_var = 0\n"
-
- for var in etsf_main_names.keys():
-  ret += """
-if ( main_var == 0 ) then
-  call etsf_io_low_read_var_infos(ncid, "%s", var_infos, lstat)
-  if ( lstat ) main_var = etsf_main_%s
-end if
-""" % (var,etsf_main_names[var])
-
- ret += """
-! Close file
-call etsf_io_low_close(ncid, lstat, error_data = error_data)"""
-
- return ret
-# WARNING: this definition is not used yet.
+  return ret
 
 
 
@@ -187,10 +255,12 @@ end if
    ret += "    case (etsf_grp_%s)\n" % group
    if ( action == "def" ):
     if (group == "main"):
-     buf = "call etsf_io_main_def(ncid, mains, lstat, error_data)\n"
+     buf = "call etsf_io_main_def(ncid, mains, lstat, error_data, &\n" \
+         + "                     & split = my_split_definition)\n"
     else:
      buf  = "call etsf_io_%s_def(ncid, lstat, error_data, &\n" % group
-     buf += "                     & k_dependent = my_k_dependent)\n"
+     buf += "                     & k_dependent = my_k_dependent, &\n" \
+         +  "                     & split = my_split_definition)\n"
     buf += "if (.not. lstat) return\n"
    else:
     # Check the association
@@ -243,31 +313,216 @@ if (.not. lstat) return
 call etsf_io_low_close(ncid, lstat, error_data = error_data)"""
 
  return ret
- 
+
+# Give the group associated to a variable name.
+def code_data_get():
+  ret = ""
+  ret += "etsf_group = etsf_grp_none\n"
+  ret += "etsf_main  = etsf_main_none\n"
+  fmt_else = ""
+  for grp in etsf_groups:
+    for var in etsf_groups[grp]:
+      ret += "%sif (trim(varname) == \"%s\") then\n" % (fmt_else, var)
+      ret += "  etsf_group = etsf_grp_%s\n" % grp
+      if (grp == "main"):
+        ret += "  etsf_main = etsf_main_%s\n" % etsf_variables_shortnames[var]
+      if (fmt_else == ""):
+        fmt_else = "else "
+  ret += "end if\n"
+  return ret
 
 
 # Code for dimensions
 def code_dims(action):
 
  ret = ""
+ my_dims = []
  for dim in etsf_dimensions:
+   props = 0
+   if (dim in etsf_properties):
+     props = etsf_properties[dim]
+   
+   if ( props & ETSF_PROP_DIM_SPLIT != 0):
+     my_dims.append("my_" + dim)
+ all_dims = etsf_dimensions + my_dims
+ if (action == "merge"):
+   ret += "lstat = .false.\n"
+
+ for dim in all_dims:
   if ( ret != "" ):
    ret += "\n"
 
   if ( action == "def" ):
-    ret += "call etsf_io_low_write_dim(ncid, \"%s\", &\n" % dim \
-         + "                         & dims%%%s, &\n" % dim \
-         + "                         & lstat, error_data = error_data)\n" \
-         + "if (.not. lstat) return\n"
+    if (dim.startswith("my_")):
+      ret += "if (dims%%%s /= etsf_no_dimension .and. &\n" % dim \
+             +  "    dims%%%s /= dims%%%s) then\n" % (dim, dim[3:])
+    else:
+      ret += "if (dims%%%s /= etsf_no_dimension) then\n" % dim
+    ret += "  call etsf_io_low_write_dim(ncid, \"%s\", &\n" % dim \
+        +  "                           & dims%%%s, &\n" % dim \
+        +  "                           & lstat, error_data = error_data)\n" \
+        +  "  if (.not. lstat) return\n" \
+        +  "end if\n"
   elif ( action == "get" ):
     ret += "call etsf_io_low_read_dim(ncid, \"%s\", &\n" % dim \
          + "                        & dims%%%s, &\n" % dim \
          + "                        & lstat, error_data = error_data)\n" \
-         + "if (.not. lstat) return\n"
+         + "if (.not. lstat) then \n" \
+         + "  if (error_data%access_mode_id == ERROR_MODE_INQ) then\n"
+    if (dim.startswith("my_")):
+      ret += "    dims%%%s = dims%%%s\n" % (dim, dim[3:])
+    else:
+      ret += "    dims%%%s = etsf_no_dimension\n" % dim
+    ret += "  else\n" \
+         + "    return\n" \
+         + "  end if\n" \
+         + "end if\n"
+  elif ( action == "trace" ):
+    ret += "write(*, \"(A42,A,I6)\") \"%s\", &\n" % dim
+    ret += "  & \": \", dims%%%s" % dim
+  elif ( action == "merge" ):
+    if (dim.startswith("my_")):
+      ret += "if (output_dims%%%s /= dims%%%s) then\n" % (dim, dim)
+      ret += "  output_dims%%%s = output_dims%%%s + &\n" % (dim, dim)
+      ret += "    & dims%%%s\n" % dim
+      ret += "end if\n"
+    else:
+      ret += "if (output_dims%%%s /= dims%%%s) then\n" % (dim, dim)
+      ret += "  call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, &\n"
+      ret += "    & ERROR_TYPE_DIM, my_name, &\n"
+      ret += "    & errmess = \"incompatible dimension for merge.\")\n"
+      ret += "  return\n"
+      ret += "end if\n"
 
+ if (action != "trace"):
+   ret += "lstat = .true.\n"
  return ret
 
- 
+# Code for split
+def code_split(action):
+  ret = ""
+  if (action == "def"):
+    # We define the descriptive arrays of splitted variables
+    for var in etsf_variables:
+      if (var.startswith("my_")):
+        var_desc = etsf_variables[var]
+        ret += "if (dims%%%s /= etsf_no_dimension .and. &\n" % var_desc[1]
+        ret += "  & dims%%%s /= dims%%%s) then \n" % (var_desc[1], var_desc[1][3:])
+        # Create the definition of the shape and dimensions
+        if ( len(var_desc) > 1 ):
+          dims = "pad(\"" + var_desc[1] + "\")"
+          for dim in var_desc[2:]:
+            dims = "pad(\""+ dim + "\"), &\n  &    " + dims
+          dims = "(/ " + dims + " /),"
+        else:
+          dims = None
+
+        # Handle the defintion
+        buf = "call etsf_io_low_def_var(ncid, \"%s\", &\n" % var \
+            + "  & %s, &\n" % nf90_type(var_desc)
+        if (dims is not None):
+          buf += "  & %s &\n" % dims
+        buf += "  & lstat, error_data = error_data)\n"
+        buf += "if (.not. lstat) return\n"
+        ret += indent_code(buf, 1)
+        ret += "end if\n"
+  elif (action == "init"):
+    # We set the dimension of my_something in dims from
+    # the size of the associated array of split_definition
+    for var in etsf_variables:
+      if (var.startswith("my_")):
+        ret += "if (associated(split_definition%%%s)) then\n" % var
+        ret += "  dims%%%s = &\n" % etsf_variables[var][1]
+        ret += "    & size(split_definition%%%s)\n" % var
+        ret += "else\n"
+        ret += "  dims%%%s = &\n" % etsf_variables[var][1]
+        ret += "    & dims%%%s\n" % etsf_variables[var][1][3:]
+        ret += "end if\n"
+  elif (action == "put" or action == "get"):
+    if (action == "put"):
+      action_str = "write"
+    else:
+      action_str = "read"
+    for var in etsf_variables:
+      if (var.startswith("my_")):
+        ret += "if (associated(split%%%s)) then\n" % var
+        ret += "  call etsf_io_low_%s_var(ncid, \"%s\", &\n" % (action_str, var) \
+            +  "                          & split%%%s, &\n" % var \
+            +  "                          & lstat, error_data = error_data)\n"
+        ret += "  if (.not. lstat) return\n"
+        ret += "end if\n"
+  elif (action == "allocate"):
+    # Reading the dims argument, we allocate the etsf_split argument.
+    for var in etsf_variables:
+      if (var.startswith("my_")):
+        var_desc = etsf_variables[var]
+        ret += "if (dims%%%s /= etsf_no_dimension .and. &\n" % var_desc[1]
+        ret += "  & dims%%%s /= dims%%%s) then \n" % (var_desc[1], var_desc[1][3:])
+        ret += "  allocate(split%%%s(dims%%%s))\n" % (var, var_desc[1])
+        ret += "  split%%%s(:) = -1\n" % var
+        ret += "end if\n"
+  elif (action == "free"):
+    for var in etsf_variables:
+      if (var.startswith("my_")):
+        var_desc = etsf_variables[var]
+        ret += "if (associated(split%%%s)) then\n" % var
+        ret += "  deallocate(split%%%s)\n" % var
+        ret += "end if\n"
+  elif (action == "copy"):
+    for var in etsf_variables:
+      if (var.startswith("my_")):
+        var_desc = etsf_variables[var]
+        ret += "if (dims%%%s /= etsf_no_dimension .and. &\n" % var_desc[1]
+        ret += "  & dims%%%s /= dims%%%s) then \n" % (var_desc[1], var_desc[1][3:])
+        ret += "  allocate(split_array(dims%%%s))\n" % (var_desc[1])
+        ret += "  call etsf_io_low_read_var(ncid_from, \"%s\", &\n" % var
+        ret += "                          & split_array, lstat, error_data = error_data)\n"
+        ret += "  if (.not. lstat) then\n"
+        ret += "    deallocate(split_array)\n"
+        ret += "    return\n"
+        ret += "  end if\n"
+        ret += "  call etsf_io_low_write_var(ncid_to, \"%s\", &\n" % var
+        ret += "                           & split_array, lstat, error_data = error_data)\n"
+        ret += "  if (.not. lstat) then\n"
+        ret += "    deallocate(split_array)\n"
+        ret += "    return\n"
+        ret += "  end if\n"
+        ret += "  deallocate(split_array)\n"
+        ret += "end if\n"
+  elif (action == "merge"):
+    ret += "lstat = .false.\n"
+    for var in etsf_variables:
+      if (var.startswith("my_")):
+        var_desc = etsf_variables[var]
+        ret += "if (associated(output_split%%%s)) then\n" % var
+        ret += "  if (.not. associated(split%%%s)) then\n" % var
+        ret += "    call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, &\n"
+        ret += "      & ERROR_TYPE_DIM, my_name, &\n"
+        ret += "      & errmess = \"incompatible split for merge (not allocated).\")\n"
+        ret += "    return\n"
+        ret += "  end if\n"
+        ret += "  do ivar = 1, size(output_split%%%s), 1\n" % var
+        ret += "    if (output_split%%%s(ivar) < 0) then\n" % var
+        ret += "      exit\n"
+        ret += "    end if\n"
+        ret += "  end do\n"
+        ret += "  if ((ivar + size(split%%%s) - 1) > size(output_split%%%s)) then\n" % \
+               (var, var)
+        ret += "    call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, &\n"
+        ret += "      & ERROR_TYPE_DIM, my_name, &\n"
+        ret += "      & errmess = \"incompatible split for merge (wrong length).\")\n"
+        ret += "    return\n"
+        ret += "  end if\n"
+        ret += "  output_split%%%s(ivar:ivar + size(split%%%s) - 1) = &\n" % (var, var)
+        ret += "    & split%%%s\n" % var
+        ret += "  ! We modify the split value to be used in accordance with\n"
+        ret += "  ! the new output_split\n"
+        ret += "  split%%%s = &\n" % var
+        ret += "    & (/ (len, len = ivar, ivar + size(split%%%s) - 1, 1) /)\n" % var
+        ret += "end if\n"
+    ret += "lstat = .true.\n"
+  
+  return ret
 
 # Code for global attributes
 # WARNING! this definition is obsolete since
@@ -308,24 +563,18 @@ def code_globals(action):
   return ret
 # WARNING! this definition is obsolete
 
+# Code for def action on a group
+def code_group_def(group):
 
-
-# Generic code for a group
-def code_group_generic(group,action):
-
- # Look for peculiarities
- if ( group in etsf_properties ):
-  specs = etsf_properties[group]
- else:
-  specs = ETSF_PROP_NONE
-
- # Store code for possible attributes.
- ret_att = ""
  # Store main code
  ret = ""
+ # Store the set of dimensions used by this group
+ # A boolean is associated to each name. If True,
+ # then the dimension is splitted.
+ set_of_dims = {}
  
- # Consistency check in def mode
- if (group == "main" and action == "def"):
+ # Consistency check
+ if (group == "main"):
   ret += """! Consistency checks.
 if (mains < 0 .or. mains >= 2 ** etsf_main_nvars) then
   call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_ARG, my_name, &
@@ -337,27 +586,32 @@ end if
 """
 
  # Handling of different optional variables
- if (action == "get"):
-   ret += "! Get values for optional arguments, set default.\n"
-   ret += "if (present(use_atomic_units)) then\n"
-   ret += "  my_use_atomic_units = use_atomic_units\n"
-   ret += "else\n"
-   ret += "  my_use_atomic_units = .true.\n"
-   ret += "end if\n"
- if (action == "def"):
-   ret += "! Get values for optional arguments, set default.\n"
-   ret += "if (present(k_dependent)) then\n"
-   ret += "  my_k_dependent = k_dependent\n"
-   ret += "else\n"
-   ret += "  my_k_dependent = .true.\n"
+ ret += "! Get values for optional arguments, set default.\n"
+ ret += "if (present(k_dependent)) then\n"
+ ret += "  my_k_dependent = k_dependent\n"
+ ret += "else\n"
+ ret += "  my_k_dependent = .true.\n"
+ ret += "end if\n"
+ for var in etsf_groups[group]:
+   var_desc = etsf_variables[var]
+   if (len(var_desc) > 1):
+     for dim in var_desc[1:]:
+       set_of_dims[dim] = False
+ buf = ""
+ for var in etsf_variables:
+   var_desc = etsf_variables[var]
+   if (var.startswith("my_") and var_desc[1][3:] in set_of_dims):
+     set_of_dims[var_desc[1][3:]] = True
+     buf += "if (associated(split%%%s)) then\n" % var
+     buf += "  write(split_dims%%%s, \"(A)\") &\n" % var_desc[1][3:]
+     buf += "    & \"%s\"\n" % var_desc[1]
+     buf += "end if\n"
+ if (buf != ""):
+   ret += "! Set the name for dimensions that could be splitted.\n"
+   ret += "if (present(split)) then\n"
+   ret += indent_code(buf, 1)
    ret += "end if\n"
 
- ret += "allocate(varid(%d))\n" % len(etsf_groups[group])
- if (action == "put"):
-  ret += "! Begin by putting the file in write mode.\n"
-  ret += "call etsf_io_low_set_write_mode(ncid, lstat, error_data = error_data)\n"
-  ret += "if (.not. lstat) return\n"
- 
  # Process each variable in the group
  ivar = 0
  ivar_sym_matrices = None
@@ -384,65 +638,348 @@ end if
   att_kdep    = False
   att_symm    = False
   if (var in etsf_properties):
-    props = etsf_properties[var]
-    unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
-    splitted    = ( props & ETSF_PROP_VAR_SUB_ACCESS == ETSF_PROP_VAR_SUB_ACCESS)
-    att_symm    = ( props & ETSF_PROP_VAR_SYMMORPHIC == ETSF_PROP_VAR_SYMMORPHIC)
-    att_units   = ( props & ETSF_PROP_VAR_UNITS == ETSF_PROP_VAR_UNITS)
-    att_kdep    = ( props & ETSF_PROP_VAR_KDEP == ETSF_PROP_VAR_KDEP)
-  
-  if ( action == "def" ):
-    # Create the definition of the shape and dimensions
-    if ( len(var_desc) > 1 ):
-      dims = "pad(\"" + var_desc[1] + "\")"
+      props = etsf_properties[var]
+      unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED != 0)
+      splitted    = ( props & ETSF_PROP_VAR_SUB_ACCESS != 0)
+      att_symm    = ( props & ETSF_PROP_VAR_SYMMORPHIC != 0)
+      att_units   = ( props & ETSF_PROP_VAR_UNITS != 0)
+      att_kdep    = ( props & ETSF_PROP_VAR_KDEP != 0)
+      
+  # Create the definition of the shape and dimensions
+  if ( len(var_desc) > 1 ):
+      if (set_of_dims[var_desc[1]]):
+          dims = "split_dims%%%s" % var_desc[1]
+      else:
+          dims = "pad(\"" + var_desc[1] + "\")"
       for dim in var_desc[2:]:
-        dims = "pad(\""+ dim + "\"), &\n  &    " + dims
+          if (set_of_dims[dim]):
+              dims = "split_dims%%%s, &\n  &    " % dim + dims
+          else:
+              dims = "pad(\""+ dim + "\"), &\n  &    " + dims
       dims = "(/ " + dims + " /),"
       # Treat the special case of reduced_coordinates_of_plane_waves
       if (var == "reduced_coordinates_of_plane_waves"):
-        dims_kdep = "pad(\"" + var_desc[2] + "\")"
-        for dim in var_desc[3:]:
-          dims_kdep = "pad(\""+ dim + "\"), &\n    &    " + dims_kdep
-        dims_kdep = "(/ " + dims_kdep + " /),"
-    else:
+          if (set_of_dims[var_desc[2]]):
+              dims_kdep = "split_dims%%%s" % var_desc[2]
+          else:
+              dims_kdep = "pad(\"" + var_desc[2] + "\")"
+          for dim in var_desc[3:]:
+              if (set_of_dims[dim]):
+                  dims_kdep = "split_dims%%%s, &\n  &    " % dim + dims
+              else:
+                  dims_kdep = "pad(\""+ dim + "\"), &\n    &    " + dims_kdep
+          dims_kdep = "(/ " + dims_kdep + " /),"
+  else:
       dims = None
 
-    # Handle the defintion
-    buf = "call etsf_io_low_def_var(ncid, \"%s\", &\n" % var \
+  # Handle the defintion
+  buf = "call etsf_io_low_def_var(ncid, \"%s\", &\n" % var \
         + "  & %s, &\n" % nf90_type(var_desc)
-    if (dims is not None):
+  if (dims is not None):
       buf += "  & %s &\n" % dims
-    buf += "  & lstat, ncvarid = varid(%d), error_data = error_data)\n" % ivar
-    # The case of reduced_coordinates_of_plane_waves is special since
-    # the number of dimension vary.
-    if (var == "reduced_coordinates_of_plane_waves"):
+  buf += "  & lstat, ncvarid = ivar, error_data = error_data)\n"
+  # The case of reduced_coordinates_of_plane_waves is special since
+  # the number of dimension vary.
+  if (var == "reduced_coordinates_of_plane_waves"):
       buf_kdep  = "if (.not. my_k_dependent) then\n" 
       buf_kdep += "  call etsf_io_low_def_var(ncid, \"%s\", &\n" % var \
-                + "    & %s, &\n" % nf90_type(var_desc)
+                  + "    & %s, &\n" % nf90_type(var_desc)
       buf_kdep += "    & %s &\n" % dims_kdep
-      buf_kdep += "    & lstat, ncvarid = varid(%d), error_data = error_data)\n" % ivar
+      buf_kdep += "    & lstat, ncvarid = ivar, error_data = error_data)\n"
       buf_kdep += "else\n"
       buf_kdep += indent_code(buf, 1)
       buf_kdep += "end if\n"
       buf = buf_kdep
-    buf += "if (.not. lstat) return\n"
-    # Handle attributes of the variable
-    if (att_units):
-      buf += code_attribute_units("write", "\"atomic units\"", "1.0d0", ivar)
-    if (att_kdep or var == "reduced_coordinates_of_plane_waves"):
-      buf += code_attribute_kdep("write", "varid(%d)" % ivar)
-    if (att_symm):
-      buf += code_attribute_symm("write", ivar, "\"yes\"")
+  buf += "if (.not. lstat) return\n"
+  # Handle attributes of the variable
+  if (att_units):
+      buf += code_attribute_units("write", "\"atomic units\"", "1.0d0", "ivar")
+  if (att_kdep or var == "reduced_coordinates_of_plane_waves"):
+      buf += code_attribute_kdep("write", "ivar")
+  if (att_symm):
+      buf += code_attribute_symm("write", "ivar", "\"yes\"")
 
-    # Print the variable definition        
-    if (group == "main"):
+  # Print the variable definition        
+  if (group == "main"):
       ret += "if (iand(mains, etsf_main_%s) /= 0) then\n" % var_shortname(var)
       ret += indent_code(buf, 1)
       ret += "end if\n"
-    else:
+  else:
       ret += buf
 
+ return ret
+
+def code_split_write(dims, var, var_fortran, var_splitted, var_unformatted, string_len, var_span):
+  ret = ""
+  if (dims == []):
+    if (not(var_splitted)):
+      ret += "call etsf_io_low_write_var(ncid_to, \"%s\", &\n" % var
+      ret += "                         & %s%s, lstat, &\n" % (var_fortran, string_len)
+      ret += "                         & error_data = error_data)\n"
+    else:
+      ret += "call etsf_io_low_write_var(ncid_to, \"%s\", &\n" % var
+      ret += "                         & %s(%s)%s, &\n" % \
+             (var_fortran, var_span, string_len)
+      ret += "                         & lstat, error_data = error_data, &\n"
+      ret += "                         & start = start, count = count)\n"
+    ret += "if (.not. lstat) then\n"
+    ret += "  deallocate(%s)\n" % var_fortran
+    if (var_splitted):
+      ret += "  deallocate(start, count, istop)\n"
+      if (not(var_unformatted)):
+        ret += "  deallocate(jstart, jend)\n"
+    ret += "  return\n"
+    ret += "end if\n"
+    if (var_splitted and var_unformatted):
+      ret += "istart = istart + len\n"
+    return ret
+
+  if dims[0].startswith("my_"):
+    # The dimension is potentialy splitted.
+    # We get the name of the array used to index the
+    # splitted values.
+    dim_array = dim_get_split_array(dims[0])
+    # If the dim_array is allocated, then we use it.
+    ret += "do idim%d = 1, istop(%d), 1\n" % (len(dims), len(dims))
+    ret += "  if (associated(split%%%s)) then\n" % dim_array
+    ret += "    start(%d)  = split%%%s(idim%d)\n" % \
+           (len(dims), dim_array, len(dims))
+    if (not(var_unformatted)):
+      ret += "    jstart(%d) = split%%%s(idim%d)\n" % \
+             (len(dims), dim_array, len(dims))
+      ret += "    jend(%d)   = split%%%s(idim%d)\n" % \
+             (len(dims), dim_array, len(dims))
+    ret += "  end if\n"
+    ret += indent_code(code_split_write(dims[1:], var, var_fortran, \
+                                        var_splitted, var_unformatted, \
+                                        string_len, var_span), 1)
+    ret += "end do\n"
   else:
+    ret = code_split_write(dims[1:], var, var_fortran, var_splitted, \
+                           var_unformatted, string_len, var_span)
+
+  return ret
+  
+# Code to copy the values of a group from one file to another
+# The routine has several arguments:
+#  - ncid_to: the id of the NetCDF to write the data to ;
+#  - ncid_from: the id of the NetCDF to read data from ;
+#  - dims_from: the description of the dimensions used in the from file ;
+#  - lstat: .false. if an error occured ;
+#  - error_data: the error descriptor ;
+#  - split: optional, if set, the data are writen in a full array
+#           at the right places as defined in the split structure.
+def code_group_copy(group):
+  # Store main code
+  ret = "lstat = .false.\n"
+
+  # Process each variable in the group
+  for var in etsf_groups[group]:
+    # We prepend a my_ prefix to all dimensions when they are subject to splitting.
+    var_desc = etsf_variables[var][:]
+    for dim in var_desc[1:]:
+      if dim in etsf_properties:
+        if (etsf_properties[dim] & ETSF_PROP_DIM_SPLIT != 0):
+          var_desc[var_desc.index(dim)] = "my_" + dim
+
+    # Retrieve variable properties of interest.
+    unformatted = False
+    if (var in etsf_properties):
+      props = etsf_properties[var]
+      unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED != 0)
+
+    # Allocate an array for the reading action
+    ret += "! Variable '%s'\n" % var
+    ret += "!  allocate and read data\n"
+    var_fortran = "folder%%%s" % var
+    if (var_desc[0].startswith("string")):
+      string_len = ", dims%%%s" % var_desc[-1]
+    else:
+      string_len = ""
+    if ((var_desc[0].startswith("string") and len(var_desc) < 3) or \
+        (not(var_desc[0].startswith("string")) and len(var_desc) < 2)):
+      # Case when the variable is a scalar
+      var_splitted = False
+      length = ""
+    else:
+      var_splitted = var_get_split_status(var)
+      if (var_desc[0].startswith("string")):
+        stop = -2
+      else:
+        stop = -1
+      # If the variable is unformatted, we use data1D,
+      # else, we use the right shape.
+      length = "( &\n"
+      # We compute the total length of data
+      for dim in var_desc[1:stop]:
+        if (unformatted):
+          length += "  & dims%%%s * &\n" % dim
+        else:
+          length += "  & dims%%%s, &\n" % dim
+      length += "  & dims%%%s)" % var_desc[stop]
+      if (unformatted):
+        var_fortran = "folder%%%s%%data1D" % var
+    ret += "allocate(%s%s)\n" % (var_fortran, length)
+    ret += "call etsf_io_low_read_var(ncid_from, \"%s\", &\n" % var
+    ret += "                        & %s%s, lstat, &\n" % (var_fortran, string_len)
+    ret += "                        & error_data = error_data)\n"
+    # Raise error only if the error is not an inquire one.
+    ret += "if (.not. lstat .and. error_data%access_mode_id /= ERROR_MODE_INQ) then\n"
+    ret += "  deallocate(%s)\n" % var_fortran
+    ret += "  return\n"
+    ret += "end if\n"
+    ret += "!  write data and deallocate (if read succeed)\n"
+    ret += "if (lstat) then\n"
+    if (not(var_splitted)):
+      ret += indent_code(code_split_write([], var, var_fortran, \
+                                          False, False,string_len, ""), 1)
+    else:
+      ret += "  if (present(split)) then\n"
+      ret += "    ! We use the split definition to write to appropriated locations.\n"
+      ret += "    allocate(start(%d), count(%d))\n" % \
+             (len(var_desc) + stop, len(var_desc) + stop)
+      ret += "    count(:) = 0\n"
+      ret += "    start(:) = 1\n"
+      ret += "    ! For each dimension, set the do loop boundaries,\n"
+      ret += "    ! and the array boundaries.\n"
+      ret += "    allocate(istop(%d))\n" % (len(var_desc) + stop)
+      if (unformatted):
+        # If unformatted, the array boundaries are just istart and istart + len - 1
+        ret += "    istart   = 1\n"
+        ret += "    len      = 1\n"
+      else:
+        # If not, we store the array boundaries into jstart and jend arrays.
+        ret += "    allocate(jstart(%d), jend(%d))\n" % \
+               (len(var_desc) + stop, len(var_desc) + stop)
+      # For each dimensions, we compute the indexes for reading,
+      # istop is use as stop value for the do loops
+      #  (either 1 or size(split%dim_array)) ;
+      # jstart is used to restrict acces for each dimension
+      #  when the array is unformatted (start value) ;
+      # jend is identical to jstart but for end.
+      var_span = ""
+      for dim in var_desc[1:]:
+        if (dim.startswith("my_")):
+          dim_id = len(var_desc) - var_desc.index(dim)
+          ret += "    if (.not. associated(split%%%s)) then\n" % \
+                 dim_get_split_array(dim)
+          ret += "      istop(%d)  = 1\n" % dim_id
+          if (unformatted):
+            ret += "      len = len * dims%%%s\n" % dim
+          else:
+            var_span = "jstart(%d):jend(%d), " % (dim_id, dim_id) + var_span
+            ret += "      jstart(%d) = 1\n" % dim_id
+            ret += "      jend(%d)   = dims%%%s\n" % (dim_id, dim)
+          ret += "    else\n"
+          ret += "      istop(%d) = size(split%%%s)\n" % \
+                 (dim_id, dim_get_split_array(dim))
+          ret += "      count(%d) = 1\n" % dim_id
+          ret += "    end if\n"
+        else:
+          if (unformatted):
+            ret += "    len = len * dims%%%s\n" % dim
+          else:
+            var_span = ":, " + var_span
+      if (unformatted):
+        var_span = "istart:istart + len - 1"
+      else:
+        if (var_span.endswith(", ")):
+          var_span = var_span[:-2]
+      # Treat the split possibility
+      # For each possible splitted dimension, make a for loop on write action
+      ret += indent_code(code_split_write(var_desc[1:], var, var_fortran, \
+                                          True, unformatted, string_len, var_span), 2)
+      ret += "    deallocate(start, count, istop)\n"
+      if (not(unformatted)):
+        ret += "    deallocate(jstart, jend)\n"
+      ret += "  else\n"
+      ret += "    ! No split information, we copy everything in the same shape.\n"
+      ret += indent_code(code_split_write([], var, var_fortran, False, False, string_len, ""), 2)
+      ret += "  end if\n" 
+    ret += "end if\n"
+    ret += "deallocate(%s)\n" % var_fortran
+    ret += "\n"
+    ret += "lstat = .true.\n"
+
+  return ret
+
+# Generic code for a group
+def code_group_generic(group,action):
+
+  if (action == "def"):
+    return code_group_def(group)
+  elif (action == "copy"):
+    return code_group_copy(group)
+
+  # Store code for possible attributes.
+  ret_att = ""
+  # Store main code
+  ret = ""
+  # Store the set of dimensions used by this group
+  # A boolean is associated to each name. If True,
+  # then the dimension is splitted.
+  set_of_dims = {}
+
+  # Consistency check in def mode
+  if (group == "main" and action == "def"):
+    ret += """! Consistency checks.
+if (mains < 0 .or. mains >= 2 ** etsf_main_nvars) then
+  call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_ARG, my_name, &
+                           & tgtname = "mains", errmess = "value out of bounds")
+  lstat = .false.
+  return
+end if
+
+"""
+
+  # Handling of different optional variables
+  if (action == "get"):
+    ret += "! Get values for optional arguments, set default.\n"
+    ret += "if (present(use_atomic_units)) then\n"
+    ret += "  my_use_atomic_units = use_atomic_units\n"
+    ret += "else\n"
+    ret += "  my_use_atomic_units = .true.\n"
+    ret += "end if\n"
+
+  ret += "\nallocate(varid(%d))\n" % len(etsf_groups[group])
+  if (action == "put"):
+    ret += "! Begin by putting the file in write mode.\n"
+    ret += "call etsf_io_low_set_write_mode(ncid, lstat, error_data = error_data)\n"
+    ret += "if (.not. lstat) return\n"
+
+  # Process each variable in the group
+  ivar = 0
+  ivar_sym_matrices = None
+  for var in etsf_groups[group]:
+    var_desc = etsf_variables[var]
+    ivar += 1
+    if (var == "reduced_symmetry_matrices"):
+      ivar_sym_matrices = ivar
+
+    if ( ret != "" ):
+      ret += "\n"
+
+    # put in char_len, the length of the string.
+    # This information is required by the low level routines.
+    if ( var_desc[0].startswith("string")):
+      char_len = etsf_constants[var_desc[-1]] + ", "
+    else:
+      char_len = ""
+
+    # Retrieve variable properties of interest.
+    unformatted = False
+    splitted    = False
+    att_units   = False
+    att_kdep    = False
+    att_symm    = False
+    if (var in etsf_properties):
+      props = etsf_properties[var]
+      unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
+      splitted    = ( props & ETSF_PROP_VAR_SUB_ACCESS == ETSF_PROP_VAR_SUB_ACCESS)
+      att_symm    = ( props & ETSF_PROP_VAR_SYMMORPHIC == ETSF_PROP_VAR_SYMMORPHIC)
+      att_units   = ( props & ETSF_PROP_VAR_UNITS == ETSF_PROP_VAR_UNITS)
+      att_kdep    = ( props & ETSF_PROP_VAR_KDEP == ETSF_PROP_VAR_KDEP)
+
     if ( action == "put" ):
       action_str = "write"
     elif ( action == "get" ):
@@ -456,7 +993,7 @@ end if
     else:
       code_if = "if (associated(folder%%%s)) then\n" % var
     ret += code_if
-    
+
     # Special treatment for reduced_coordinates_of_plane_waves
     if (var == "reduced_coordinates_of_plane_waves"):
       ret += indent_code(code_attribute_kdep("read", "\"%s\"" % var, "flag"), 1)
@@ -466,12 +1003,15 @@ end if
       # Special treatment for reduced_coordinates_of_plane_waves
       if (var == "reduced_coordinates_of_plane_waves"):
         spl  = "if (flag(1:2) == \"no\") then\n"
-        spl += "  allocate(start(%d), count(%d))\n" % (len(var_desc) - 2, len(var_desc) - 2)
+        spl += "  allocate(start(%d), count(%d))\n" % \
+               (len(var_desc) - 2, len(var_desc) - 2)
         spl += "else\n"
-        spl += "  allocate(start(%d), count(%d))\n" % (len(var_desc) - 1, len(var_desc) - 1)
+        spl += "  allocate(start(%d), count(%d))\n" % \
+               (len(var_desc) - 1, len(var_desc) - 1)
         spl += "end if\n"
       else:
-        spl  = "allocate(start(%d), count(%d))\n" % (len(var_desc) - 1, len(var_desc) - 1)
+        spl  = "allocate(start(%d), count(%d))\n" % \
+               (len(var_desc) - 1, len(var_desc) - 1)
       spl += "start(:) = 1\n"
       spl += "count(:) = 0\n"
       # For each max_something dimension, use the provided value.
@@ -480,8 +1020,10 @@ end if
         if (dim.startswith("max_")):
           spl += "count(%d) = folder%%%s__%s\n" % (i, var_shortname(var), dim[4:])
         if (dim == "number_of_spins"):
-          spl += "if (folder%%%s__spin_access /= etsf_no_sub_access) then\n" % var_shortname(var)
-          spl += "  start(%d) = folder%%%s__spin_access\n" % (i, var_shortname(var))
+          spl += "if (folder%%%s__spin_access /= etsf_no_sub_access) then\n" % \
+                 var_shortname(var)
+          spl += "  start(%d) = folder%%%s__spin_access\n" % \
+                 (i, var_shortname(var))
           spl += "  count(%d) = 1\n" % (i)
           spl += "end if\n"
         if (dim == "number_of_kpoints"):
@@ -499,7 +1041,7 @@ end if
       ret += indent_code(spl, 1)
     else:
       sub_arg = ""
-    
+
     # Treat the k_dependent attribute
     if (action == "get" and att_kdep):
       ret += indent_code(code_attribute_kdep("read", "\"%s\"" % var, "flag"), 1)
@@ -508,7 +1050,7 @@ end if
       ret += "                            & lstat, error_data = error_data)\n"
       ret += "    folder%%%s = len\n" % var
       ret += "  else\n"
-      
+
     # If variable may be splitted, we append the start/count optional arguments
     buf =  "  call etsf_io_low_%s_var(ncid, \"%s\", &\n" % (action_str, var) \
         +  "                          & folder%%%s, %s&\n" % (var, char_len) \
@@ -521,7 +1063,7 @@ end if
       ret += "  end if\n"
     else:
       ret += buf
-    
+
     # If variable may be splitted
     if (splitted):
       ret += "  deallocate(start, count)\n"
@@ -536,35 +1078,37 @@ end if
       ret_att += indent_code(code_attribute_units(action_str, \
                              "folder%%%s__units" % var_shortname(var), \
                              "folder%%%s__scale_to_atomic_units" % var_shortname(var), \
-                             ivar, var, splitted, unformatted), 1)
+                             "varid(%d)" % ivar, var, splitted, unformatted), 1)
       ret_att += "end if\n\n"
     if (att_symm and action == "put"):
       ret_att += "if (associated(folder%reduced_symmetry_translations)) then\n"
-      ret_att += indent_code(code_attribute_symm("test", ivar_sym_matrices), 1)
+      ret_att += indent_code(code_attribute_symm("test", "varid(%d)" % ivar_sym_matrices), 1)
       ret_att += "end if\n\n"
 
- # Add attribute code if some
- if (ret_att is not ""):
-   ret += "\n! Handle all attributes for the group.\n"
-   if (action == "put"):
-     ret += "call etsf_io_low_set_define_mode(ncid, lstat, error_data = error_data)\n"
-     ret += "if (.not. lstat) return\n"
-   ret += ret_att
- ret += "\ndeallocate(varid)"
- return ret
+  # Add attribute code if some
+  if (ret_att is not ""):
+    ret += "\n! Handle all attributes for the group.\n"
+    if (action == "put"):
+      ret += "call etsf_io_low_set_define_mode(ncid, lstat, error_data = error_data)\n"
+      ret += "if (.not. lstat) return\n"
+    ret += ret_att
+  if (action != "def"):
+    ret += "\ndeallocate(varid)"
+      
+  return ret
 
 # Code for the unit attribute, testing its value
 # and the scale_to_atomic_units attribute.
 def code_attribute_units(action, att_unit, att_scale, ivar, \
                          var = None, var_split = False, var_unform = False):
   ret = "! Handle the units attribute.\n"
-  ret += code_attributes(action, "varid(%d)" % ivar, "units", \
+  ret += code_attributes(action, ivar, "units", \
                          att_unit, "etsf_charlen")
   ret += "if (.not. lstat) return\n"
   # If unit exists, we test its value in the reading case.
   if (action == "read"):
     ret += "if (trim(%s) /= \"atomic units\") then\n" % att_unit
-    ret += indent_code(code_attributes("read", "varid(%d)" % ivar, \
+    ret += indent_code(code_attributes("read", ivar, \
                        "scale_to_atomic_units", att_scale, ""), 1)
     ret += "  if (.not. lstat) return\n"
     ret += "else\n"
@@ -580,7 +1124,7 @@ def code_attribute_units(action, att_unit, att_scale, ivar, \
       ret += "    & %s\n" % att_scale
     ret += "end if\n"
   else:
-    ret += code_attributes("write", "varid(%d)" % ivar, \
+    ret += code_attributes("write", ivar, \
                            "scale_to_atomic_units", att_scale, "")
     ret += "if (.not. lstat) return\n"
     
@@ -616,7 +1160,7 @@ def code_attribute_symm(action, ivar, att_value = None):
     ret += "end do\n"
     att_value = "trim(flag)"
     action = "write"
-  ret += code_attributes(action, "varid(%d)" % ivar, "symmorphic", att_value, "etsf_charlen")
+  ret += code_attributes(action, ivar, "symmorphic", att_value, "etsf_charlen")
   ret += "if (.not. lstat) return\n"
   return ret
 
@@ -754,14 +1298,14 @@ def init_routine(name,template,info,script,args,type="subroutine"):
  if ( args != None ):
   for arg_str in args:
    arg_info = arg_str.split()
-
-   if ( arg_list != "" ):
-    if ( (len(arg_list)+arg_move)/72 > arg_stop ):
-     arg_list += ", &\n  & "
-     arg_stop += 1
-    else:
-     arg_list += ", "
-   arg_list += arg_info[0]
+   if ( arg_info[2] != "local" ):
+     if ( arg_list != "" ):
+      if ( (len(arg_list)+arg_move)/72 > arg_stop ):
+       arg_list += ", &\n  & "
+       arg_stop += 1
+      else:
+       arg_list += ", "
+     arg_list += arg_info[0]
   ret = re.sub("@ARG_LIST@",arg_list,ret)
 
   arg_desc = ""
@@ -779,20 +1323,21 @@ def init_routine(name,template,info,script,args,type="subroutine"):
     inout = 1
    elif (arg_info[2] == "inout"):
     inout = 2
-   arg_doc[inout] += "!! * %s" % arg
-   if (arg_info[1].startswith("type")):
-     arg_doc[inout] += " <%s>" % arg_info[1]
-   arg_doc[inout] += " = "
-   if ( (len(arg_info) > 3) and (arg_info[3] == "optional") ):
-     arg_doc[inout] += "(optional) "
-   key = arg + "-" + name
-   if (key in etsf_subs_doc_args):
-     arg_doc[inout] += re.sub("\n", "\n!!", etsf_subs_doc_args[key])
-   else:
-     key = arg + "-*"
+   if (inout is not None):
+     arg_doc[inout] += "!! * %s" % arg
+     if (arg_info[1].startswith("type")):
+       arg_doc[inout] += " <%s>" % arg_info[1]
+     arg_doc[inout] += " = "
+     if ( (len(arg_info) > 3) and (arg_info[3] == "optional") ):
+       arg_doc[inout] += "(optional) "
+     key = arg + "-" + name
      if (key in etsf_subs_doc_args):
        arg_doc[inout] += re.sub("\n", "\n!!", etsf_subs_doc_args[key])
-   arg_doc[inout] += "\n"
+     else:
+       key = arg + "-*"
+       if (key in etsf_subs_doc_args):
+         arg_doc[inout] += re.sub("\n", "\n!!", etsf_subs_doc_args[key])
+     arg_doc[inout] += "\n"
 
    # Optional arguments
    if ( (len(arg_info) > 3) and (arg_info[3] == "optional") ):
@@ -801,10 +1346,13 @@ def init_routine(name,template,info,script,args,type="subroutine"):
     opt = ""
 
    # The fortran definition
-   arg_desc += "  %s%s, intent(%s) :: %s\n" % (arg_info[1],opt,arg_info[2],arg)
-   if ( (len(arg_info) > 3) and 
-        ((arg_info[3] == "optional") or (arg_info[3] == "local")) ):
-    loc_vars += "  %s :: my_%s\n" % (arg_info[1],arg)
+   if (inout is not None):
+     arg_desc += "  %s%s, intent(%s) :: %s\n" % (arg_info[1],opt,arg_info[2],arg)
+     if ( (len(arg_info) > 3) and 
+          ((arg_info[3] == "optional") or (arg_info[3] == "local")) ):
+      loc_vars += "  %s :: my_%s\n" % (arg_info[1],arg)
+   else:
+     loc_vars += "  %s :: %s\n" % (arg_info[1],arg)
 
    # Build the documentation string
    arg_doc_str = ""

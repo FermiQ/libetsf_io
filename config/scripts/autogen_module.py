@@ -63,12 +63,21 @@ for att in etsf_attributes.keys():
 
 # Data type for dimensions
 edt = "\n\n ! Data type for dimensions\n type etsf_dims\n"
+edt_split = ""
 for dim in etsf_dimensions:
+ props = 0
+ if (dim in etsf_properties):
+   props = etsf_properties[dim]
+ split = ( props & ETSF_PROP_DIM_SPLIT != 0)
  if (dim in etsf_constants):
    default_value = etsf_constants[dim]
  else:
    default_value = "1"
  edt += "  %s :: %s = %s\n" % (fortran_type(["integer"]),dim, default_value)
+ if (split):
+   edt_split += "  %s :: my_%s = etsf_no_dimension\n" % (fortran_type(["integer"]),dim)
+edt += "\n  !Dimensions for variables that can be splitted.\n"
+edt += edt_split
 edt += " end type etsf_dims"
 
 # Data structures for each group of variables
@@ -192,7 +201,16 @@ for var in etsf_groups["main"]:
 # Number of main variables
 emc += "\n integer, parameter :: etsf_%-20s = %d" % ("main_nvars",egn)
 
-
+# Additional variables for splitted files.
+vsp = " type etsf_split\n"
+vsn = " type split_dim_names\n"
+for var in etsf_variables:
+  if (var.startswith("my_")):
+    vsp += "  %s, pointer :: %s(:) => null()\n" % (fortran_type(etsf_variables[var]),var)
+    vsn += "  character(len = 256) :: %s = \"%s\"\n" % (etsf_variables[var][1][3:], etsf_variables[var][1][3:])
+vsp += " end type etsf_split\n"
+vsn += " end type split_dim_names\n"
+  
 
 # Import template
 src = file("config/etsf/template.%s" % (etsf_modules["etsf_io"]),"r").read()
@@ -203,6 +221,8 @@ src = re.sub("@FLAGS_MAIN@",emc,src)
 src = re.sub("@DIMENSIONS@",edt,src)
 src = re.sub("@STRUCTURES@",est,src)
 src = re.sub("@STRUCT_GROUPS@",egf,src)
+src = re.sub("@SPLIT_GROUP@",vsp,src)
+src = re.sub("@SPLIT_NAME_GROUP@",vsn,src)
 
 # Write module
 mod = file(etsf_file_module,"w")

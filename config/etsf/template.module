@@ -52,6 +52,8 @@ module etsf_io
   !!                          specific dimension (usually spin or k points). This
   !!                          value is used to tell the library to access all the values
   !!                          of that dimension.
+  !!   * etsf_no_dimension = this value is given to a dimension. It means that
+  !!                         the file does not contain that dimension.
   !!
   !! SOURCE
   ! Constants for internal dimensions
@@ -61,6 +63,7 @@ module etsf_io
   integer, parameter :: etsf_3dimlen = 3
   integer, parameter :: etsf_spec_dimension = 0
   integer, parameter :: etsf_no_sub_access = 0
+  integer, parameter :: etsf_no_dimension = 0
 
 @CONSTANTS@
   !!***
@@ -123,6 +126,19 @@ module etsf_io
   !! SOURCE
 @STRUCT_GROUPS@
   !!***
+
+  !!****g* etsf_io_basics_group/etsf_split
+  !! FUNCTION
+  !!  This group is used to store description array in the case of a splitted file.
+  !!
+  !! SOURCE
+@SPLIT_GROUP@
+  !!***
+
+  ! Private group, use internally to get the name of dimensions
+  ! that can be splitted.
+@SPLIT_NAME_GROUP@
+  private :: split_dim_names
 
   !!****g* etsf_io/etsf_io_data_group
   !! FUNCTION

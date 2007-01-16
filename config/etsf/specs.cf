@@ -20,9 +20,10 @@ ETSF_PROP_ATT_GLOBAL      = 1    # Attribute is global
 ETSF_PROP_VAR_UNITS       = 2    # Variable has "units" attribute
 ETSF_PROP_VAR_KDEP        = 4    # Variable is k-point dependent
 ETSF_PROP_VAR_UNFORMATTED = 8    # Type of the variable is etsf_io_low_* unformatted pointer
-ETSF_PROP_VAR_SUB_ACCESS  = 16   # Variable can be accessed on single k point & spin values
+ETSF_PROP_VAR_SUB_ACCESS  = 24   # Variable can be accessed on single k point & spin values
                                  # Variables with sub access are always unformatted.
 ETSF_PROP_VAR_SYMMORPHIC  = 32   # Variable has the "symmorphic" flag
+ETSF_PROP_DIM_SPLIT       = 64   # Files can be splitted on that dimension
 
 # ETSF constants
 etsf_constants = {
@@ -60,7 +61,16 @@ etsf_properties = {
    "number_of_coefficients":ETSF_PROP_VAR_KDEP,
    "gw_corrections":ETSF_PROP_VAR_SUB_ACCESS,
    "number_of_states":ETSF_PROP_VAR_UNFORMATTED,
-   "reduced_symmetry_matrices":ETSF_PROP_VAR_SYMMORPHIC}
+   "reduced_symmetry_matrices":ETSF_PROP_VAR_SYMMORPHIC,
+   "max_number_of_states":ETSF_PROP_DIM_SPLIT,
+   "number_of_kpoints":ETSF_PROP_DIM_SPLIT,
+   "number_of_spins":ETSF_PROP_DIM_SPLIT,
+   "number_of_components":ETSF_PROP_DIM_SPLIT,
+   "number_of_grid_points_vector1":ETSF_PROP_DIM_SPLIT,
+   "number_of_grid_points_vector2":ETSF_PROP_DIM_SPLIT,
+   "number_of_grid_points_vector3":ETSF_PROP_DIM_SPLIT,
+   "max_number_of_coefficients":ETSF_PROP_DIM_SPLIT
+   }
 
 # ETSF attributes
 etsf_attributes = {
@@ -219,6 +229,30 @@ etsf_variables = {
    "monkhorst_pack_folding":[
       "integer",
       "number_of_vectors"],
+   "my_coefficients":[
+      "integer",
+      "my_max_number_of_coefficients"],
+   "my_components":[
+      "integer",
+      "my_number_of_components"],
+   "my_grid_points_vector1":[
+      "integer",
+      "my_number_of_grid_points_vector1"],
+   "my_grid_points_vector2":[
+      "integer",
+      "my_number_of_grid_points_vector2"],
+   "my_grid_points_vector3":[
+      "integer",
+      "my_number_of_grid_points_vector3"],
+   "my_kpoints":[
+      "integer",
+      "my_number_of_kpoints"],
+   "my_spins":[
+      "integer",
+      "my_number_of_spins"],
+   "my_states":[
+      "integer",
+      "my_max_number_of_states"],
    "number_of_coefficients":[
       "integer",
       "number_of_kpoints"],

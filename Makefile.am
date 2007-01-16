@@ -16,6 +16,7 @@ endif
 SUBDIRS = \
 	src/low_level \
 	src/group_level \
+	src/utils \
 	$(subdir_tests) \
 	$(subdir_tutorials)
 

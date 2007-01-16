@@ -92,26 +92,34 @@
   end type etsf_io_low_error
   !!***
 
-  !!****s* etsf_io_low_read_group/etsf_io_low_var_infos
+  !!****s* etsf_io_low_level/etsf_io_low_var_infos
   !! NAME
   !!  etsf_io_low_var_infos
   !!
   !! FUNCTION
   !!  This structure is used to store variable informations, such as
-  !!  name, NetCDF id, type, shape and dimensions.
+  !!  name, NetCDF id, type, shape and dimensions. It contains the following
+  !!  elements:
+  !!  * nctype: the type of the variable, see #ETSF_IO_LOW_CONSTANTS.
+  !!  * ncid: the id used by NetCDF to access this variable.
+  !!  * name: the variable name.
+  !!  * ncshape: the number of dimensions (0 for scalar variable).
+  !!  * ncdims: the size for each dimension (only (1:ncshape) are relevent).
+  !!  * ncdimnames: the name corresponding to such dimensions (may be unset,
+  !!                if set, use etsf_io_low_free_var_infos()).
   !!
   !! SOURCE
   type etsf_io_low_var_infos
-    character(len = 80) :: name
-    
-    integer :: ncid
     integer :: nctype
+    integer :: ncid
+    character(len = 80) :: name
     integer :: ncshape
     integer :: ncdims(1:16)
+    character(len = 80), pointer :: ncdimnames(:) => null()
   end type etsf_io_low_var_infos
   !!***
   
-  !!****s* etsf_io_low_level/etsf_io_low_var_double
+  !!****s* etsf_io_low_var/etsf_io_low_var_double
   !! NAME
   !!  etsf_io_low_var_double
   !!
@@ -133,7 +141,7 @@
   end type etsf_io_low_var_double
   !!***
   
-  !!****s* etsf_io_low_level/etsf_io_low_var_integer
+  !!****s* etsf_io_low_var/etsf_io_low_var_integer
   !! NAME
   !!  etsf_io_low_var_integer
   !!

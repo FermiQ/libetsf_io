@@ -23,6 +23,7 @@ program tests_read
   call tests_read_var_integer(trim(path))
   call tests_read_var_double(trim(path))
   call tests_read_var_character(trim(path))
+  call tests_read_all_var_infos(trim(path))
   
 contains
 
@@ -664,5 +665,78 @@ contains
     
     write(*,*) 
   end subroutine tests_read_var_character
+
+  subroutine tests_read_all_var_infos(path)
+    character(len = *), intent(in) :: path
+    integer :: ncid, i
+    logical :: lstat
+    type(etsf_io_low_error) :: error
+    type(etsf_io_low_var_infos), pointer :: infos(:)
+    character(len = *), parameter :: me = "tests_read_all_var_infos"
+    integer, parameter :: infos_shapes(10) = (/ 2, 1, 2, 4, 0, 0, 1, 2, 2, 4 /)
+    character(len = 256) :: infos_names(10)
+
+    infos_names = (/ pad("atom_species_names"), &
+         & pad("atom_species"), pad("test_integer_2d"), pad("test_integer_4d"), &
+         & pad("space_group"), pad("test_double_0d"), pad("test_double_1d"), &
+         & pad("reduced_atom_positions"), pad("primitive_vectors"), pad("density") /)
+    
+    write(*,*)
+    write(*,*) "Testing etsf_io_low_read_all_var_infos()..."
+
+    ! Testing allocated pointers
+    allocate(infos(1))
+    call etsf_io_low_read_all_var_infos(0, infos, lstat, error_data = error)
+    call tests_read_status("argument var_infos_array: allocated array", &
+         & (.not. lstat .and. error%access_mode_id == ERROR_MODE_INQ .and. &
+         & error%target_type_id == ERROR_TYPE_ARG), error)
+    deallocate(infos)
+
+    ! Testing wrong ncid
+    call etsf_io_low_read_all_var_infos(0, infos, lstat, error_data = error)
+    call tests_read_status("argument ncid: wrong value", (.not. lstat .and. &
+      & error%access_mode_id == ERROR_MODE_INQ), error)
+    
+    ! Open for read
+    call etsf_io_low_open_read(ncid, path//"/read_var_t01.nc", lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't open file"
+      return
+    end if
+
+    ! Read all variable descriptions
+    call etsf_io_low_read_all_var_infos(ncid, infos, lstat, error_data = error)
+    call tests_read_status("read all variable descriptions", lstat, error)
+    if (lstat) then
+       ! Check the values
+       call etsf_io_low_error_set(error, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, &
+            & errmess = "wrong number of variables.")
+       call tests_read_status(" - check number of variables", (size(infos) == 10), &
+            & error)
+       do i = 1, size(infos), 1
+          call etsf_io_low_error_set(error, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, &
+               & errmess = "wrong variable name.")
+          call tests_read_status(" - check variable name '"//trim(infos_names(i))//"'", &
+               & (trim(infos(i)%name) == trim(infos_names(i))), error)
+          call etsf_io_low_error_set(error, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, &
+               & errmess = "wrong variable shape.")
+          call tests_read_status(" - check variable '"//trim(infos_names(i))//"' shape", &
+               & (infos(i)%ncshape == infos_shapes(i)), error)
+       end do
+
+       ! Deallocate the informations
+       if (associated(infos)) then
+          deallocate(infos)
+       end if
+    end if
+
+    call etsf_io_low_close(ncid, lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't open file"
+      return
+    end if
+    
+    write(*,*) 
+  end subroutine tests_read_all_var_infos
   
 end program tests_read

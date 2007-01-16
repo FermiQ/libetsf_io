@@ -57,3 +57,17 @@ def var_shortname(var):
     return etsf_variables_shortnames[var]
   else:
     return var
+
+def dim_get_split_array(dim):
+  for var in etsf_variables:
+    if (var.startswith("my_") and etsf_variables[var][1] == dim):
+      return var
+  return None
+
+def var_get_split_status(var):
+  for dim in etsf_variables[var][1:]:
+    if (dim in etsf_properties):
+      if (etsf_properties[dim] & ETSF_PROP_DIM_SPLIT != 0):
+        return True
+  return False
+    

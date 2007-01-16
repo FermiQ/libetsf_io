@@ -530,7 +530,7 @@ module etsf_io_low_level
   end interface etsf_io_low_write_var
   !End of the generic interface of etsf_io_low_write_var
   
-  !!****f* etsf_io_low_level/etsf_io_low_var_associated
+  !!****f* etsf_io_low_var/etsf_io_low_var_associated
   !! NAME
   !!  etsf_io_low_var_associated
   !!
@@ -558,7 +558,7 @@ module etsf_io_low_level
     module procedure var_double_associated
   end interface etsf_io_low_var_associated
 
-  !!****f* etsf_io_low_level/etsf_io_low_var_multiply
+  !!****f* etsf_io_low_var/etsf_io_low_var_multiply
   !! NAME
   !!  etsf_io_low_var_multiply
   !!
@@ -582,7 +582,50 @@ module etsf_io_low_level
   interface etsf_io_low_var_multiply
     module procedure var_integer_multiply
     module procedure var_double_multiply
-  end interface etsf_io_low_var_multiply
+  end interface
+
+  !!****m* etsf_io_low_var_infos/etsf_io_low_read_var_infos
+  !! NAME
+  !!  etsf_io_low_read_var_infos
+  !!
+  !! FUNCTION
+  !!  This method is used to retrieve informations about a variable:
+  !!  * its NetCDF id or its name ;
+  !!  * its type (see #ETSF_IO_LOW_CONSTANTS) ;
+  !!  * its shape and length for each dimension.
+  !!  One can get informations knowing the name or the id of a variable. Using
+  !!  the dim_name argument to .true., the name of each used dimensions are
+  !!  retrieved. In that case, the var_infos should be freed after use, calling
+  !!  etsf_io_low_free_var_infos().
+  !!
+  !! SYNOPSIS
+  !!  * call etsf_io_low_read_var_infos(ncid, varname, var_infos, lstat, error_data, dim_name)
+  !!  * call etsf_io_low_read_var_infos(ncid, varid, var_infos, lstat, error_data, dim_name)
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
+  !!
+  !! INPUTS
+  !!  * ncid = a NetCDF handler, opened with read access.
+  !!  * varname = a string identifying a variable.
+  !!  * varid = a integer identifying a variable.
+  !!  * dim_name = (optional) if .true. retrieve the names of the dimensions,
+  !!               and store them in a newly allocated array in the var_infos
+  !!               structure (see etsf_io_low_free_var_infos()).
+  !!
+  !! OUTPUT
+  !!  * var_infos <type(etsf_io_low_var_infos)> = store, type, shape, dimensions and NetCDF id.
+  !!  * lstat = .true. if operation succeed.
+  !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!***
+  interface etsf_io_low_read_var_infos
+    module procedure read_var_infos_name
+    module procedure read_var_infos_id
+    module procedure read_var_infos
+  end interface
   
   !!****g* etsf_io_low_level/etsf_io_low_error_group
   !! FUNCTION
@@ -632,11 +675,9 @@ module etsf_io_low_level
   !!  * variables.
   !!
   !! SOURCE
-  public :: etsf_io_low_var_infos
   public :: etsf_io_low_read_att
   public :: etsf_io_low_read_dim
   public :: etsf_io_low_read_var
-  public :: etsf_io_low_read_var_infos
   !!***
 
   !!****g* etsf_io_low_level/etsf_io_low_write_group
@@ -651,6 +692,17 @@ module etsf_io_low_level
   public :: etsf_io_low_write_att
   public :: etsf_io_low_write_dim
   public :: etsf_io_low_write_var
+  !!***
+
+  !!****g* etsf_io_low_level/etsf_io_low_var
+  !! FUNCTION
+  !!  These routines are used to defined an array without predefined shape.
+  !!
+  !! SOURCE
+  public :: etsf_io_low_var_integer
+  public :: etsf_io_low_var_double
+  public :: etsf_io_low_var_multiply
+  public :: etsf_io_low_var_associated
   !!***
   
   ! Private variables & methods.
@@ -723,7 +775,7 @@ contains
     if (present(errid)) then
       error_data%error_id = errid
     else
-      error_data%error_id = -1
+      error_data%error_id = nf90_noerr
     end if
     if (present(errmess)) then
       error_data%error_message = errmess(1:min(256, len(errmess)))
@@ -775,7 +827,7 @@ contains
     else
       write(line_mess, "(A)") ""
     end if
-    if (error_data%error_id /= 0) then
+    if (error_data%error_id /= nf90_noerr) then
       write(line_messid, "(A,I0,A)") "  Error id           : ", error_data%error_id, char(10)
     else
       write(line_messid, "(A)") ""
@@ -831,7 +883,7 @@ contains
     if (trim(error_data%error_message) /= "") then
       write(*,*) "    *** Error message      : ", trim(error_data%error_message)
     end if
-    if (error_data%error_id /= 0) then
+    if (error_data%error_id /= nf90_noerr) then
       write(*,*) "    *** Error id           : ", error_data%error_id
     end if
     write(*,*) "    ***"

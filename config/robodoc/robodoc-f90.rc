@@ -122,3 +122,5 @@ keywords:
     inout
     private
     public
+    dimension
+    allocatable

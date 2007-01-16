@@ -29,15 +29,19 @@ etsf_subprograms = {
    "dims":[
       "low_level",
       """!!  @ACTION_TEXT@ all ETSF dimensions.""",
-      "def get"],
+      "def get merge trace"],
    "@GROUP@":[
       "low_level",
       """!!  @ACTION_TEXT@ ETSF variables for @GROUP@.""",
-      "def get put"],
+      "def get put copy"],
    "data":[
       "data",
       "@ACTION_TEXT@ an ETSF file.",
-      "init read write"],
+      "init read write contents get copy"],
+   "split":[
+      "low_level",
+      """!!  @ACTION_TEXT@ ETSF variables for @GROUP@.""",
+      "init allocate free def get put copy merge"],
 } 
 
 # Peculiarities
@@ -50,9 +54,14 @@ etsf_subs_actions = {
    "get":"get",
    "put":"put",
    "init":"initialize",
+   "allocate":"allocate",
    "read":"read",
    "write":"write",
-   "contents":"analyze"
+   "contents":"analyze",
+   "copy":"copy",
+   "trace":"echo a trace",
+   "free":"deallocate",
+   "merge":"merge"
 }
 
 # Descriptions of the subprogram arguments for the "def" action
@@ -67,12 +76,21 @@ etsf_subs_def_args = {
       "mains integer in",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out",
-      "k_dependent logical in optional"],
+      "k_dependent logical in optional",
+      "split type(etsf_split) in optional",
+      "split_dims type(split_dim_names) local"],
    "@GROUP@":[
       "ncid integer in",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out",
-      "k_dependent logical in optional"]
+      "k_dependent logical in optional",
+      "split type(etsf_split) in optional",
+      "split_dims type(split_dim_names) local"],
+   "split":[
+      "ncid integer in",
+      "dims type(etsf_dims) in",
+      "lstat logical out",
+      "error_data type(etsf_io_low_error) out"]
 }
 
 # Descriptions of the subprogram arguments for the "get" action
@@ -87,7 +105,16 @@ etsf_subs_get_args = {
       "folder type(etsf_@GROUP@) inout",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out",
-      "use_atomic_units logical in optional"]
+      "use_atomic_units logical in optional"],
+   "split":[
+      "ncid integer in",
+      "split type(etsf_split) inout",
+      "lstat logical out",
+      "error_data type(etsf_io_low_error) out"],
+   "data":[
+      "etsf_group integer out",
+      "etsf_main integer out",
+      "varname character(len=*) in"]
 }
 
 # Descriptions of the subprogram arguments for the "put" action
@@ -95,6 +122,11 @@ etsf_subs_put_args = {
    "@GROUP@":[
       "ncid integer in",
       "folder type(etsf_@GROUP@) in",
+      "lstat logical out",
+      "error_data type(etsf_io_low_error) out"],
+   "split":[
+      "ncid integer in",
+      "split type(etsf_split) in",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out"]
 }
@@ -111,7 +143,11 @@ etsf_subs_init_args = {
       "lstat logical out",
       "error_data type(etsf_io_low_error) out",
       "k_dependent logical in optional",
-      "overwrite logical in optional"]      
+      "overwrite logical in optional",
+      "split_definition type(etsf_split) in optional"],
+   "split":[
+      "dims type(etsf_dims) inout",
+      "split_definition type(etsf_split) in"] 
 }
 
 # Descriptions of the subprogram arguments for the "contents" action
@@ -119,8 +155,14 @@ etsf_subs_contents_args = {
    "data":[
       "filename character(len=*) in",
       "dims type(etsf_dims) out",
-      "main_var integer out",
-      "groups integer out"]
+      "split type(etsf_split) out",
+      "etsf_main integer out",
+      "etsf_group integer out",
+      "lstat logical out",
+      "error_data type(etsf_io_low_error) out",
+      "var_list type(etsf_io_low_var_infos),dimension(:),pointer out optional",
+      "main integer local",
+      "grp integer local"]
 }
 
 # Descriptions of the subprogram arguments for the "read" action
@@ -140,6 +182,71 @@ etsf_subs_write_args = {
       "filename character(len=*) in",
       "groups integer in",
       "group_folder type(etsf_groups) in",
+      "lstat logical out",
+      "error_data type(etsf_io_low_error) out"]
+}
+
+# Descriptions of the subprogram arguments for the "copy" action
+etsf_subs_copy_args = {
+   "split":[
+      "ncid_to integer in",
+      "ncid_from integer in",
+      "dims type(etsf_dims) in",
+      "lstat logical out",
+      "error_data type(etsf_io_low_error) out",
+      "split_array(:) integer,allocatable local"],
+   "@GROUP@":[
+      "ncid_to integer in",
+      "ncid_from integer in",
+      "dims type(etsf_dims) in",
+      "lstat logical out",
+      "error_data type(etsf_io_low_error) out",
+      "split type(etsf_split) in optional",
+      "istart integer local",
+      "idim1,idim2,idim3,idim4,idim5,idim6,idim7,idim8 integer local",
+      "istop(:) integer,allocatable local",
+      "jstart(:) integer,allocatable local",
+      "jend(:) integer,allocatable local",
+      "folder type(etsf_@GROUP@) local"],
+   "data":[
+      "dest_file character(len=*) in",
+      "source_file character(len=*) in",
+      "dims type(etsf_dims) in",
+      "lstat logical out",
+      "error_data type(etsf_io_low_error) out",
+      "split type(etsf_split) in optional",
+      "ncid_to integer local"]
+}
+
+# Descriptions of the subprogram arguments for the "trace" action
+etsf_subs_trace_args = {
+   "dims":[
+      "dims type(etsf_dims) in"]
+}
+
+# Descriptions of the subprogram arguments for the "allocate" action
+etsf_subs_allocate_args = {
+   "split":[
+      "split type(etsf_split) out",
+      "dims type(etsf_dims) in"]
+}
+
+# Descriptions of the subprogram arguments for the "free" action
+etsf_subs_free_args = {
+   "split":[
+      "split type(etsf_split) inout"]
+}
+
+# Descriptions of the subprogram arguments for the "free" action
+etsf_subs_merge_args = {
+   "dims":[
+      "output_dims type(etsf_dims) inout",
+      "dims type(etsf_dims) in",
+      "lstat logical out",
+      "error_data type(etsf_io_low_error) out"],
+   "split":[
+      "output_split type(etsf_split) inout",
+      "split type(etsf_split) inout",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out"]
 }
@@ -205,5 +312,11 @@ etsf_subs_doc_args = {
      choose the groups (from #etsf_groups) that will be accessed. This is a sum of
      values taken from #FLAGS_GROUPS.""",
    "overwrite-data_init":"""
-     will overwrite an existing file with the same file name (default is .false.)."""
+     will overwrite an existing file with the same file name (default is .false.).""",
+   "split-*":"""
+     for each array associated in the type, the dimension used to declared the
+     variables sizes will be 'my_/something/'.""",
+   "split_definition-*":"""
+     give for each associated array the number of elements (given by the size)
+     and the values of these elements in a splitted file."""
 }

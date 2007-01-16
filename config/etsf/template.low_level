@@ -30,7 +30,7 @@ subroutine etsf_io_@NAME@(@ARG_LIST@)
   integer, allocatable          :: start(:), count(:)
   integer, allocatable          :: varid(:)
   character(etsf_charlen)       :: flag
-  integer                       :: len
+  integer                       :: len, ivar
 @LOCAL_VARS@
 
   ! *************************************************************************

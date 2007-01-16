@@ -60,15 +60,191 @@
   end subroutine etsf_io_low_read_dim
   !!***
   
-  !!****m* etsf_io_low_read_group/etsf_io_low_read_var_infos
+  !!****m* etsf_io_low_var_infos/etsf_io_low_free_var_infos
   !! NAME
-  !!  etsf_io_low_read_var_infos
+  !!  etsf_io_low_free_var_infos
   !!
   !! FUNCTION
-  !!  This method is used to retrieve informations about a variable:
-  !!  * its NetCDF id ;
-  !!  * its type (see #ETSF_IO_LOW_CONSTANTS) ;
-  !!  * its shape and length for each dimension.
+  !!  This method free all internal allocated memory of a given #etsf_io_low_var_infos
+  !!  object after use.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
+  !!
+  !! SIDE EFFECTS
+  !!  * var_infos <type(etsf_io_low_var_infos)> = the type object to be freed.
+  !!
+  !! SOURCE
+  subroutine etsf_io_low_free_var_infos(var_infos)
+    type(etsf_io_low_var_infos), intent(inout) :: var_infos
+    
+    if (associated(var_infos%ncdimnames)) then
+      deallocate(var_infos%ncdimnames)
+    end if
+  end subroutine etsf_io_low_free_var_infos
+  !!***
+
+  subroutine read_var_infos_name(ncid, varname, var_infos, lstat, error_data, &
+                               & dim_name)
+    integer, intent(in)                            :: ncid
+    character(len = *), intent(in)                 :: varname
+    type(etsf_io_low_var_infos), intent(out)       :: var_infos
+    logical, intent(out)                           :: lstat
+    type(etsf_io_low_error), intent(out), optional :: error_data
+    logical, intent(in), optional                  :: dim_name
+
+    !Local
+    character(len = *), parameter :: me = "read_var_infos_name"
+    integer :: s
+    logical :: my_dim_name
+    
+    lstat = .false.
+    var_infos%name = varname(1:min(80, len(varname)))
+    ! will inq_varid()
+    s = nf90_inq_varid(ncid, varname, var_infos%ncid)
+    if (s /= nf90_noerr) then
+      if (present(error_data)) then
+        call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_VID, me, &
+                                 & tgtname = varname, errid = s, errmess = nf90_strerror(s))
+      end if
+      return
+    end if
+    if (present(dim_name)) then
+      my_dim_name = dim_name
+    else
+      my_dim_name = .false.
+    end if
+    if (present(error_data)) then
+      call read_var_infos(ncid, var_infos, my_dim_name, lstat, error_data)
+    else
+      call read_var_infos(ncid, var_infos, my_dim_name, lstat)
+    end if
+  end subroutine read_var_infos_name
+  subroutine read_var_infos_id(ncid, varid, var_infos, lstat, error_data, &
+                               & dim_name)
+    integer, intent(in)                            :: ncid
+    integer, intent(in)                            :: varid
+    type(etsf_io_low_var_infos), intent(out)       :: var_infos
+    logical, intent(out)                           :: lstat
+    type(etsf_io_low_error), intent(out), optional :: error_data
+    logical, intent(in), optional                  :: dim_name
+
+    !Local
+    character(len = *), parameter :: me = "read_var_infos_id"
+    integer :: s
+    character(len = NF90_MAX_NAME) :: varname
+    logical :: my_dim_name
+    
+    lstat = .false.
+    var_infos%ncid = varid
+    ! will inq_varid()
+    s = nf90_inquire_variable(ncid, var_infos%ncid, name = varname)
+    if (s /= nf90_noerr) then
+      if (present(error_data)) then
+        call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, &
+                                 & tgtid = varid, errid = s, errmess = nf90_strerror(s))
+      end if
+      return
+    end if
+    var_infos%name = varname(1:min(80, len(varname)))
+    if (present(dim_name)) then
+      my_dim_name = dim_name
+    else
+      my_dim_name = .false.
+    end if
+    if (present(error_data)) then
+      call read_var_infos(ncid, var_infos, my_dim_name, lstat, error_data)
+    else
+      call read_var_infos(ncid, var_infos, my_dim_name, lstat)
+    end if
+  end subroutine read_var_infos_id
+  ! Read dimensions..., varid must be set, varname is left untouched.
+  subroutine read_var_infos(ncid, var_infos, with_dim_name, lstat, error_data)
+    integer, intent(in)                            :: ncid
+    type(etsf_io_low_var_infos), intent(inout)     :: var_infos
+    logical, intent(in)                            :: with_dim_name
+    logical, intent(out)                           :: lstat
+    type(etsf_io_low_error), intent(out), optional :: error_data
+
+    !Local
+    character(len = *), parameter :: me = "read_var_infos"
+    integer :: i, s
+    integer, allocatable :: ncdimids(:)
+    character(len = NF90_MAX_NAME) :: dimname    
+    
+    lstat = .false.
+    ! will inq_vartype()
+    ! will inq_varndims()
+    s = nf90_inquire_variable(ncid, var_infos%ncid, xtype = var_infos%nctype, &
+                            & ndims = var_infos%ncshape)
+    if (s /= nf90_noerr) then
+      if (present(error_data)) then
+        call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, &
+                                 & tgtname = var_infos%name, tgtid = var_infos%ncid, &
+                                 & errid = s, errmess = nf90_strerror(s))
+      end if
+      return
+    end if
+    if (var_infos%ncshape > 0) then
+      ! will inq_vardimid()
+      allocate(ncdimids(1:var_infos%ncshape))
+      if (with_dim_name) then
+        allocate(var_infos%ncdimnames(1:var_infos%ncshape))
+      end if
+      s = nf90_inquire_variable(ncid, var_infos%ncid, dimids = ncdimids)
+      if (s /= nf90_noerr) then
+        if (present(error_data)) then
+          call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, &
+                                   & tgtname = var_infos%name, tgtid = var_infos%ncid, &
+                                   & errid = s, errmess = nf90_strerror(s))
+        end if
+        deallocate(ncdimids)
+        return
+      end if
+      do i = 1, var_infos%ncshape, 1
+        ! will inq_dimlen()
+        if (with_dim_name) then
+          s = nf90_inquire_dimension(ncid, ncdimids(i), len = var_infos%ncdims(i), &
+                                   & name = dimname)
+          var_infos%ncdimnames(i) = dimname(1:min(80, len(dimname)))
+        else
+          s = nf90_inquire_dimension(ncid, ncdimids(i), len = var_infos%ncdims(i))
+        end if
+        if (s /= nf90_noerr) then
+          if (present(error_data)) then
+            call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_DIM, me, &
+                         & tgtid = ncdimids(i), errid = s, errmess = nf90_strerror(s))
+          end if
+          deallocate(ncdimids)
+          if (with_dim_name) then
+            deallocate(var_infos%ncdimnames)
+            var_infos%ncdimnames => null()
+          end if
+          return
+        end if
+      end do
+      deallocate(ncdimids)
+      if (with_dim_name) then
+        deallocate(var_infos%ncdimnames)
+        var_infos%ncdimnames => null()
+      end if
+    end if
+    lstat = .true.
+  end subroutine read_var_infos
+
+  !!****s* etsf_io_low_var_infos/etsf_io_low_read_all_var_infos
+  !! NAME
+  !!  etsf_io_low_read_all_var_infos
+  !!
+  !! FUNCTION
+  !!  Read a NetCDF file and create an array storing all variable
+  !!  informations. These informations are stored in an array allocated in
+  !!  this routine. It must be deallocated after use. The retrieved informations
+  !!  include NetCDF varid, variable name, shape and dimensions. If the
+  !!  with_dim_name is set to .true., the names of dimensions are also stored.
   !!
   !! COPYRIGHT
   !!  Copyright (C) 2006
@@ -78,78 +254,96 @@
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with read access.
-  !!  * varname = a string identifying a variable.
+  !!  * with_dim_name = (optional) if set to .true., the dimension names are also
+  !!                    retrieved. In that case, each element of output array
+  !!                    @var_infos_array must be freed using
+  !!                    etsf_io_low_free_var_infos().
   !!
   !! OUTPUT
-  !!  * var_infos <type(etsf_io_low_var_infos)> = store, type, shape, dimensions and NetCDF id.
-  !!  * lstat = .true. if operation succeed.
+  !!  * var_infos_array <type(etsf_io_low_var_infos)> = a pointer on an array to
+  !!                                                    store the informations. This
+  !!                                                    pointer must be null() on
+  !!                                                    enter. If no variables are
+  !!                                                    found or an error occurs, the
+  !!                                                    pointer is let null().
+  !!  * lstat = .true. if the file has been read without error.
   !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
   !!
+  !!
   !! SOURCE
-  subroutine etsf_io_low_read_var_infos(ncid, varname, var_infos, lstat, error_data)
-    integer, intent(in)                            :: ncid
-    character(len = *), intent(in)                 :: varname
-    type(etsf_io_low_var_infos), intent(out)       :: var_infos
-    logical, intent(out)                           :: lstat
-    type(etsf_io_low_error), intent(out), optional :: error_data
+  subroutine etsf_io_low_read_all_var_infos(ncid, var_infos_array, lstat, &
+       & error_data, with_dim_name)
+    integer, intent(in)                               :: ncid
+    type(etsf_io_low_var_infos), pointer, intent(out) :: var_infos_array(:)
+    logical, intent(out)                              :: lstat
+    type(etsf_io_low_error), intent(out), optional    :: error_data
+    logical, optional, intent(in)                     :: with_dim_name
 
     !Local
-    character(len = *), parameter :: me = "etsf_io_low_read_var_infos"
-    integer :: i, s
-    integer, allocatable :: ncdimids(:)
-    
+    character(len = *), parameter :: me = "etsf_io_low_read_all_var_infos"
+    integer :: i, j, s, nvars
+    logical :: my_with_dim_name
+
     lstat = .false.
-    var_infos%name = varname(1:min(80, len(varname)))
-    ! will inq_varid()
-    s = nf90_inq_varid(ncid, varname, var_infos%ncid)
-    if (s /= nf90_noerr) then
-      if (present(error_data)) then
-        call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_VID, me, tgtname = varname, &
-                     & errid = s, errmess = nf90_strerror(s))
-      end if
-      return
+    if (present(with_dim_name))then
+       my_with_dim_name = with_dim_name
+    else
+       my_with_dim_name = .false.
     end if
-    ! will inq_vartype()
-    ! will inq_varndims()
-    s = nf90_inquire_variable(ncid, var_infos%ncid, xtype = var_infos%nctype, &
-                            & ndims = var_infos%ncshape)
-    if (s /= nf90_noerr) then
-      if (present(error_data)) then
-        call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, tgtname = varname, &
-                     & tgtid = var_infos%ncid, errid = s, errmess = nf90_strerror(s))
-      end if
-      return
+    ! Consistency checks...
+    if (associated(var_infos_array)) then
+       if (present(error_data)) then
+          call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_ARG, me, &
+               & tgtname = "var_infos_array", errid = 0, &
+               & errmess = "pointer already allocated.")
+       end if
+       return
     end if
-    if (var_infos%ncshape > 0) then
-      ! will inq_vardimid()
-      allocate(ncdimids(1:var_infos%ncshape))
-      s = nf90_inquire_variable(ncid, var_infos%ncid, dimids = ncdimids)
-      if (s /= nf90_noerr) then
-        if (present(error_data)) then
-          call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, tgtname = varname, &
-                       & tgtid = var_infos%ncid, errid = s, errmess = nf90_strerror(s))
-        end if
-        deallocate(ncdimids)
-        return
-      end if
-      do i = 1, var_infos%ncshape, 1
-        ! will inq_dimlen()
-        s = nf90_inquire_dimension(ncid, ncdimids(i), len = var_infos%ncdims(i))
-        if (s /= nf90_noerr) then
-          if (present(error_data)) then
-            call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_DIM, me, &
-                         & tgtid = ncdimids(i), errid = s, errmess = nf90_strerror(s))
+    var_infos_array => null()
+    ! Inquire the NetCDF file for number of variables
+    s = nf90_inquire(ncid, nVariables = nvars)
+    if (s /= nf90_noerr) then
+       if (present(error_data)) then
+          call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, &
+               & errid = s, errmess = nf90_strerror(s))
+       end if
+       return
+    end if
+    if (nvars == 0) then
+       ! No variables in the file.
+       lstat = .true.
+       return
+    end if
+    ! Allocate the var_infos_array argument and read var_infos for each
+    ! variables in the NetCDF file.
+    allocate(var_infos_array(nvars))
+    do i = 1, nvars, 1
+       if (present(error_data))then
+          call read_var_infos_id(ncid, i, var_infos_array(i), lstat, error_data, &
+               & my_with_dim_name)
+       else
+          call read_var_infos_id(ncid, i, var_infos_array(i), lstat, &
+               & dim_name = my_with_dim_name)
+       end if
+       ! Handle the error, if required.
+       if (.not. lstat) then
+          ! Free the var_infos_array argument before leaving
+          if (my_with_dim_name) then
+             do j = 1, i, 1
+                deallocate(var_infos_array(i)%ncdimnames)
+             end do
           end if
-          deallocate(ncdimids)
+          deallocate(var_infos_array)
+          var_infos_array => null()
           return
-        end if
-      end do
-      deallocate(ncdimids)
-    end if
+       end if
+    end do
     lstat = .true.
-  end subroutine etsf_io_low_read_var_infos
+  end subroutine etsf_io_low_read_all_var_infos
   !!***
-  
+
+  ! Create the start, count and map arrays for a put or a get action using the
+  ! NetCDF routines.
   subroutine etsf_io_low_make_access(start, count, map, var_infos, lstat, &
                                    & opt_start, opt_count, opt_map, error_data)
     integer, intent(out)                           :: start(16), count(16), map(16)

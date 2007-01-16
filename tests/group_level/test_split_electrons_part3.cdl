@@ -1,0 +1,79 @@
+netcdf test_write_electrons {
+dimensions:
+	character_string_length = 80 ;
+	max_number_of_angular_momenta = 1 ;
+	max_number_of_coefficients = 6 ;
+	max_number_of_projectors = 2 ;
+	max_number_of_states = 8 ;
+	number_of_atoms = 4 ;
+	number_of_atom_species = 1 ;
+	number_of_cartesian_directions = 3 ;
+	number_of_components = 2 ;
+	number_of_grid_points_vector1 = 1 ;
+	number_of_grid_points_vector2 = 1 ;
+	number_of_grid_points_vector3 = 5 ;
+	number_of_kpoints = 12 ;
+	my_number_of_kpoints = 4;
+	number_of_reduced_dimensions = 3 ;
+	number_of_spinor_components = 1 ;
+	number_of_spins = 1 ;
+	number_of_symmetry_operations = 4 ;
+	number_of_vectors = 3 ;
+	real_or_complex = 1 ;
+	symbol_length = 2 ;
+variables:
+	int my_kpoints(my_number_of_kpoints);
+	int number_of_electrons ;
+	char exchange_functional(character_string_length) ;
+	char correlation_functional(character_string_length) ;
+	double fermi_energy ;
+		fermi_energy:units = "atomic units" ;
+		fermi_energy:scale_to_atomic_units = 1. ;
+	char smearing_scheme(character_string_length) ;
+	double smearing_width ;
+		smearing_width:units = "atomic units" ;
+		smearing_width:scale_to_atomic_units = 1. ;
+	int number_of_states(number_of_spins, my_number_of_kpoints) ;
+	double eigenvalues(number_of_spins, my_number_of_kpoints, max_number_of_states) ;
+		eigenvalues:units = "atomic units" ;
+		eigenvalues:scale_to_atomic_units = 1. ;
+	double occupations(number_of_spins, my_number_of_kpoints, max_number_of_states) ;
+
+// global attributes:
+		:file_format = "ETSF Nanoquanta" ;
+		:file_format_version = 1.3f ;
+		:Conventions = "http://www.etsf.eu/fileformats/" ;
+		:title = "Test" ;
+		:history = "" ;
+data:
+
+ number_of_electrons = 456 ;
+
+ exchange_functional = "He" ;
+
+ correlation_functional = "He" ;
+
+ fermi_energy = 456 ;
+
+ smearing_scheme = "He" ;
+
+ smearing_width = 456 ;
+
+ my_kpoints =
+  2, 6, 8, 10 ;
+
+ number_of_states =
+  2, 6, 8, 10 ;
+
+ eigenvalues =
+  9, 10, 11, 12, 13, 14, 15, 16,
+  41, 42, 43, 44, 45, 46, 47, 48,
+  57, 58, 59, 60, 61, 62, 63, 64,
+  73, 74, 75, 76, 77, 78, 79, 80 ;
+
+ occupations =
+  9, 10, 11, 12, 13, 14, 15, 16,
+  41, 42, 43, 44, 45, 46, 47, 48,
+  57, 58, 59, 60, 61, 62, 63, 64,
+  73, 74, 75, 76, 77, 78, 79, 80 ;
+}
