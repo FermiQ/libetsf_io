@@ -9,7 +9,7 @@ dnl  - PACKAGE_TARNAME, the name used for the tarball ;
 dnl  - PACKAGE_VERSION, the version ;
 dnl  - PACKAGE_STRING, the name + the version ;
 dnl  - PACKAGE_BUGREPORT, the mail.
-AC_INIT([ETSF - IO library], [0.6], [caliste@pcpm.ucl.ac.be], [etsf_io])
+AC_INIT([ETSF - IO library], [0.7], [caliste@pcpm.ucl.ac.be], [etsf_io])
 
 dnl All temporary building files are put in this directory.
 dnl his must be called before AM_INIT_AUTOMAKE
@@ -89,8 +89,8 @@ AC_MSG_CHECKING([for netcdf library])
 AC_LINK_IFELSE([
 program main
   use netcdf
- integer :: s, ncid
- s = nf90_open(path = "", mode = NF90_NOWRITE, ncid = ncid)
+  integer :: s, ncid
+  s = nf90_open(path = "", mode = NF90_NOWRITE, ncid = ncid)
 end program main
 ], withnetcdf=yes, withnetcdf=no)
 AC_MSG_RESULT([$withnetcdf])
