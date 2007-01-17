@@ -36,16 +36,24 @@
     <h3>etsf_io</h3>
     <p>The main module, called <code>etsf_io</code>, contains specific routines to the ETSF specifications. All variables from the specifications have been gathered into structured called <em>group</em> (see the etsf_groups <a href="group_level/etsf_io_f90.html#robo7">page</a> and related ones).</p>
     <p>For each group, one can define a file with these variables using methods with a name like <code>etsf_io_&lt;group_name&gt;_def()</code>. This will alocate the disk space required to store all the variables of the group. Then, to write data, methods called <code>etsf_io_&lt;group_name&gt;_put()</code> are available. For reading actions, the routines are suffixed with get instead of put. To access several groups at one time a high level routine has been created and is called <code>etsf_io_data_&lt;action&gt;</code>.</p>
+    <p>There are two tutorials to learn how to use this module:</p>
+    <ul>
+      <li><a href="tutorials/create_a_crystal_den_file_f90.html">First tutorial</a> is intended to explain the basics and the philosophy of this library. It details the first steps required to create a density file, using high level routines (<code>etsf_io_data_&lt;action&gt;</code>). It shows how to use the pointers and the unformatted ones (used to map any shape arrays between the ETSF definition and the main program memory).</li>
+      <li><a href="tutorials/read_write_sub_access_f90.html">Second tutorial</a> introduced the group level routines and explain how to access only sub part of arrays. This sub access is possible when one array has a dimension on spin or k points. Then one can access data for one k point or spin at a time. This is controlled by some attributes in the concerned groups, called <code>&lt;short_var_name&gt;__[spin|kpoint]_access</code>. In this tutorial a wave-function file is created and the coefficients of wave-functions are written for one k point at a time.</li>
+    </ul>
+    <h3>etsf_io_file</h3>
+    <p>This is a not mandatory high level module. It contains several routines to do complex action on ETSF files. Currently, only the merge action has been implemented but other actions are planned, such as validity checks.</p>
+    <p>The merge routine (see the API <a href="utils/etsf_io_file_f90.html">page</a>), can read several ETSF files and create a new one, copying all varaibles that are not splitted and merging those that have a split definition. If there is not enough input file to create a full unsplitted array, the new file will contains some new split informations resulting from the merge. This routine has currently some drawbacks: headers and attributes are lost, as all none-ETSF variables and dimensions.</p>
     <h2>Attributes</h2>
     <p>The support for attributes as defined in the specifications is transparent for the user of the library:</p>
     <ul>
-      <li>The units attribute is defined by default to "atomic units". When a file is read, all returned values are automatically converted to atomic units when required, thanks to the scale_to-atomic_units attribute. To get the true value from the file, one can give an optional argument to prevent to convert into atomic units, called <em>use_atomic_units (logical)</em></li>
+      <li>The units attribute is defined by default to "atomic units". When a file is read, all returned values are automatically converted to atomic units when required, thanks to the scale_to-atomic_units attribute. To get the true value from the file, one can give an optional argument to prevent to convert into atomic units, called <em>use_atomic_units (logical)</em>.</li>
       <li>The k_dependent attribute is set to "yes" by default. When a variable with the k_dependent attribute is read, the value from the array is read except if the attribute is false. Then the fallback value specified in the ETSF specifications is given.</li>
       <li>The symmorphic attribute is set to "no" automatically as soon as reduced_symmetry_translations is set to non zero values.</li>
     </ul>
   </div> <!-- content -->
   <div id="footer">
-  <p>Manually maintained file, last edition 2006-12-05 by Damien Caliste.</p>
+  <p>Manually maintained file, last edition 2007-01-17 by Damien Caliste.</p>
   </div> <!-- footer -->
 </body>
 </html>

@@ -1,3 +1,17 @@
+* Wed Jan 17 2007 Damien Caliste <damien.caliste@cea.fr> 0.7
+- add a new Fortran type to store the split definitions (e.g. my_kpoints...). This
+  structure can be used when defining the variables on initialisation to set the
+  splitted dimensions to the variables that need them.
+- add a new source directory src/utils that will contains some high level library
+  not mandatory but with convienient tools. It currently contains a routine to merge
+  files that have been created with some split definition. To do it several group
+  level have been added, especially some to copy variables from one file to another.
+  The split action is complete for all ETSF variables, but other ones are currently
+  lost, but also attributes and headers are lost.
+- add a new tutorial on sub access. It explain how to use the
+  <varname>__[spin|kpoint]_access attributes of groups that have been introduced in
+  the last release.
+	
 * Tue Dec 12 2006 Damien Caliste <caliste@pcpm.ucl.ac.be> 0.6
 - rewrite the generating script for low access in Python for a better portability.
 - complete the implementation of all attributes (units, k_dependent and symmorphic).
