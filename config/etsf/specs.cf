@@ -118,7 +118,11 @@ etsf_dimensions = [
    "number_of_spins",
    "number_of_symmetry_operations",
    "number_of_vectors",
-   "real_or_complex",
+   "real_or_complex_coefficients",
+   "real_or_complex_density",
+   "real_or_complex_gw_corrections",
+   "real_or_complex_potential",
+   "real_or_complex_wavefunctions",
    "symbol_length"]
 
 # ETSF variables
@@ -147,7 +151,7 @@ etsf_variables = {
       "max_number_of_states",
       "number_of_spinor_components",
       "max_number_of_coefficients",
-      "real_or_complex"],
+      "real_or_complex_coefficients"],
    "correlation_functional":[
       "string",
       "character_string_length"],
@@ -157,14 +161,14 @@ etsf_variables = {
       "number_of_grid_points_vector3",
       "number_of_grid_points_vector2",
       "number_of_grid_points_vector1",
-      "real_or_complex"],
+      "real_or_complex_potential"],
    "density":[
       "real double_precision",
       "number_of_components",
       "number_of_grid_points_vector3",
       "number_of_grid_points_vector2",
       "number_of_grid_points_vector1",
-      "real_or_complex"],
+      "real_or_complex_density"],
    "eigenvalues":[
       "real double_precision",
       "number_of_spins",
@@ -176,7 +180,7 @@ etsf_variables = {
       "number_of_grid_points_vector3",
       "number_of_grid_points_vector2",
       "number_of_grid_points_vector1",
-      "real_or_complex"],
+      "real_or_complex_potential"],
    "exchange_functional":[
       "string",
       "character_string_length"],
@@ -186,7 +190,7 @@ etsf_variables = {
       "number_of_grid_points_vector3",
       "number_of_grid_points_vector2",
       "number_of_grid_points_vector1",
-      "real_or_complex"],
+      "real_or_complex_potential"],
    "fermi_energy":[
       "real double_precision"],
    "gw_corrections":[
@@ -194,7 +198,7 @@ etsf_variables = {
       "number_of_spins",
       "number_of_kpoints",
       "max_number_of_states",
-      "real_or_complex"],
+      "real_or_complex_gw_corrections"],
    "kb_formfactors":[
       "real double_precision",
       "number_of_atom_species",
@@ -284,7 +288,7 @@ etsf_variables = {
       "number_of_grid_points_vector3",
       "number_of_grid_points_vector2",
       "number_of_grid_points_vector1",
-      "real_or_complex"],
+      "real_or_complex_wavefunctions"],
    "reduced_atom_positions":[
       "real double_precision",
       "number_of_atoms",

@@ -83,7 +83,7 @@ program read_write_sub_access
   dims%number_of_kpoints = 2
   dims%number_of_spinor_components = 1
   dims%number_of_spins = 1
-  dims%real_or_complex = 2
+  dims%real_or_complex_coefficients = 2
   
   
 !! NOTES
