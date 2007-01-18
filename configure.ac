@@ -35,10 +35,21 @@ dnl Imported script from ABINIT to defined which compiler is under usage.
 dnl It will define fc_type and fc_version that are required when installing.
 ABI_PROG_FC()
 
+dnl Set if the module name are capitalized or not with the FC compiler.
+case "$fc_type" in
+  "pathscale")
+     capitalize_module=yes
+     capitalize_module_ext="mod" ;;
+  *)
+     capitalize_module=no
+     capitalize_module_ext="mod" ;;
+esac
+
 dnl We custom the module naming scheme depending on the compiler
 dnl and the platform.
 dnl Not done yet
-AC_SUBST(MODULE_EXT, "mod")
+AM_CONDITIONAL(CAPITALIZE, test "$capitalize_module" = "yes")
+AC_SUBST(MODULE_EXT, $capitalize_module_ext)
 
 dnl Set the FCFLAGS and FFLAGS variable
 if test -z "$FFLAGS" ; then

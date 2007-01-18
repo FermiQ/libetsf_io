@@ -1,6 +1,6 @@
 vpath %.a $(top_builddir)/src/group_level
 
-AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(top_builddir)/src/group_level
+AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(top_builddir)/src/group_level -I@NETCDF_CFLAGS@
 
 noinst_PROGRAMS = tests_init tests_write tests_read tests_copy
 

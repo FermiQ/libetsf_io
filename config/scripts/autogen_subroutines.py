@@ -343,7 +343,7 @@ def code_dims(action):
      props = etsf_properties[dim]
    
    if ( props & ETSF_PROP_DIM_SPLIT != 0):
-     my_dims.append("my_" + dim)
+     my_dims.append(limit_length("my_" + dim))
  all_dims = etsf_dimensions + my_dims
  if (action == "merge"):
    ret += "lstat = .false.\n"
@@ -355,22 +355,22 @@ def code_dims(action):
   if ( action == "def" ):
     if (dim.startswith("my_")):
       ret += "if (dims%%%s /= etsf_no_dimension .and. &\n" % dim \
-             +  "    dims%%%s /= dims%%%s) then\n" % (dim, dim[3:])
+             +  "    dims%%%s /= dims%%%s) then\n" % (dim, expand_length(dim)[3:])
     else:
       ret += "if (dims%%%s /= etsf_no_dimension) then\n" % dim
-    ret += "  call etsf_io_low_write_dim(ncid, \"%s\", &\n" % dim \
+    ret += "  call etsf_io_low_write_dim(ncid, \"%s\", &\n" % expand_length(dim) \
         +  "                           & dims%%%s, &\n" % dim \
         +  "                           & lstat, error_data = error_data)\n" \
         +  "  if (.not. lstat) return\n" \
         +  "end if\n"
   elif ( action == "get" ):
-    ret += "call etsf_io_low_read_dim(ncid, \"%s\", &\n" % dim \
+    ret += "call etsf_io_low_read_dim(ncid, \"%s\", &\n" % expand_length(dim) \
          + "                        & dims%%%s, &\n" % dim \
          + "                        & lstat, error_data = error_data)\n" \
          + "if (.not. lstat) then \n" \
          + "  if (error_data%access_mode_id == ERROR_MODE_INQ) then\n"
     if (dim.startswith("my_")):
-      ret += "    dims%%%s = dims%%%s\n" % (dim, dim[3:])
+      ret += "    dims%%%s = dims%%%s\n" % (dim, expand_length(dim)[3:])
     else:
       ret += "    dims%%%s = etsf_no_dimension\n" % dim
     ret += "  else\n" \
@@ -382,7 +382,7 @@ def code_dims(action):
     ret += "  & \": \", dims%%%s" % dim
   elif ( action == "merge" ):
     if (dim.startswith("my_")):
-      ret += "if (output_dims%%%s /= dims%%%s) then\n" % (dim, dim)
+      ret += "if (output_dims%%%s /= output_dims%%%s) then\n" % (dim, expand_length(dim)[3:])
       ret += "  output_dims%%%s = output_dims%%%s + &\n" % (dim, dim)
       ret += "    & dims%%%s\n" % dim
       ret += "end if\n"
@@ -406,8 +406,8 @@ def code_split(action):
     for var in etsf_variables:
       if (var.startswith("my_")):
         var_desc = etsf_variables[var]
-        ret += "if (dims%%%s /= etsf_no_dimension .and. &\n" % var_desc[1]
-        ret += "  & dims%%%s /= dims%%%s) then \n" % (var_desc[1], var_desc[1][3:])
+        ret += "if (dims%%%s /= etsf_no_dimension .and. &\n" % limit_length(var_desc[1])
+        ret += "  & dims%%%s /= dims%%%s) then \n" % (limit_length(var_desc[1]), var_desc[1][3:])
         # Create the definition of the shape and dimensions
         if ( len(var_desc) > 1 ):
           dims = "pad(\"" + var_desc[1] + "\")"
@@ -432,10 +432,10 @@ def code_split(action):
     for var in etsf_variables:
       if (var.startswith("my_")):
         ret += "if (associated(split_definition%%%s)) then\n" % var
-        ret += "  dims%%%s = &\n" % etsf_variables[var][1]
+        ret += "  dims%%%s = &\n" % limit_length(etsf_variables[var][1])
         ret += "    & size(split_definition%%%s)\n" % var
         ret += "else\n"
-        ret += "  dims%%%s = &\n" % etsf_variables[var][1]
+        ret += "  dims%%%s = &\n" % limit_length(etsf_variables[var][1])
         ret += "    & dims%%%s\n" % etsf_variables[var][1][3:]
         ret += "end if\n"
   elif (action == "put" or action == "get"):
@@ -456,9 +456,9 @@ def code_split(action):
     for var in etsf_variables:
       if (var.startswith("my_")):
         var_desc = etsf_variables[var]
-        ret += "if (dims%%%s /= etsf_no_dimension .and. &\n" % var_desc[1]
-        ret += "  & dims%%%s /= dims%%%s) then \n" % (var_desc[1], var_desc[1][3:])
-        ret += "  allocate(split%%%s(dims%%%s))\n" % (var, var_desc[1])
+        ret += "if (dims%%%s /= etsf_no_dimension .and. &\n" % limit_length(var_desc[1])
+        ret += "  & dims%%%s /= dims%%%s) then \n" % (limit_length(var_desc[1]), var_desc[1][3:])
+        ret += "  allocate(split%%%s(dims%%%s))\n" % (var, limit_length(var_desc[1]))
         ret += "  split%%%s(:) = -1\n" % var
         ret += "end if\n"
   elif (action == "free"):
@@ -472,9 +472,9 @@ def code_split(action):
     for var in etsf_variables:
       if (var.startswith("my_")):
         var_desc = etsf_variables[var]
-        ret += "if (dims%%%s /= etsf_no_dimension .and. &\n" % var_desc[1]
-        ret += "  & dims%%%s /= dims%%%s) then \n" % (var_desc[1], var_desc[1][3:])
-        ret += "  allocate(split_array(dims%%%s))\n" % (var_desc[1])
+        ret += "if (dims%%%s /= etsf_no_dimension .and. &\n" % limit_length(var_desc[1])
+        ret += "  & dims%%%s /= dims%%%s) then \n" % (limit_length(var_desc[1]), var_desc[1][3:])
+        ret += "  allocate(split_array(dims%%%s))\n" % (limit_length(var_desc[1]))
         ret += "  call etsf_io_low_read_var(ncid_from, \"%s\", &\n" % var
         ret += "                          & split_array, lstat, error_data = error_data)\n"
         ret += "  if (.not. lstat) then\n"
@@ -813,10 +813,10 @@ def code_group_copy(group):
       # We compute the total length of data
       for dim in var_desc[1:stop]:
         if (unformatted):
-          length += "  & dims%%%s * &\n" % dim
+          length += "  & dims%%%s * &\n" % limit_length(dim)
         else:
-          length += "  & dims%%%s, &\n" % dim
-      length += "  & dims%%%s)" % var_desc[stop]
+          length += "  & dims%%%s, &\n" % limit_length(dim)
+      length += "  & dims%%%s)" % limit_length(var_desc[stop])
       if (unformatted):
         var_fortran = "folder%%%s%%data1D" % var
     ret += "allocate(%s%s)\n" % (var_fortran, length)
@@ -865,7 +865,7 @@ def code_group_copy(group):
                  dim_get_split_array(dim)
           ret += "      istop(%d)  = 1\n" % dim_id
           if (unformatted):
-            ret += "      len = len * dims%%%s\n" % dim
+            ret += "      len = len * dims%%%s\n" % limit_length(dim)
           else:
             var_span = "jstart(%d):jend(%d), " % (dim_id, dim_id) + var_span
             ret += "      jstart(%d) = 1\n" % dim_id
@@ -1351,7 +1351,10 @@ def init_routine(name,template,info,script,args,type="subroutine"):
 
    # The fortran definition
    if (inout is not None):
-     arg_desc += "  %s%s, intent(%s) :: %s\n" % (arg_info[1],opt,arg_info[2],arg)
+     if (arg_info[1].find("pointer") < 0):
+       arg_desc += "  %s%s, intent(%s) :: %s\n" % (arg_info[1],opt,arg_info[2],arg)
+     else:
+       arg_desc += "  %s%s :: %s\n" % (arg_info[1],opt,arg)
      if ( (len(arg_info) > 3) and 
           ((arg_info[3] == "optional") or (arg_info[3] == "local")) ):
       loc_vars += "  %s :: my_%s\n" % (arg_info[1],arg)

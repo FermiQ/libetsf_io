@@ -75,7 +75,12 @@ for dim in etsf_dimensions:
    default_value = "1"
  edt += "  %s :: %s = %s\n" % (fortran_type(["integer"]),dim, default_value)
  if (split):
-   edt_split += "  %s :: my_%s = etsf_no_dimension\n" % (fortran_type(["integer"]),dim)
+   # Special handling of number_of_grid_points_vector that create a problem
+   # because of a name longer than 31 characters.
+   if (dim.startswith("number_of_grid_points_vector")):
+     edt_split += "  %s :: my_number_of_grid_points_vect%s = etsf_no_dimension\n" % (fortran_type(["integer"]),dim[28])
+   else:
+     edt_split += "  %s :: my_%s = etsf_no_dimension\n" % (fortran_type(["integer"]),dim)
 edt += "\n  !Dimensions for variables that can be splitted.\n"
 edt += edt_split
 edt += " end type etsf_dims"
