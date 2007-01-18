@@ -28,6 +28,7 @@ tests_copy_SOURCES = tests_copy.f90
 tests_copy_LDFLAGS = -L$(top_builddir)/src/group_level
 tests_copy_LDADD = -letsf_io
 
+CLEANFILES=tests_init_done
 
 #dependencies
 tests_init.o: tests_init.f90 \
@@ -39,7 +40,7 @@ tests_copy.o: libetsf_io.a
 run-tests: run-tests-init run-tests-write run-tests-read run-tests-copy
 
 run-tests-init tests_init_done: tests_init
-	\rm -f test*.nc
+	\rm -f test_init_*.nc
 	./tests_init
 	touch tests_init_done
 
