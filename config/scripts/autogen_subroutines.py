@@ -1351,7 +1351,12 @@ def init_routine(name,template,info,script,args,type="subroutine"):
 
    # The fortran definition
    if (inout is not None):
-     arg_desc += "  %s%s, intent(%s) :: %s\n" % (arg_info[1],opt,arg_info[2],arg)
+     if (arg_info[1].find("pointer") >= 0):
+       # The intent keyword is not allowed by several compilers
+       # with the keyword pointer.
+       arg_desc += "  %s%s :: %s\n" % (arg_info[1],opt,arg)
+     else:
+       arg_desc += "  %s%s, intent(%s) :: %s\n" % (arg_info[1],opt,arg_info[2],arg)
      if ( (len(arg_info) > 3) and 
           ((arg_info[3] == "optional") or (arg_info[3] == "local")) ):
       loc_vars += "  %s :: my_%s\n" % (arg_info[1],arg)

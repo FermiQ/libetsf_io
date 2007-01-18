@@ -344,7 +344,7 @@ AC_DEFUN([_ABI_CHECK_FC_PGI],
  AC_MSG_CHECKING([if we are using the Portland Group Fortran compiler])
 
  fc_info_string=`$1 -V 2>&1 | sed -e '/^$/d'`
- abi_result=`echo "${fc_info_string}" | grep '^pgf90' | grep -v 'No files to process'`
+ abi_result=`echo "${fc_info_string}" | grep '^pgf9[[05]]' | grep -v 'No files to process'`
  if test "${abi_result}" = ""; then
   abi_result="no"
   fc_info_string=""

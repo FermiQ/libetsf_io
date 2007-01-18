@@ -2,6 +2,14 @@ vpath %.a $(top_builddir)/src/group_level
 
 AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(top_builddir)/src/group_level
 
+EXTRA_DIST = \
+	test_split_electrons_part1.cdl \
+	test_split_electrons_part1.nc \
+	test_split_electrons_part2.cdl \
+	test_split_electrons_part2.nc \
+	test_split_electrons_part3.cdl \
+	test_split_electrons_part3.nc
+
 noinst_PROGRAMS = tests_init tests_write tests_read tests_copy
 
 tests_init_SOURCES = tests_init.f90

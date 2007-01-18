@@ -5,7 +5,7 @@ EXTRA_DIST = @INCLUDED_FILES@
 
 module_DATA = etsf_io.@MODULE_EXT@
 
-AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(srcdir)
+AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(srcdir) -I@NETCDF_CFLAGS@
 
 libetsf_io_a_SOURCES = etsf_io.f90
 

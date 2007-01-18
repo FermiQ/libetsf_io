@@ -274,7 +274,7 @@
   subroutine etsf_io_low_read_all_var_infos(ncid, var_infos_array, lstat, &
        & error_data, with_dim_name)
     integer, intent(in)                               :: ncid
-    type(etsf_io_low_var_infos), pointer, intent(out) :: var_infos_array(:)
+    type(etsf_io_low_var_infos), pointer              :: var_infos_array(:)
     logical, intent(out)                              :: lstat
     type(etsf_io_low_error), intent(out), optional    :: error_data
     logical, optional, intent(in)                     :: with_dim_name
