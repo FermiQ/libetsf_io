@@ -19,7 +19,7 @@ EXTRA_DIST = \
 	read_var_t01.cdl \
 	$(test_dependencies)
 
-AM_FCFLAGS = -I$(top_builddir)/src/low_level
+AM_FCFLAGS = -I$(top_builddir)/src/low_level -I@NETCDF_CFLAGS@
 
 noinst_PROGRAMS = tests_read \
 	tests_write

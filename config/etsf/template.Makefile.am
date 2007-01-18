@@ -2,8 +2,11 @@ lib_LIBRARIES = libetsf_io.a
 
 EXTRA_DIST = @INCLUDED_FILES@
 
-
+if CAPITALIZE
+module_DATA = ETSF_IO.@MODULE_EXT@
+else
 module_DATA = etsf_io.@MODULE_EXT@
+endif
 
 AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(srcdir) -I@NETCDF_CFLAGS@
 

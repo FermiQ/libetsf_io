@@ -70,4 +70,22 @@ def var_get_split_status(var):
       if (etsf_properties[dim] & ETSF_PROP_DIM_SPLIT != 0):
         return True
   return False
-    
+
+def limit_length(var):
+  """ This routine is used to change the name of the argument to be
+      shorter than 31 characters. This is done, case by case. """
+  if (var.startswith("my_number_of_grid_points_vector")):
+    return "my_number_of_grid_points_vect" + var[31]
+  else:
+    return var
+
+def expand_length(var):
+  """ This routine is the inverse of limit_length. """
+  if (var == "my_number_of_grid_points_vect1"):
+    return "my_number_of_grid_points_vector1"
+  elif (var == "my_number_of_grid_points_vect2"):
+    return "my_number_of_grid_points_vector2"
+  elif (var == "my_number_of_grid_points_vect3"):
+    return "my_number_of_grid_points_vector3"
+  else:
+    return var

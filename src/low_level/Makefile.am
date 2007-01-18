@@ -6,7 +6,11 @@ EXTRA_DIST = public_variables.f90 \
 	write_routines.f90 \
 	write_routines_auto.f90
 
+if CAPITALIZE
+module_DATA = ETSF_IO_LOW_LEVEL.@MODULE_EXT@
+else
 module_DATA = etsf_io_low_level.@MODULE_EXT@
+endif
 
 AM_FCFLAGS = -I@NETCDF_CFLAGS@ -I$(srcdir)
 

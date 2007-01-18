@@ -4,9 +4,13 @@ bin_PROGRAMS = etsf_io
 
 lib_LIBRARIES = libetsf_io_file.a
 
+if CAPITALIZE
+module_DATA = ETSF_IO_FILE.@MODULE_EXT@
+else
 module_DATA = etsf_io_file.@MODULE_EXT@
+endif
 
-AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(top_builddir)/src/group_level
+AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(top_builddir)/src/group_level  -I@NETCDF_CFLAGS@
 
 libetsf_io_file_a_SOURCES = etsf_io_file.f90
 
