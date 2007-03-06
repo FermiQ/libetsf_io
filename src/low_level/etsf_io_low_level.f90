@@ -757,20 +757,20 @@ contains
     end if
     
     ! Storing informations
-    error_data%parent = parent(1:min(80, len(parent)))
+    write(error_data%parent, "(A)") parent(1:min(80, len(parent)))
     error_data%access_mode_id = mode
-    error_data%access_mode_str = etsf_io_low_error_mode(mode)
+    write(error_data%access_mode_str, "(A)") etsf_io_low_error_mode(mode)
     error_data%target_type_id = type
-    error_data%target_type_str = etsf_io_low_error_type(type)
+    write(error_data%target_type_str, "(A)") etsf_io_low_error_type(type)
     if (present(tgtid)) then
       error_data%target_id = tgtid
     else
       error_data%target_id = -1
     end if
     if (present(tgtname)) then
-      error_data%target_name = tgtname(1:min(80, len(tgtname)))
+      write(error_data%target_name, "(A)") trim(tgtname(1:min(80, len(tgtname))))
     else
-      error_data%target_name = ""
+      write(error_data%target_name, "(A)") ""
     end if
     if (present(errid)) then
       error_data%error_id = errid
@@ -778,9 +778,9 @@ contains
       error_data%error_id = nf90_noerr
     end if
     if (present(errmess)) then
-      error_data%error_message = errmess(1:min(256, len(errmess)))
+      write(error_data%error_message, "(A)") trim(errmess(1:min(256, len(errmess))))
     else
-      error_data%error_message = ""
+      write(error_data%error_message, "(A)") ""
     end if
   end subroutine etsf_io_low_error_set
   !!***

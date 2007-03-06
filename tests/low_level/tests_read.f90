@@ -188,7 +188,8 @@ contains
     var_from%ncshape = 4
     var_to%ncshape = 2
     var_from%ncdims(1:4) = (/ 3, 3, 3, 2 /)
-    var_to%ncdims(1:2) = (/ 25, 2 /)
+    var_to%ncdims(1:2) = (/ 25, 3 /)
+    write(*,*) "----------->"
     call etsf_io_low_check_var(var_from, var_to, (/ 1, 1, 1, 1 /), (/ 3, 3, 3, 2 /), &
                              & (/ 1, 3, 9, 27 /), lstat, error_data = error)
     call tests_read_status("field ncshape: uncompatible values", (.not. lstat), error)
@@ -201,10 +202,10 @@ contains
                          
     var_from%ncshape = 4
     var_to%ncshape = 4
-    var_from%ncdims(1:4) = (/ 3, 3, 3, 2 /)
-    var_to%ncdims(1:4) = (/ 3, 3, 3, 2 /)
-    call etsf_io_low_check_var(var_from, var_to, (/ 1, 1, 1, 1 /), (/ 3, 3, 3, 2 /), &
-                             & (/ 1, 3, 9, 27 /), lstat, error_data = error)
+    var_from%ncdims(1:4) = (/ 4, 3, 3, 2 /)
+    var_to%ncdims(1:4) = (/ 4, 3, 3, 2 /)
+    call etsf_io_low_check_var(var_from, var_to, (/ 1, 1, 1, 1 /), (/ 4, 3, 3, 2 /), &
+                             & (/ 1, 4, 12, 36 /), lstat, error_data = error)
     call tests_read_status("field ncshape (nD): matching values", lstat, error)
 
     

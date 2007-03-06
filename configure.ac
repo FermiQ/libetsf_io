@@ -81,7 +81,7 @@ if test "$withnetcdf" = "no" ; then
   fi
 fi
 if test "$withnetcdf" = "no" ; then
-  echo "Action: install NetCDF and set its path with --with-netcdf-module."
+  echo "Action: install NetCDF and set its path with --with-netcdf-module-path."
   AC_MSG_ERROR(["No 'NetCDF' module found."])
 fi
 AC_SUBST(NETCDF_CFLAGS, "$ac_netcdf_mod")

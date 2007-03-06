@@ -68,6 +68,31 @@ module etsf_io
 @CONSTANTS@
   !!***
 
+  !!****s* etsf_io_basics_group/etsf_vars
+  !! NAME
+  !!  etsf_vars
+  !!
+  !! FUNCTION
+  !!  This structure contains informations about a list of variables. It inherits
+  !!  from etsf_io_low_var_infos type, but it adds new fields, specific to
+  !!  the ETSF norm. These fields are:
+  !!  * @group which is a value in FLAGS_GROUPS ;
+  !!  * @varid which is a value in FLAGS_MAIN ;
+  !!  * @split which defines if the variable is a split definition array.
+  !!  This structure is intrinsectly an array for performance reasons since
+  !!  variables are usually handled together. Use etsf_io_vars_free() to 
+  !!  deallocate it.
+  !!
+  !! SOURCE
+  type etsf_vars
+    integer                              :: n_vars    =  0
+    type(etsf_io_low_var_infos), pointer :: parent(:) => null()
+    integer, pointer                     :: group(:)  => null()
+    integer, pointer                     :: varid(:)  => null()
+    logical, pointer                     :: split(:)  => null()
+  end type etsf_vars
+  !!***
+
   !!****d* etsf_io_basics_group/FLAGS_GROUPS
   !! NAME
   !!  FLAGS_GROUPS

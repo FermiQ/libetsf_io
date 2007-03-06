@@ -60,6 +60,41 @@
   end subroutine etsf_io_low_read_dim
   !!***
   
+  !!****m* etsf_io_low_var_infos/etsf_io_low_free_all_var_infos
+  !! NAME
+  !!  etsf_io_low_free_all_var_infos
+  !!
+  !! FUNCTION
+  !!  This method is used to free all associated memory in an array of
+  !!  #etsf_io_low_var_infos elements. The array is also deallocated.
+  !!  This routine is convenient after a call to etsf_io_low_read_all_var_infos()
+  !!  with the optional argument @with_dim_name set to true.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
+  !!
+  !! SIDE EFFECTS
+  !!  * var_infos_array <type(etsf_io_low_var_infos)> = a pointer on an associated
+  !!    array to be deallocated.
+  !!
+  !! SOURCE
+  subroutine etsf_io_low_free_all_var_infos(var_infos_array)
+    type(etsf_io_low_var_infos), pointer :: var_infos_array(:)
+    
+    integer :: i
+
+    if (associated(var_infos_array)) then
+       do i = 1, size(var_infos_array), 1
+          call etsf_io_low_free_var_infos(var_infos_array(i))
+       end do
+       deallocate(var_infos_array)
+    end if
+  end subroutine etsf_io_low_free_all_var_infos
+  !!***
+
   !!****m* etsf_io_low_var_infos/etsf_io_low_free_var_infos
   !! NAME
   !!  etsf_io_low_free_var_infos
@@ -227,10 +262,6 @@
         end if
       end do
       deallocate(ncdimids)
-      if (with_dim_name) then
-        deallocate(var_infos%ncdimnames)
-        var_infos%ncdimnames => null()
-      end if
     end if
     lstat = .true.
   end subroutine read_var_infos
@@ -523,7 +554,6 @@
     character(len = 80) :: err
     integer :: i, s, nb_ele_ref, nb_ele, sub_shape
     integer :: nclendims(1:7)
-    logical :: stat
     
     lstat = .false.
     ! Check the type, if both numeric or both strings, vars are compatible.
@@ -544,7 +574,6 @@
         call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
                                   & tgtname = trim(var_ref%name)//" (start | count | map)", errmess = "inconsistent length")
       end if
-      lstat = .false.
       return
     end if
     ! Checks on start.
@@ -556,7 +585,6 @@
           call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
                                    & tgtname = trim(var_ref%name)//" (start)", errmess = err)
         end if
-        lstat = .false.
         return
       end if
     end do
@@ -569,7 +597,6 @@
           call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
                                    & tgtname = trim(var_ref%name)//" (count)", errmess = err)
         end if
-        lstat = .false.
         return
       end if
     end do
@@ -599,7 +626,6 @@
         call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
                                   & tgtname = trim(var_ref%name)//" (map)", errmess = err)
       end if
-      lstat = .false.
       return
     end if
     
@@ -882,6 +908,8 @@
           call etsf_io_low_check_header(ncid, lstat)
         end if
       end if
+    else
+      lstat = .true.
     end if
   end subroutine etsf_io_low_open_read
   !!***

@@ -40,8 +40,12 @@ etsf_subprograms = {
       "init read write contents get copy"],
    "split":[
       "low_level",
-      """!!  @ACTION_TEXT@ ETSF variables for @GROUP@.""",
+      """!!  @ACTION_TEXT@ ETSF split variables.""",
       "init allocate free def get put copy merge"],
+   "vars":[
+      "low_level",
+      """!!  @ACTION_TEXT@ etsf_vars structures.""",
+      "free"],
 } 
 
 # Peculiarities
@@ -78,6 +82,7 @@ etsf_subs_def_args = {
       "error_data type(etsf_io_low_error) out",
       "k_dependent logical in optional",
       "split type(etsf_split) in optional",
+      "ivar integer local",
       "split_dims type(split_dim_names) local"],
    "@GROUP@":[
       "ncid integer in",
@@ -85,6 +90,7 @@ etsf_subs_def_args = {
       "error_data type(etsf_io_low_error) out",
       "k_dependent logical in optional",
       "split type(etsf_split) in optional",
+      "ivar integer local",
       "split_dims type(split_dim_names) local"],
    "split":[
       "ncid integer in",
@@ -105,7 +111,12 @@ etsf_subs_get_args = {
       "folder type(etsf_@GROUP@) inout",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out",
-      "use_atomic_units logical in optional"],
+      "use_atomic_units logical in optional",
+      "varid(:) integer,allocatable local",
+      "start(:) integer,allocatable local",
+      "count(:) integer,allocatable local",
+      "len integer local",
+      "flag character(etsf_charlen) local"],
    "split":[
       "ncid integer in",
       "split type(etsf_split) inout",
@@ -114,6 +125,7 @@ etsf_subs_get_args = {
    "data":[
       "etsf_group integer out",
       "etsf_main integer out",
+      "etsf_split logical out",
       "varname character(len=*) in"]
 }
 
@@ -123,7 +135,12 @@ etsf_subs_put_args = {
       "ncid integer in",
       "folder type(etsf_@GROUP@) in",
       "lstat logical out",
-      "error_data type(etsf_io_low_error) out"],
+      "error_data type(etsf_io_low_error) out",
+      "varid(:) integer,allocatable local",
+      "start(:) integer,allocatable local",
+      "count(:) integer,allocatable local",
+      "len integer local",
+      "flag character(etsf_charlen) local"],
    "split":[
       "ncid integer in",
       "split type(etsf_split) in",
@@ -160,9 +177,11 @@ etsf_subs_contents_args = {
       "etsf_group integer out",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out",
-      "var_list type(etsf_io_low_var_infos),dimension(:),pointer out optional",
-      "main integer local",
-      "grp integer local"]
+      "vars_infos type(etsf_vars) inout optional",
+      "with_dim_name logical local",
+      "group_id integer local",
+      "var_id integer local",
+      "split_id logical local"]
 }
 
 # Descriptions of the subprogram arguments for the "read" action
@@ -202,6 +221,9 @@ etsf_subs_copy_args = {
       "lstat logical out",
       "error_data type(etsf_io_low_error) out",
       "split type(etsf_split) in optional",
+      "start(:) integer,allocatable local",
+      "count(:) integer,allocatable local",
+      "len integer local",
       "istart integer local",
       "idim1,idim2,idim3,idim4,idim5,idim6,idim7,idim8 integer local",
       "istop(:) integer,allocatable local",
@@ -234,7 +256,9 @@ etsf_subs_allocate_args = {
 # Descriptions of the subprogram arguments for the "free" action
 etsf_subs_free_args = {
    "split":[
-      "split type(etsf_split) inout"]
+      "split type(etsf_split) inout"],
+   "vars":[
+      "vars_infos type(etsf_vars) inout"]
 }
 
 # Descriptions of the subprogram arguments for the "free" action
@@ -248,7 +272,9 @@ etsf_subs_merge_args = {
       "output_split type(etsf_split) inout",
       "split type(etsf_split) inout",
       "lstat logical out",
-      "error_data type(etsf_io_low_error) out"]
+      "error_data type(etsf_io_low_error) out",
+      "ivar integer local",
+      "len integer local"]
 }
 
 # Documentation for arguments. The key is build on (separated by dash)
@@ -377,7 +403,7 @@ etsf_subs_doc_args = {
      @output_split.""",
    "split-data_contents":"""
      if any, read the split array from the given file and put their values
-     in this argument. The array must be allocated (see etsf_io_split_allocated()
+     in this argument. The array must be allocated (see etsf_io_split_allocate()
      or do it manually).""",
    "split-*_copy":"""
      if this argument is given, the values in the split definition (e.g. my_kpoints)
@@ -396,11 +422,21 @@ etsf_subs_doc_args = {
      the path to the file to be written.""",
    "source_files-*":"""
      an array with all files to be read and copied to the @dest_file.""",
+   "etsf_split-*_get":"""
+     this logical is .true. if @varname is a valid split name.""",
    "etsf_main-*_get":"""
      this integer is a flag corresponding to the given @varname.""",
    "etsf_group-*_get":"""
      this integer is a flag corresponding to the group in which the given
      @varname is defined.""",
    "varname-*":"""
-     the name of a variable, to know if it is part of ETSF or not."""
+     the name of a variable, to know if it is part of ETSF or not.""",
+   "vars_infos-data_contents":"""
+     when reading the file for variable informations, it creates a list of
+     type(etsf_var) that describes all the variables in the
+     file. This list contains non ETSF informations such as variable names,
+     types, shapes, an array of dimension values and an other array of dimension
+     names. It also contains ETSF informations, like group id or if the variable
+     is a split definition. When given, internal pointers are associated in the
+     subroutine. To free them, use etsf_io_vars_free().""",
 }

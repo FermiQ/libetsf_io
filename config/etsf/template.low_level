@@ -27,10 +27,6 @@ subroutine etsf_io_@NAME@(@ARG_LIST@)
 
   !Local variables-------------------------------
   character(len = *), parameter :: my_name = 'etsf_io_@NAME@'
-  integer, allocatable          :: start(:), count(:)
-  integer, allocatable          :: varid(:)
-  character(etsf_charlen)       :: flag
-  integer                       :: len, ivar
 @LOCAL_VARS@
 
   ! *************************************************************************

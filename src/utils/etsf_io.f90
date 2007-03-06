@@ -59,6 +59,7 @@ program etsf_io
         stop
      end if
   else
+     write(*, "(A)") "Error: missing action, use -a option."
      call usage()
      stop
   end if

@@ -74,13 +74,14 @@ if (.not. lstat) return
 
 """
 
- ret += "! Define groups\n"
+ ret += "! Define split arrays.\n"
  # Call the def subroutine for possible splitted variables.
  ret += "if (present(split_definition)) then\n"
  ret += "  call etsf_io_split_def(ncid, dims, lstat, error_data)\n"
  ret += "  if (.not. lstat) return\n"
  ret += "end if\n"
  # Write the select case for the argument groups.
+ ret += "! Define groups.\n"
  ret += code_data_select("def")
  
  # Close the NetCDF file.
@@ -140,9 +141,14 @@ def code_data_copy():
 # Read a NetCDF file for main and one or several group.
 def code_data_contents():
   ret = "lstat = .false.\n"
-  ret += "if (present(var_list)) then\n"
-  ret += "  var_list => null()\n"
+  ret += "if (present(vars_infos)) then\n"
+  ret += "  vars_infos%n_vars = 0\n"
+  ret += "  vars_infos%parent => null()\n"
+  ret += "  with_dim_name = .true.\n"
+  ret += "else\n"
+  ret += "  with_dim_name = .false.\n"
   ret += "end if\n"
+  ret += "\n"
   
   # Open the file for reading.
   ret += "! Open file for reading\n"
@@ -166,8 +172,10 @@ def code_data_contents():
   ret += "end if\n"
 
   # List all variables of the file.
-  ret += "! Get all variables definitions\n"
-  ret += "call etsf_io_low_read_all_var_infos(ncid, my_var_list, lstat, error_data)\n"
+  ret += "! Get all variables definitions.\n"
+  ret += "! It will allocate my_vars_infos%parent array.\n"
+  ret += "call etsf_io_low_read_all_var_infos(ncid, my_vars_infos%parent, &\n"
+  ret += "  & lstat, error_data, with_dim_name = with_dim_name)\n"
   ret += "if (.not. lstat) then\n"
   ret += "  call etsf_io_split_free(split)\n"
   ret += "  return\n"
@@ -176,17 +184,34 @@ def code_data_contents():
   # Get for all variable its group and main id.
   ret += "etsf_group = etsf_grp_none\n"
   ret += "etsf_main  = etsf_main_none\n"
-  ret += "if (associated(my_var_list)) then\n"
-  ret += "  do i = 1, size(my_var_list), 1\n"
-  ret += "    call etsf_io_data_get(grp, main, my_var_list(i)%name)\n"
-  ret += "    etsf_group = ior(etsf_group, grp)\n"
-  ret += "    etsf_main  = ior(etsf_main, main)\n"
+  ret += "if (associated(my_vars_infos%parent)) then\n"
+  ret += "  my_vars_infos%n_vars = size(my_vars_infos%parent)\n"
+  ret += "  if (present(vars_infos)) then\n"
+  ret += "    ! Allocate vars_infos arrays for future use.\n"
+  ret += "    vars_infos%n_vars = my_vars_infos%n_vars\n"
+  ret += "    allocate(vars_infos%group(vars_infos%n_vars))\n"
+  ret += "    allocate(vars_infos%varid(vars_infos%n_vars))\n"
+  ret += "    allocate(vars_infos%split(vars_infos%n_vars))\n"
+  ret += "  end if\n"
+  ret += "  ! get the main_id and the group_id for all variables.\n"
+  ret += "  do i = 1, my_vars_infos%n_vars, 1\n"
+  ret += "    call etsf_io_data_get(group_id, var_id, &\n"
+  ret += "      & split_id, my_vars_infos%parent(i)%name)\n"
+  ret += "    etsf_group = ior(etsf_group, group_id)\n"
+  ret += "    etsf_main  = ior(etsf_main, var_id)\n"
+  ret += "    if (present(vars_infos)) then\n"
+  ret += "      ! Update vars_infos arrays.\n"
+  ret += "      vars_infos%group(i) = group_id\n"
+  ret += "      vars_infos%varid(i) = var_id\n"
+  ret += "      vars_infos%split(i) = split_id\n"
+  ret += "    end if\n"
   ret += "  end do\n"
   ret += "end if\n"
-  ret += "if (present(var_list)) then\n"
-  ret += "  var_list => my_var_list\n"
-  ret += "else if (associated(my_var_list)) then\n"
-  ret += "  deallocate(my_var_list)\n"
+  ret += "if (present(vars_infos)) then\n"
+  ret += "  ! Associate vars_infos%parent to the one computed in my_vars_infos.\n"
+  ret += "  vars_infos%parent => my_vars_infos%parent\n"
+  ret += "else if (associated(my_vars_infos%parent)) then\n"
+  ret += "  call etsf_io_low_free_all_var_infos(my_vars_infos%parent)\n"
   ret += "end if\n\n"
 
   ret += "! Close file\n"
@@ -319,6 +344,7 @@ def code_data_get():
   ret = ""
   ret += "etsf_group = etsf_grp_none\n"
   ret += "etsf_main  = etsf_main_none\n"
+  ret += "etsf_split = .false.\n"
   fmt_else = ""
   for grp in etsf_groups:
     for var in etsf_groups[grp]:
@@ -328,13 +354,35 @@ def code_data_get():
         ret += "  etsf_main = etsf_main_%s\n" % etsf_variables_shortnames[var]
       if (fmt_else == ""):
         fmt_else = "else "
+  # Add the split variables
+  for var in etsf_variables:
+    if var.startswith("my_"):
+      ret += "else if (trim(varname) == \"%s\") then\n" % var
+      ret += "  etsf_split = .true.\n"
+  ret += "end if\n"
+  return ret
+
+# Code for split
+def code_vars(action):
+  ret  = ""
+  ret += "! Deallocate all associated pointers.\n"
+  ret += "if (associated(vars_infos%parent)) then\n"
+  ret += "  call etsf_io_low_free_all_var_infos(vars_infos%parent)\n"
+  ret += "end if\n"
+  ret += "if (associated(vars_infos%group)) then\n"
+  ret += "  deallocate(vars_infos%group)\n"
+  ret += "end if\n"
+  ret += "if (associated(vars_infos%varid)) then\n"
+  ret += "  deallocate(vars_infos%varid)\n"
+  ret += "end if\n"
+  ret += "if (associated(vars_infos%split)) then\n"
+  ret += "  deallocate(vars_infos%split)\n"
   ret += "end if\n"
   return ret
 
 
 # Code for dimensions
 def code_dims(action):
-
  ret = ""
  my_dims = []
  for dim in etsf_dimensions:
