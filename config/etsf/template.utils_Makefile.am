@@ -4,6 +4,11 @@ bin_PROGRAMS = etsf_io
 
 lib_LIBRARIES = libetsf_io_file.a
 
+EXTRA_DIST = \
+@SPEC_CHECK_LIST@
+	etsf_io_file_contents.f90 \
+	etsf_io_file_private.f90
+
 if CAPITALIZE
 module_DATA = ETSF_IO_FILE.@MODULE_EXT@
 else
@@ -20,6 +25,9 @@ etsf_io_LDADD = -letsf_io_file -letsf_io
 
 
 #dependencies
-etsf_io_file.o: libetsf_io.a
+etsf_io_file.o: libetsf_io.a \
+@SPEC_CHECK_LIST@
+	etsf_io_file_contents.f90 \
+	etsf_io_file_private.f90
 
 etsf_io.o: libetsf_io_file.a

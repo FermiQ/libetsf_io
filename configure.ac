@@ -132,7 +132,7 @@ AC_SUBST(moduledir)
 
 dnl Append $FCFLAGS_SRCEXT to $FCFLAGS since the former is not
 dnl added automatically in the Makefile.in.
-FCFLAGS="$FCFLAGS $FCFLAGS_SRCEXT"
+FCFLAGS="$FCFLAGS $FCFLAGS_f90"
 
 dnl Give the name of file.in to transform to file
 AC_CONFIG_FILES([

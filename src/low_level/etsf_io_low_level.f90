@@ -1063,6 +1063,35 @@ contains
   end function pad
   !!***
 
+  !!****m* etsf_io_low_level/strip
+  !! NAME
+  !!  strip
+  !!
+  !! FUNCTION
+  !!  Little tool to change all final '\0' (end of string in C) characters to
+  !!  ' ' (space).
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!
+  !! SIDE EFFECTS
+  !!  * string = the string to convert. It is done in-place.
+  !!
+  !! SOURCE
+  subroutine strip(string)
+    character(len = *), intent(inout) :: string
+
+    integer :: i, l
+
+    i = index(string, char(0))
+    l = len(string)
+    string(i:l) = repeat(" ", l - i + 1)
+  end subroutine strip
+  !!***
+
   include "read_routines.f90"
   include "read_routines_auto.f90"
 

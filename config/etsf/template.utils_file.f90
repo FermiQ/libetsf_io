@@ -7,6 +7,11 @@
 !!  actually contains:
 !!  * etsf_io_file_merge(): a routine to read several files and merge their data
 !!                          into a single output file.
+!!  * etsf_io_file_contents(): a routine to read a file and get what specifications
+!!                             this file is matching (cristallographic data,
+!!                             potential...).
+!!  * etsf_io_file_check(): a routine to validate a file against one or several
+!!                          specifications.
 !!
 !! COPYRIGHT
 !!  Copyright (C) 2006
@@ -38,6 +43,9 @@ module etsf_io_file
   end type file_infos_type
 
   public :: etsf_io_file_merge
+  public :: etsf_io_file_check
+  public :: etsf_io_file_contents
+@SPEC_CHECK_PUBLIC@
 
 contains
 
@@ -473,5 +481,65 @@ contains
     call etsf_io_split_free(output_split)
   end subroutine etsf_io_file_merge
 !!***
+
+!!****m* etsf_io_file/etsf_io_file_check
+!! NAME
+!!  etsf_io_file_check
+!!
+!! FUNCTION
+!!  This is a high level routine to check that a file is valid to
+!!  the specifications. This validity is done on presence of required
+!!  variables and on conform variable definition. The presence of attributes
+!!  when required is also done.
+!!
+!! COPYRIGHT
+!!  Copyright (C) 2006
+!!  This file is distributed under the terms of the
+!!  GNU General Public License, see ~abinit/COPYING
+!!  or http://www.gnu.org/copyleft/lesser.txt .
+!!
+!! INPUTS
+!! * file_name = 
+!!     a list of path where input files can be found.
+!! * file_flags =
+!!     a serie of flags to check the file on. These flags are defined in the
+!!     module etsf_io (see ETSF_IO_VALIDITY_FLAGS). To use several flags,
+!!     simply add each of them.
+!! OUTPUT
+!! * lstat = 
+!!     return .true. if the file is valid.
+!! * error_data <type(etsf_io_low_error)> = 
+!!     contains the details of the error is @lstat is false.
+!!
+!! SOURCE
+  subroutine etsf_io_file_check(file_name, file_flags, lstat, error_data)
+    character(len = *), intent(in)       :: file_name
+    integer, intent(in)                  :: file_flags
+    logical, intent(out)                 :: lstat
+    type(etsf_io_low_error), intent(out) :: error_data
+
+    integer :: read_flags
+    type(etsf_io_low_error), dimension(etsf_nspecs_data) :: errors
+    integer :: i
+    
+    call etsf_io_file_contents(read_flags, errors, file_name, lstat, error_data)
+    if (.not. lstat) return
+    
+    do i = 1, etsf_nspecs_data
+       if (iand(file_flags, 2 ** (i - 1)) /= 0 .and. &
+            & iand(read_flags, 2 ** (i - 1)) == 0) then
+          lstat = .false.
+          error_data = errors(i)
+          return
+       end if
+    end do
+    lstat = .true.
+  end subroutine etsf_io_file_check
+!!***
+
+  include "etsf_io_file_contents.f90"
+@SPEC_CHECK_INCLUDE@
+
+  include "etsf_io_file_private.f90"
 
 end module etsf_io_file

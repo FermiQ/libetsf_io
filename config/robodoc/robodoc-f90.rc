@@ -124,3 +124,19 @@ keywords:
     public
     dimension
     allocatable
+    trim
+    len
+    and
+    or
+    not
+    read
+    write
+    iostat
+    allocate
+    allocated
+    associated
+    deallocate
+    select
+    case
+    iand
+    ior

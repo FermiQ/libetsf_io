@@ -118,6 +118,19 @@ module etsf_io
 @FLAGS_MAIN@
   !!***
 
+  !!****d* etsf_io_basics_group/ETSF_IO_VALIDITY_FLAGS
+  !! NAME
+  !!  ETSF_IO_VALIDITY_FLAGS
+  !!
+  !! FUNCTION
+  !!  These flags are used to identify a valid file as defined
+  !!  in the specifications. These valid files contains physical informations such as
+  !!  a potential or crystalographic data. Flags are not exclusive.
+  !!
+  !! SOURCE
+@ETSF_IO_VALIDITY_FLAGS@
+  !!***
+
   !!****s* etsf_io_basics_group/etsf_dims
   !! NAME
   !!  etsf_dimensions

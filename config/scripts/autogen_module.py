@@ -215,6 +215,20 @@ for var in etsf_variables:
     vsn += "  character(len = 256) :: %s = \"%s\"\n" % (etsf_variables[var][1][3:], etsf_variables[var][1][3:])
 vsp += " end type etsf_split\n"
 vsn += " end type split_dim_names\n"
+
+# Flags for specification files.
+vlf = ""
+vlf_id = ""
+ivlf = 0
+vlf += "  integer, parameter :: etsf_%-30s = 0\n" % "specs_none"
+vlf_id = "  character(len = *), parameter :: etsf_specs_names(%d) = (/ &\n" % len(etsf_specifications_files)
+for id in etsf_specifications_files.keys():
+  vlf += "  integer, parameter :: etsf_%-30s = %d\n" % (id, 2 ** ivlf)
+  vlf_id += "    & \"%-25s\", &\n" % id
+  ivlf += 1
+vlf += "  integer, parameter :: etsf_%-30s = %d\n" % ("nspecs_data", ivlf)
+vlf_id = vlf_id[:-4] + " /)\n"
+vlf += vlf_id
   
 
 # Import template
@@ -223,6 +237,7 @@ src = re.sub("@SCRIPT@",my_name,src)
 src = re.sub("@CONSTANTS@",ead,src)
 src = re.sub("@FLAGS_GROUPS@",egc,src)
 src = re.sub("@FLAGS_MAIN@",emc,src)
+src = re.sub("@ETSF_IO_VALIDITY_FLAGS@",vlf,src)
 src = re.sub("@DIMENSIONS@",edt,src)
 src = re.sub("@STRUCTURES@",est,src)
 src = re.sub("@STRUCT_GROUPS@",egf,src)

@@ -440,3 +440,50 @@ etsf_subs_doc_args = {
      is a split definition. When given, internal pointers are associated in the
      subroutine. To free them, use etsf_io_vars_free().""",
 }
+
+etsf_subs_doc_desc = {
+  "*-get":"""
+    """,
+  "*-put":"""
+    """,
+  "*-def":"""
+    """,
+  "*-copy":"""
+    """,
+  "*-get":"""
+    """,
+  "dims-merge":"""
+    """,
+  "dims-trace":"""
+    """,
+  "split-allocate":"""
+    """,
+  "split-copy":"""
+    """,
+  "split-def":"""
+    """,
+  "split-free":"""
+    """,
+  "split-get":"""
+    """,
+  "split-init":"""
+    """,
+  "split-merge":"""
+    """,
+  "split-put":"""
+    """,
+  "vars-free":"""
+    """,
+  "data-contents":"""
+    """,
+  "data-copy":"""
+    """,
+  "data-get":"""
+    """,
+  "data-init":"""
+    """,
+  "data-read":"""
+    """,
+  "data-write":"""
+    """,
+  }
