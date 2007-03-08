@@ -16,6 +16,7 @@ program etsf_io_ploumploum
   
   character(len = 80) :: action = ""
   ! Variables used for the merge action
+  logical :: get_help = .false.
   integer :: n_input_args = 0
   character(len = 256) :: input_args(256)
   integer :: n_input_files = 0
@@ -41,6 +42,8 @@ program etsf_io_ploumploum
      else if (get_option("f", "flag", opt_value, i_arg)) then
         n_input_flags = n_input_flags + 1
         input_flags(n_input_flags) = opt_value
+     else if (get_option("h", "help", opt_value, i_arg, .false.)) then
+        get_help = .true.
      else
         ! This should be the end of option.
         call getarg(i_arg, opt_value)
@@ -67,6 +70,11 @@ program etsf_io_ploumploum
         exit
      end if
   end do
+
+  if (get_help) then
+     call usage()
+     stop
+  end if
 
   if (trim(action) == "merge") then
      if (n_input_files < 2) then
@@ -193,10 +201,12 @@ contains
 
   subroutine usage()
     write(*, "(A)") ""
-    write(*, "(A)") "Usage: etsf_io -a action [[-i file]...] [-o file] [arguments]"
+    write(*, "(A)") "Usage: etsf_io [-h | -a action] [[-i file]...] [[-f flag]...]"
+    write(*, "(A)") "               [-o file] [arguments]"
     write(*, "(A)") ""
     write(*, "(A)") "   Handle ETSF files, see --action option."
-    write(*, "(A)") "-a --action           : give the action to perform."
+    write(*, "(A)") "-h --help             : show this little help."
+    write(*, "(A)") "-a --action value     : give the action to perform."
     write(*, "(A)") "                        Possible action may be:"
     write(*, "(A)") "                        * 'merge' to gather several files that"
     write(*, "(A)") "                          have been splitted."
@@ -204,11 +214,13 @@ contains
     write(*, "(A)") "                          specifications the file matches."
     write(*, "(A)") "                        * 'check' to check the validity of"
     write(*, "(A)") "                          the file against specifications."
-    write(*, "(A)") "-o --output-file      : give the path to the output ETSF file."
-    write(*, "(A)") "-i --input-file       : give the path for an input file. This"
+    write(*, "(A)") "-o --output-file file : give the path to the output ETSF file."
+    write(*, "(A)") "-i --input-file file  : give the path for an input file. This"
     write(*, "(A)") "                        option can be used one or several times."
     write(*, "(A)") "-l --list             : when action is check, it give the list"
     write(*, "(A)") "                        of available flags."
+    write(*, "(A)") "-f --flag value       : give a flag name (get valid names from"
+    write(*, "(A)") "                        -l option)."
     write(*, "(A)") ""
     write(*, "(A)") "   Examples:"
     write(*, "(A)") "Merge three files, etsf_io -a merge -i file1.nc -i file2.nc"

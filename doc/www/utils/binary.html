@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+                      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+      <head>
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" href="../robodoc.css" type="text/css" />
+    <title>ETSF_IO binary</title>
+  </head>
+
+    <body>
+      <div id="logo">
+	<a name="robo_top_of_doc">ETSF_IO library - documentation pages</a>
+      </div> <!-- logo -->
+      <div id="navigation">
+	<a href="../index.html">Library documentation page</a>
+	<a href="../robo_modules.html">Public API (modules)</a>
+	<a href="../tutorials/index.html">Tutorials & examples</a>
+	<a href="binary.html#top">Binary utility</a>
+	<a class="level2" href="#merge">Merge files</a>
+	<a class="level2" href="#content">Scan file contents</a>
+	<a class="level2" href="#check">Check conformance</a>
+      </div> <!-- navigation -->
+      <div id="content">
+	<p>As NetCDF is shipped with <code>ncdump</code> and <code>ncgen</code> to handle NetCDF files, ETSF_IO is shipped with its own binary program <code>etsf_io</code>. This utility is made to handle some high level actions on ETSF files.</p>
+	<h1>etsf_io man page</h1>
+	<p>etsf_io is called with the mandatory <code>-a</code> option (or <code>--action</code> to defined what action will be done by the program. Follows the little help returned by <code>etsf_io --help</code>:</p>
+	<pre class="source">
+Usage: etsf_io [-h | -a action] [[-i file]...] [[-f flag]...]
+               [-o file] [arguments]
+
+   Handle ETSF files, see --action option.
+-h --help             : show this little help.
+-a --action value     : give the action to perform.
+                        Possible action may be:
+                        * 'merge' to gather several files that
+                          have been splitted.
+                        * 'content' to get the name of
+                          specifications the file matches.
+                        * 'check' to check the validity of
+                          the file against specifications.
+-o --output-file file : give the path to the output ETSF file.
+-i --input-file file  : give the path for an input file. This
+                        option can be used one or several times.
+-l --list             : when action is check, it give the list
+                        of available flags.
+-f --flag value       : give a flag name (get valid names from
+                        -l option).
+
+   Examples:
+Merge three files, etsf_io -a merge -i file1.nc -i file2.nc
+                   -i file3.nc -o output.nc
+
+Get the contents of file test.nc, etsf_io -a contents test.nc
+
+Get the list of flags for validity checks, etsf_io -a check -l
+
+Checks with two flags, etsf_io -a check -f flag1 -f flag2 test.nc
+	</pre>
+	<h1>Action merge <a name="merge"></a></h1>
+	<p>TODO: wite something here.</p>
+	<h1>Action content <a name="content"></a></h1>
+	<p>TODO: wite something here.</p>
+	<h1>Action check <a name="check"></a></h1>
+	<p>TODO: wite something here.</p>
+      </div>
+      <div id="footer">
+	<p>Manually maintained file, last edition 2007-03-08 by Damien Caliste.</p>
+      </div> <!-- footer -->
+    </body>
+</html>

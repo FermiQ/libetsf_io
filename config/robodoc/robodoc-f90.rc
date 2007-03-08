@@ -47,6 +47,7 @@ ignore items:
 options:
     --src ./src
     --doc ./doc/www
+    --css ./config/robodoc/robodoc.css
     --html
     --multidoc
     --sections
@@ -55,7 +56,7 @@ options:
     --tabsize 2
     --toc
     --nopre
-    --documenttitle "libetsf_io.a - ETSF I/O - API"
+    --documenttitle "ETSF_IO library - documentation pages"
     --syntaxcolors
 headertypes:
     g  "Sub categories"  robo_sub_cat
@@ -140,3 +141,4 @@ keywords:
     case
     iand
     ior
+    program

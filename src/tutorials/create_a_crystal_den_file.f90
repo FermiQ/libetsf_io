@@ -157,10 +157,10 @@ program create_a_crystal_den_file
                                      & 0.4d0, 0.4d0, 0.6d0, &
                                      & 0.4d0, 0.6d0, 0.4d0 /), (/ 3, 5 /))
   atom_species = (/ 2, 1, 1, 1, 1 /)
-  chemical_symbols = (/ "He", "Si" /)
+  chemical_symbols = (/ "H ", "Si" /)
 
   ! We compute the density with a powerful algorithm.
-  density = (/ (i, i = 1, 36 * 36 * 36) /)
+  density = (/ (0.d0 + i, i = 1, 36 * 36 * 36) /)
   
 !! NOTES
 !!  Before calling the etsf_io_data_write() routine, we associate the pointers of our

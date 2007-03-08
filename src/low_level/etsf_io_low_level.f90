@@ -1087,8 +1087,10 @@ contains
     integer :: i, l
 
     i = index(string, char(0))
-    l = len(string)
-    string(i:l) = repeat(" ", l - i + 1)
+    if (i > 0) then
+       l = len(string)
+       string(i:l) = repeat(" ", l - i + 1)
+    end if
   end subroutine strip
   !!***
 
