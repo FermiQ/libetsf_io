@@ -10,9 +10,9 @@ EXTRA_DIST = \
 	etsf_io_file_private.f90
 
 if CAPITALIZE
-module_DATA = ETSF_IO_FILE.@MODULE_EXT@
+module_DATA = ETSF_IO_FILE.@MODULE_EXT@ ETSF_IO_TOOLS.@MODULE_EXT@ 
 else
-module_DATA = etsf_io_file.@MODULE_EXT@
+module_DATA = etsf_io_file.@MODULE_EXT@ etsf_io_tools.@MODULE_EXT@
 endif
 
 AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(top_builddir)/src/group_level  -I@NETCDF_CFLAGS@
@@ -34,3 +34,9 @@ etsf_io_file.o: libetsf_io.a \
 etsf_io_tools.o: libetsf_io.a
 
 etsf_io.o: libetsf_io_utils.a
+
+ETSF_IO_FILE.@MODULE_EXT@ etsf_io_file.@MODULE_EXT@: \
+	etsf_io_file.o
+
+ETSF_IO_TOOLS.@MODULE_EXT@ etsf_io_tools.@MODULE_EXT@: \
+	etsf_io_tools.o

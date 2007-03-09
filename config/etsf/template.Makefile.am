@@ -18,5 +18,4 @@ libetsf_io_a_LIBADD = $(top_builddir)/src/low_level/etsf_io_low_level.o
 #dependencies
 etsf_io.o: etsf_io.f90 @INCLUDED_FILES@
 
-ETSF_IO.@MODULE_EXT@ etsf_io.@MODULE_EXT@:
-	etsf_io.o
+ETSF_IO.@MODULE_EXT@ etsf_io.@MODULE_EXT@: etsf_io.o
