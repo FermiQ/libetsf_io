@@ -1335,8 +1335,18 @@ def init_routine(name,template,info,script,args,type="subroutine"):
   ret = re.sub("@FUNCTYPE@",type,ret)
 
  ret = re.sub("@NAME@",name,ret)
- ret = re.sub("@INFO@",info,ret)
  ret = re.sub("@SCRIPT@",script,ret)
+
+ # Build the documentation for FUNCTION (replacing @INFO@)
+ if (name in etsf_subs_doc_desc):
+   ret = re.sub("\n@INFO@", re.sub("\n", "\n!!", etsf_subs_doc_desc[name]), ret)
+ else:
+   # Try to match with a joker
+   key = "*_" + name[name.find("_") + 1:]
+   if (key in etsf_subs_doc_desc):
+     ret = re.sub("\n@INFO@", re.sub("\n", "\n!!", etsf_subs_doc_desc[key]), ret)
+   else:
+     ret = re.sub("@INFO@", info, ret)
 
  arg_list = ""
  arg_move = len(name)+19

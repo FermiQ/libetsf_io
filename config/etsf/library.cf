@@ -36,7 +36,7 @@ etsf_subprograms = {
       "def get put copy"],
    "data":[
       "data",
-      "@ACTION_TEXT@ an ETSF file.",
+      "!!  @ACTION_TEXT@ an ETSF file.",
       "init read write contents get copy"],
    "split":[
       "low_level",
@@ -403,8 +403,8 @@ etsf_subs_doc_args = {
      @output_split.""",
    "split-data_contents":"""
      if any, read the split array from the given file and put their values
-     in this argument. The array must be allocated (see etsf_io_split_allocate()
-     or do it manually).""",
+     in this argument. If lstat = .true., it may be allocated in output.
+     So, after use, it must be deallocated, using etsf_io_split_free().""",
    "split-*_copy":"""
      if this argument is given, the values in the split definition (e.g. my_kpoints)
      are used to put the data in the destination file in a bigger array at the right
@@ -442,48 +442,115 @@ etsf_subs_doc_args = {
 }
 
 etsf_subs_doc_desc = {
-  "*-get":"""
-    """,
-  "*-put":"""
-    """,
-  "*-def":"""
-    """,
-  "*-copy":"""
-    """,
-  "*-get":"""
-    """,
-  "dims-merge":"""
-    """,
-  "dims-trace":"""
-    """,
-  "split-allocate":"""
-    """,
-  "split-copy":"""
-    """,
-  "split-def":"""
-    """,
-  "split-free":"""
-    """,
-  "split-get":"""
-    """,
-  "split-init":"""
-    """,
-  "split-merge":"""
-    """,
-  "split-put":"""
-    """,
-  "vars-free":"""
-    """,
-  "data-contents":"""
-    """,
-  "data-copy":"""
-    """,
-  "data-get":"""
-    """,
-  "data-init":"""
-    """,
-  "data-read":"""
-    """,
-  "data-write":"""
-    """,
+  "*_get":"""
+    Read an opened ETSF file to get data related to the given group.
+    Only associated pointers of argument @folder will be accessed. If any accessed
+    variable is missing, this routine returns an error (usually an access_mode_id
+    of argument error_data set to ERROR_MODE_INQ). Any other errors implies a
+    return with @lstat = .false..""",
+  "*_put":"""
+    Write data related to the given group in an opened ETSF file (it must be in
+    write mode, use etsf_io_low_set_write_mode() to change it).
+    Only associated pointers of argument @folder will be accessed. If any errors
+    occurs it returns with @lstat = .false..""",
+  "*_def":"""
+    The given ETSF file must be opened and in define state (see
+    etsf_io_low_set_define_mode() to change it). Then, all variable of the group
+    are defined.
+
+    One can specify which variable may be splitted using the optional argument
+    @split. For each associated array in this structure, variable with appropriated
+    dimensions will use my_<something> instead of <something>.""",
+  "*_copy":"""
+    This routine copy all variable of a group from one file @ncid_from to another
+    @ncid_to. If a variable is missing in the source file, this does not raise an
+    error, it is simply skipped. But if a variable in the destination file is not
+    defined, this will raise an error.
+
+    The copy is done per variable. This means that memory occupation is reduced
+    during the copy.
+
+    Normally, copies are pristine copies. But if optional argument @split is
+    given, then the read values are copied to the specified locations in split
+    arrays. In that case, the destination variable must have a compatible definition
+    with the split values.""",
+  "dims_merge":"""
+    It is a checking routine. For all variable, it checks that values are the same
+    in source and destination. For my_<something> variables, if values are different
+    then output value is the sum of previous value and input value. This is useful
+    when the dimensions have split definition. In that case, merging all input file
+    dimensions will check classical dimensions and sum all split dimensions. At
+    the end, if my_<something> is equal to <something> then the merging of the
+    files will end up in suppressing the split for the <something> variable. In
+    the other case (my_<something> < <something>), the resulting merge file
+    will still have a split dimension <something> but with more values.""",
+  "dims_trace":"""
+    Output for each variable its value. Essentially used for debugging.""",
+  "dims_get":"""
+    Read the dimensions from an ETSF file. If one dimension is not found,
+    its value is put to etsf_no_dimension (see ETSF_IO_CONSTANTS).""",
+  "dims_def":"""
+    Create dimensions and set their values. For normal dimensions, their are defined
+    if their values are different from etsf_no_dimension (see ETSF_IO_CONSTANTS).
+    For split dimensions (my_<something>), they are defined only if they are
+    different from etsf_no_dimension or from the value of dimension <something>.""",
+  "split_allocate":"""
+    Allocate internal pointers of structure etsf_split given the dimensions
+    in @dims. The split arrays are allocated only if the associated dimensions
+    are different from etsf_no_dimension (see ETSF_IO_CONSTANTS) and from
+    the associated full dimension. To free a split structure, use
+    etsf_io_split_free().""",
+  "split_copy":"""
+    As for etsf_io_electrons_copy() for instance, it copy all values from split
+    definitions of file @ncid_from to file @ncid_to. Arrays are copied only if
+    their dimensions are neither etsf_no_dimension (see ETSF_IO_CONSTANTS) nor
+    the associated full dimension value. The arrays in @ncid_to must already be
+    defined, use etsf_io_split_def() to do it.""",
+  "split_def":"""
+    Create arrays for split definitions. They are defined only if their
+    dimensions (my_<something>) are different from etsf_no_dimension (see
+    ETSF_IO_CONSTANTS) or from the value of dimension <something>.""",
+  "split_free":"""
+    Deallocate a split defintions, previously allocated with
+    etsf_io_split_allocate().""",
+  "split_get":"""
+    Read the split defintions from a file. Only associated pointers from the
+    @split structure will be read.""",
+  "split_init":"""
+    This routine is used to set the dimensions from a split defintion. It
+    copies to @dims%my_<something> the size of associated arrays in
+    @split_definition.""",
+  "split_merge":"""
+    This is a complex routine that create a larger split definition (@output_split)
+    from an input split definition (@split). For each associated array in @split,
+    it copies all values of this array into the corresponding array in @output_split.
+    The position in the corresponding array is the first unused index (i.e. with a
+    negative value).
+
+    The input @split definition is then modified to reflect the new position of values
+    in @output_split.""",
+  "split_put":"""
+    Simply write the split definition (of associated pointers) to the file.""",
+  "vars_free":"""
+    Free the given variable list.""",
+  "data_contents":"""
+    High-level routine that get informations from a given @filename. Returned values
+    are the list of dimensions, allocated split definitions (if any), flags for
+    main variables (see FLAGS_MAIN) and flags for groups (see FLAGS_GROUPS).
+
+    This routine can also be used to get the comprehensive list of read variables
+    with their definitions (name, shape, dimension names...). Use
+    etsf_io_vars_free() to deallocate this list.""",
+  "data_copy":"""
+    High-level routine that copy all ETSF variables from one file to another.""",
+  "data_get":"""
+    This is a query routine to get informations about a variable when its name
+    is given. It does not interact with any files and is just a Firtran version of
+    the specifications.""",
+  "data_init":"""
+    High-level routine to create an ETSF file.""",
+  "data_read":"""
+    High-level routine to read a lot of ETSF variable at once.""",
+  "data_write":"""
+    High-level routine to write a lot of ETSF variable at once.""",
   }

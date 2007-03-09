@@ -1,0 +1,6 @@
+* add attribute handling in merging files.
+* add split on checks (currently say that file is invalid).
+* add a tutorial on how to create splitted files.
+* add tests for the copy actions (in group API).
+* add tests for exotic actions (in group API).
+* complete the doc/www/utils/binary.html.
