@@ -20,6 +20,7 @@
 	<a class="level2" href="create_a_crystal_den_file_f90.html">Basics of file creation</a>
 	<a class="level2" href="read_write_sub_access_f90.html">Sub-access on k points and spin</a>
 	<a class="level2" href="convert_to_xyz_f90.html">Converter and validity checks</a>
+	<a class="level2" href="MPI_output_of_a_density_f90.html">Use MPI and split capabilities</a>
 	<a href="../utils/binary.html">Binary utility</a>
       </div> <!-- navigation -->
       <div id="content">
@@ -30,6 +31,8 @@
 	<p><a href="read_write_sub_access_f90.html">Second tutorial</a> introduces the group level routines and explain how to access only sub part of arrays. This sub access is possible when one array has a dimension on spin or k points. Then one can access data for one k point or spin at a time. This is controlled by some attributes in the concerned groups, called <code>&lt;short_var_name&gt;__[spin|kpoint]_access</code>. In this tutorial a wave-function file is created and the coefficients of wave-functions are written for one k point at a time.</p>
 	<h1>Tutorial 3 - a converter tool, usage of validity checks</h1>
 	<p><a href="convert_to_xyz_f90.html">Third tutorial</a> shows how to use high level modules <a href="../utils/etsf_io_file_f90.html">etsf_io_file</a> and <a href="../utils/etsf_io_tools_f90.html">etsf_io_tools</a> to check the conformance of an input ETSF file on cristalographic specifications and then to read atomic coordinates and names to create a simple XYZ file.</p>
+	<h1>Tutorial 4 - how to use split capabilities in conjonction with MPI?</h1>
+	<p><a href="MPI_output_of_a_density_f90.html">Fourth tutorial</a> shows how to use the split definitions as defined in the specifications to handle MPI computations. This is possible with the help of the <a href="../group_level/etsf_io_f90.html#robo107">etsf_split</a> structure. This tutorial create a density file with a paralelisation on z planes. Each process compute a gaussian in its own z planes and create an ETSF file with a split on <em>number_of_grid_points_vector3</em>. Thanks to <a href="../utils/binary.html"><code>etsf_io</code></a> the created files can be then gathered into one unique file.</p>
       </div>
       <div id="footer">
 	<p>Manually maintained file, last edition 2007-03-08 by Damien Caliste.</p>

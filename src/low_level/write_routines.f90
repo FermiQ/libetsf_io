@@ -419,6 +419,12 @@
     type(etsf_io_low_var_infos) :: var_infos
     integer :: s, varid
 
+    ! We put a default value.
+    if (present(ncvarid)) then
+      ncvarid = -1
+    end if
+    lstat = .false.
+
     ! Check if dimension already exists.
     call etsf_io_low_read_var_infos(ncid, varname, var_infos, lstat)
     if (lstat) then
@@ -473,7 +479,12 @@
     integer, allocatable :: ncdims(:, :)
     logical :: stat
 
+    ! We put a default value.
+    if (present(ncvarid)) then
+      ncvarid = -1
+    end if
     lstat = .false.
+
     ! The dimension are given by their names, we must first fetch them.
     ndims = size(vardims)
     allocate(ncdims(0:1, 1:ndims))

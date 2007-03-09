@@ -24,6 +24,7 @@
     <a class="level2" href="tutorials/create_a_crystal_den_file_f90.html">Basics of file creation</a>
     <a class="level2" href="tutorials/read_write_sub_access_f90.html">Sub-access on k points and spin</a>
     <a class="level2" href="tutorials/convert_to_xyz_f90.html">Converter and validity checks</a>
+    <a class="level2" href="tutorials/MPI_output_of_a_density_f90.html">Use MPI and split capabilities</a>
     <a href="utils/binary.html">Binary utility</a>
     <a class="level2" href="utils/binary.html#merge">Merge files</a>
     <a class="level2" href="utils/binary.html#content">Scan file contents</a>
@@ -50,10 +51,11 @@
     <div class="warning">Beware that the library built on that module includes the etsf_io_low_level module. This means that linking with <code>libetsf_io.a</code> implies linking with etsf_io_low_level.</div>
     <p>This module is the core of ETSF_IO. All variables from the specifications have been gathered into structured called <em>group</em> (see the etsf_groups <a href="group_level/etsf_io_f90.html#robo7">page</a> and related ones).</p>
     <p>For each group, one can define a file with these variables using methods with a name like <code>etsf_io_&lt;group_name&gt;_def()</code>. This will alocate the disk space required to store all the variables of the group. Then, to write data, methods called <code>etsf_io_&lt;group_name&gt;_put()</code> are available. For reading actions, the routines are suffixed with get instead of put. To access several groups at one time a high level routine has been created and is called <code>etsf_io_data_&lt;action&gt;</code>.</p>
-    <p>There are two tutorials to learn how to use this module:</p>
+    <p>There are three tutorials to learn how to use this module:</p>
     <ul>
-      <li><a href="tutorials/create_a_crystal_den_file_f90.html">First tutorial</a> is intended to explain the basics and the philosophy of this library. It details the first steps required to create a density file, using high level routines (<code>etsf_io_data_&lt;action&gt;</code>). It shows how to use the pointers and the unformatted ones (used to map any shape arrays between the ETSF definition and the main program memory).</li>
-      <li><a href="tutorials/read_write_sub_access_f90.html">Second tutorial</a> introduced the group level routines and explain how to access only sub part of arrays. This sub access is possible when one array has a dimension on spin or k points. Then one can access data for one k point or spin at a time. This is controlled by some attributes in the concerned groups, called <code>&lt;short_var_name&gt;__[spin|kpoint]_access</code>. In this tutorial a wave-function file is created and the coefficients of wave-functions are written for one k point at a time.</li>
+      <li><a href="tutorials/create_a_crystal_den_file_f90.html">Tutorial 1</a> is intended to explain the basics and the philosophy of this library. It details the first steps required to create a density file, using high level routines (<code>etsf_io_data_&lt;action&gt;</code>). It shows how to use the pointers and the unformatted ones (used to map any shape arrays between the ETSF definition and the main program memory).</li>
+      <li><a href="tutorials/read_write_sub_access_f90.html">Tutorial 2</a> introduced the group level routines and explain how to access only sub part of arrays. This sub access is possible when one array has a dimension on spin or k points. Then one can access data for one k point or spin at a time. This is controlled by some attributes in the concerned groups, called <code>&lt;short_var_name&gt;__[spin|kpoint]_access</code>. In this tutorial a wave-function file is created and the coefficients of wave-functions are written for one k point at a time.</li>
+      <li><a href="tutorials/MPI_output_of_a_density_f90.html">Tutorial 4</a> shows how to use the split definitions as defined in the specifications to handle MPI computations. This tutorial create a density file with a paralelisation on z planes.</li>
     </ul>
     <h3>etsf_io_file &amp; etsf_io_tools (<em>libetsf_io_utils.a</em>)</h3>
     <p>This library contains two modules, <code>etsf_io_file</code> which is dedicated to high level actions on ETSF files (merge, check...) and <code>etsf_io_tools</code> which implements some not mandatory routines but convenient to handle data from ETSF files (get element names...).</p>
@@ -66,7 +68,7 @@
     <p><b>etsf_io_tools</b> is a not mandatory high level module. TODO write something here.</p>
     <p>There is one tutorial to illustrate usage of these modules:</p>
     <ul>
-      <li><a href="convert_to_xyz_f90.html">Third tutorial</a> shows how to use high level modules <a href="../utils/etsf_io_file_f90.html">etsf_io_file</a> and <a href="../utils/etsf_io_tools_f90.html">etsf_io_tools</a> to check the conformance of an input ETSF file on cristalographic specifications and then to read atomic coordinates and names to create a simple XYZ file.</li>
+      <li><a href="convert_to_xyz_f90.html">Tutorial 3</a> shows how to use high level modules <a href="../utils/etsf_io_file_f90.html">etsf_io_file</a> and <a href="../utils/etsf_io_tools_f90.html">etsf_io_tools</a> to check the conformance of an input ETSF file on cristalographic specifications and then to read atomic coordinates and names to create a simple XYZ file.</li>
     </ul>
     <h2>Attributes</h2>
     <p>The support for attributes as defined in the specifications is transparent for the user of the library:</p>

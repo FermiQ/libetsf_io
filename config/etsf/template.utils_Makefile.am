@@ -33,4 +33,4 @@ etsf_io_file.o: libetsf_io.a \
 
 etsf_io_tools.o: libetsf_io.a
 
-etsf_io.o: libetsf_io_file.a
+etsf_io.o: libetsf_io_utils.a

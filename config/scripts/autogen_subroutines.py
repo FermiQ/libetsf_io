@@ -738,23 +738,30 @@ end if
       buf_kdep += indent_code(buf, 1)
       buf_kdep += "end if\n"
       buf = buf_kdep
-  buf += "if (.not. lstat) return\n"
+  buf += "! We raise don't raise an error if a dimension is missing.\n"
+  buf += "if (.not. lstat .and. (error_data%access_mode_id /= ERROR_MODE_INQ .or. &\n"
+  buf += "  & error_data%target_type_id /= ERROR_TYPE_DID)) return\n"
   # Handle attributes of the variable
-  if (att_units):
-      buf += code_attribute_units("write", "\"atomic units\"", "1.0d0", "ivar")
-  if (att_kdep or var == "reduced_coordinates_of_plane_waves"):
-      buf += code_attribute_kdep("write", "ivar")
-  if (att_symm):
-      buf += code_attribute_symm("write", "ivar", "\"yes\"")
+  if (att_units or att_kdep or var == "reduced_coordinates_of_plane_waves" or att_symm):
+    buf += "if (ivar >= 0) then\n"
+    if (att_units):
+      buf += indent_code(code_attribute_units("write", "\"atomic units\"", "1.0d0", "ivar"), 1)
+    if (att_kdep or var == "reduced_coordinates_of_plane_waves"):
+      buf += indent_code(code_attribute_kdep("write", "ivar"), 1)
+    if (att_symm):
+      buf += indent_code(code_attribute_symm("write", "ivar", "\"yes\""), 1)
+    buf += "end if\n"
 
   # Print the variable definition        
   if (group == "main"):
-      ret += "if (iand(mains, etsf_main_%s) /= 0) then\n" % var_shortname(var)
-      ret += indent_code(buf, 1)
-      ret += "end if\n"
+    ret += "if (iand(mains, etsf_main_%s) /= 0) then\n" % var_shortname(var)
+    ret += indent_code(buf, 1)
+    ret += "end if\n"
   else:
-      ret += buf
+    ret += buf
 
+ ret += "! If we reach the end, then it should be OK.\n"
+ ret += "lstat = .true.\n"
  return ret
 
 def code_split_write(dims, var, var_fortran, var_splitted, var_unformatted, string_len, var_span):

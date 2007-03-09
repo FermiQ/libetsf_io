@@ -3,6 +3,8 @@ vpath %.a $(top_builddir)/src/group_level \
 
 AM_FCFLAGS = -I@NETCDF_CFLAGS@ -I$(top_builddir)/src/low_level -I$(top_builddir)/src/group_level -I$(top_builddir)/src/utils
 
+EXTRA_DIST = MPI_output_of_a_density.f90
+
 noinst_PROGRAMS = create_a_crystal_den_file \
 	read_write_sub_access \
 	convert_to_xyz

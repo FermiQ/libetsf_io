@@ -456,7 +456,9 @@ etsf_subs_doc_desc = {
   "*_def":"""
     The given ETSF file must be opened and in define state (see
     etsf_io_low_set_define_mode() to change it). Then, all variable of the group
-    are defined.
+    are defined. All required dimensions must have already defined (see
+    etsf_io_dims_def(). If some dimensions are missing, then the variable
+    is not defined and no error are generated.
 
     One can specify which variable may be splitted using the optional argument
     @split. For each associated array in this structure, variable with appropriated
