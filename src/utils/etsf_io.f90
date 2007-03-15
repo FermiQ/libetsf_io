@@ -107,7 +107,6 @@ program etsf_io_ploumploum
         call etsf_io_low_error_handle(error)
         stop
      end if
-     write(*,"(A)") "It contents:"
      do i = 1, etsf_nspecs_data, 1
         if (iand(read_flags, 2 ** (i - 1)) /= 0) then
            write(*,"(3A)") " - Ok - ", trim(etsf_specs_names(i)), "."

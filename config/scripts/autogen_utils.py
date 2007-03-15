@@ -53,11 +53,8 @@ def code_check_var(varname, condname):
   return ret
 
 # Create subroutine to test each specification.
-def code_check_spec(id, mandatory, optional):
+def code_check_spec(mandatory, optional):
   ret  = ""
-  # Flag to store last read condition variable to
-  # avoid multiple read actions.
-  condvariable = None
   for (type, value) in mandatory:
     if (type == "var"):
       # We check this existence and definition of this variable.
@@ -89,19 +86,27 @@ def code_check_spec(id, mandatory, optional):
     elif (type == "cond"):
       # We test the existence to this variable depending on the value
       # of another variable.
-      ret += "! Check this variables depends on the value of another.\n"
-      if (condvariable is None or condvariable != value[1]):
-        ret += "! Read the condition value.\n"
-        ret += "call etsf_io_low_read_var(ncid, \"%s\", string_value, etsf_charlen, &\n" % value[1]
-        ret += "                        & lstat, error_data = error_data)\n"
-        ret += "if (.not. lstat) return\n"
-        ret += "call strip(string_value)\n"
-        condvariable = value[1]
-      else:
-        ret += "! Same condition variable, skip read action.\n"
-      ret += "if (trim(string_value) == \"%s\") then\n" % value[2]
-      ret += indent_code(code_check_var(value[0], "lstat"), 1)
-      ret += "  if (.not. lstat) return\n"
+      ret += "! Check these variables depends on the value of another.\n"
+      ret += "! Read the condition value.\n"
+      ret += "call etsf_io_low_read_var(ncid, \"%s\", string_value, etsf_charlen, &\n" % value[0]
+      ret += "                        & lstat, error_data = error_data)\n"
+      ret += "if (.not. lstat) return\n"
+      ret += "call strip(string_value)\n"
+      first = True
+      for key in value[1].keys():
+        if (first):
+          ret += "if (trim(string_value) == \"%s\") then\n" % key
+          first = False
+        else:
+          ret += "else if (trim(string_value) == \"%s\") then\n" % key
+        ret += indent_code(code_check_spec(value[1][key], []), 1)
+      ret += "else\n"
+      ret += "  call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, &\n"
+      ret += "                           & ERROR_TYPE_ARG, me, &\n"
+      ret += "                           & tgtname = \"%s\", &\n" % value[0]
+      ret += "                           & errmess = \"Empty or unknown value '\"//trim(string_value)//\"'.\")\n"
+      ret += "  lstat = .false.\n"
+      ret += "  return\n"
       ret += "end if\n"
   return ret
 
@@ -165,7 +170,7 @@ for (id, (mandatory, optional)) in etsf_specifications_files.items():
   makefile_list += "\tetsf_io_file_check_%s.f90 \\\n" % id
   include_list  += "  include \"etsf_io_file_check_%s.f90\"\n" % id
   public_list   += "  public :: etsf_io_file_check_%s\n" % id
-  str_check = indent_code(code_check_spec(id, mandatory, optional), 1)
+  str_check = indent_code(code_check_spec(mandatory, optional), 1)
   ret = file("config/etsf/template.utils_check.f90", "r").read()
   ret = re.sub("@SPEC_NAME@", id, ret)
   ret = re.sub("@CODE@", str_check, ret)
