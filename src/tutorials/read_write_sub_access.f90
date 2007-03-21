@@ -39,7 +39,7 @@ program read_write_sub_access
 !!
 !!  In the beginning of this tutorial, we define an ETSF file with 2 kpoints. This
 !!  file will contain the kpoints group (etsf_kpoints), the group of wave data
-!!  (etsf_wavedata) and the main group (etsf_main) with only
+!!  (etsf_basisdata) and the main group (etsf_main) with only
 !!  the coefficient_of_wavefunctions array.
 !!
 !!  As shown in the first tutorial (create_a_crystal_den_file), the classical
@@ -51,7 +51,7 @@ program read_write_sub_access
   ! Specific variables required by the library
   type(etsf_dims)         :: dims
   type(etsf_kpoints)      :: kpoints
-  type(etsf_wavedata)     :: wavedata
+  type(etsf_basisdata)    :: basisdata
   type(etsf_main)         :: main
   
 !! NOTES
@@ -66,7 +66,7 @@ program read_write_sub_access
 !! SOURCE
   ! Variables that are declared in the main program in a real case
   double precision, allocatable, target :: coef_pw_k(:, :)
-  ! Variables that will be used in the wavedata group.
+  ! Variables that will be used in the basisdata group.
   integer, allocatable, target          :: number_of_coefficients(:)
   integer, allocatable, target          :: red_coord_pw_k(:, :)
   ! Variables that will be used in the kpoints group.
@@ -93,7 +93,7 @@ program read_write_sub_access
 !!
 !! SOURCE
   call etsf_io_data_init("read_write_sub_access.nc", etsf_main_wfs_pw, &
-                       & etsf_grp_kpoints + etsf_grp_wavedata + etsf_grp_main, dims, &
+                       & etsf_grp_kpoints + etsf_grp_basisdata + etsf_grp_main, dims, &
                        & "Tutorial ETSF_IO, use sub access to read or write", &
                        & "Created by the tutorial example of the library", &
                        & lstat, error_data)
@@ -171,8 +171,8 @@ program read_write_sub_access
      ! We set the sub access.
      main%wfs_pw__kpoint_access = i_kpt
      ! Idem for the reduced coordinates of coefficients.
-     wavedata%reduced_coordinates_of_plane_waves%data2D => red_coord_pw_k
-     wavedata%red_coord_pw__kpoint_access = i_kpt
+     basisdata%reduced_coordinates_of_plane_waves%data2D => red_coord_pw_k
+     basisdata%red_coord_pw__kpoint_access = i_kpt
 
 !! NOTES
 !!  Now that all the arrays we want to write are associated, we can call the write
@@ -185,7 +185,7 @@ program read_write_sub_access
         call etsf_io_low_error_handle(error_data)
         stop
      end if
-     call etsf_io_wavedata_put(ncid, wavedata, lstat, error_data)
+     call etsf_io_basisdata_put(ncid, basisdata, lstat, error_data)
      if (.not. lstat) then
         call etsf_io_low_error_handle(error_data)
         stop
@@ -205,15 +205,15 @@ program read_write_sub_access
   ! We set the associations.
   kpoints%reduced_coordinates_of_kpoints => red_coord_kpt
   kpoints%kpoint_weights => kpoint_weights
-  wavedata%reduced_coordinates_of_plane_waves%data2D => null()
-  wavedata%number_of_coefficients => number_of_coefficients
+  basisdata%reduced_coordinates_of_plane_waves%data2D => null()
+  basisdata%number_of_coefficients => number_of_coefficients
   ! We call the group level write routines.
   call etsf_io_kpoints_put(ncid, kpoints, lstat, error_data)
   if (.not. lstat) then
      call etsf_io_low_error_handle(error_data)
      stop
   end if
-  call etsf_io_wavedata_put(ncid, wavedata, lstat, error_data)
+  call etsf_io_basisdata_put(ncid, basisdata, lstat, error_data)
   if (.not. lstat) then
      call etsf_io_low_error_handle(error_data)
      stop

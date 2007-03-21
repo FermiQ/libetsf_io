@@ -152,7 +152,7 @@ module etsf_io
   !!
   !! FUNCTION
   !!  This structure is a container for all available groups defined in the specifications.
-  !!  To use this structure, create a group (instanciating a #etsf_wavedata or a
+  !!  To use this structure, create a group (instanciating a #etsf_basisdata or a
   !!  #etsf_geometry), and associate this group to its pointer:
   !!   type(etsf_geometry) :: geometry_data
   !!   type(etsf_groups)   :: my_groups

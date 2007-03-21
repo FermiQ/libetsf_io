@@ -352,7 +352,7 @@ etsf_groups = {
       "monkhorst_pack_folding",
       "reduced_coordinates_of_kpoints",
       "kpoint_weights"],
-   "wavedata":[
+   "basisdata":[
       "basis_set",
       "kinetic_energy_cutoff",
       "number_of_coefficients",
@@ -375,7 +375,7 @@ etsf_group_list = [
    "geometry",
    "electrons",
    "kpoints",
-   "wavedata",
+   "basisdata",
    "gwdata",
    "main"]
 
