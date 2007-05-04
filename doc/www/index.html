@@ -25,6 +25,7 @@
     <a class="level2" href="tutorials/read_write_sub_access_f90.html">Sub-access on k points and spin</a>
     <a class="level2" href="tutorials/convert_to_xyz_f90.html">Converter and validity checks</a>
     <a class="level2" href="tutorials/MPI_output_of_a_density_f90.html">Use MPI and split capabilities</a>
+    <a class="level2" href="tutorials/mix_ETSF_and_non_ETSF_f90.html">Mix ETSF and non-ETSF variables</a>
     <a href="utils/binary.html">Binary utility</a>
     <a class="level2" href="utils/binary.html#merge">Merge files</a>
     <a class="level2" href="utils/binary.html#content">Scan file contents</a>
@@ -45,7 +46,9 @@
     <p>ETSF_IO is shipped with several libraries. These libraries gives from low-level access to high-level routines on ETSF files. Each library contains one or several modules, as described below.</p>
     <h3>etsf_io_low_level (<em>libetsf_io_low_level.a</em>)</h3>
     <p>The library is made of one unique module. This is a wrapper around NetCDF calls to be able to do in one call what requires several NetCDF calls, such as get the id of a variable, check its shape and dimensions definition and read it. This module is not specific to the ETSF specifications and can be used as a stand-alone library to easily handle NetCDF files.</p>
-    <p>It has no dedicated tutorials.</p>
+    <ul>
+      <li><a href="tutorials/mix_ETSF_and_non_ETSF_f90.html">Tutorial 5</a> is not focus on the low level API but it uses it in several areas. This tutorial shows how to write an ETSF file with additional non-ETSF variables. These variables are defined and written directly by using the low level API.</li>
+    </ul>
     <h3>etsf_io (<em>libetsf_io.a</em>)</h3>
     <p>It is also made of one unique module, called <code>etsf_io</code>, containing specific routines to the ETSF specifications.</p>
     <div class="warning">Beware that the library built on that module includes the etsf_io_low_level module. This means that linking with <code>libetsf_io.a</code> implies linking with etsf_io_low_level.</div>
@@ -56,6 +59,7 @@
       <li><a href="tutorials/create_a_crystal_den_file_f90.html">Tutorial 1</a> is intended to explain the basics and the philosophy of this library. It details the first steps required to create a density file, using high level routines (<code>etsf_io_data_&lt;action&gt;</code>). It shows how to use the pointers and the unformatted ones (used to map any shape arrays between the ETSF definition and the main program memory).</li>
       <li><a href="tutorials/read_write_sub_access_f90.html">Tutorial 2</a> introduced the group level routines and explain how to access only sub part of arrays. This sub access is possible when one array has a dimension on spin or k points. Then one can access data for one k point or spin at a time. This is controlled by some attributes in the concerned groups, called <code>&lt;short_var_name&gt;__[spin|kpoint]_access</code>. In this tutorial a wave-function file is created and the coefficients of wave-functions are written for one k point at a time.</li>
       <li><a href="tutorials/MPI_output_of_a_density_f90.html">Tutorial 4</a> shows how to use the split definitions as defined in the specifications to handle MPI computations. This tutorial create a density file with a paralelisation on z planes.</li>
+      <li><a href="tutorials/mix_ETSF_and_non_ETSF_f90.html">Tutorial 5</a> shows how to use the etsf_io_<group>_put() methods in the context of a concurrent list of ETSF and non-ETSF variables.</li>
     </ul>
     <h3>etsf_io_file &amp; etsf_io_tools (<em>libetsf_io_utils.a</em>)</h3>
     <p>This library contains two modules, <code>etsf_io_file</code> which is dedicated to high level actions on ETSF files (merge, check...) and <code>etsf_io_tools</code> which implements some not mandatory routines but convenient to handle data from ETSF files (get element names...).</p>
@@ -79,7 +83,7 @@
     </ul>
   </div> <!-- content -->
   <div id="footer">
-  <p>Manually maintained file, last edition 2007-03-08 by Damien Caliste.</p>
+  <p>Manually maintained file, last edition 2007-05-04 by Damien Caliste.</p>
   </div> <!-- footer -->
 </body>
 </html>

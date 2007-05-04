@@ -1,4 +1,3 @@
-* add a tutorial on reading both ETSF and non-ETSF variables.
 * add attribute handling in merging files.
 * add split on checks (currently say that file is invalid).
 * add tests for the copy actions (in group API).
