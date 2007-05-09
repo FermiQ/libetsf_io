@@ -1,3 +1,8 @@
+* Fri May 04 2007 Damien Caliste <damien.caliste@cea.fr> 0.9
+- add a tutorial on the creation of non-ETSF variables, concurrently with ETSF
+  ones.
+- change the name of the wavedata group to basisdata for a better consistency.
+	
 * Fri Mar 09 2007 Damien Caliste <damien.caliste@cea.fr> 0.8
 - add two more tutorials, one on the split usage and one on the high level routines.
 - improve the documentation, especially the non robodoc pages.
@@ -6,7 +11,7 @@
 - create a high level routine to get the names of chemical species following the
   recommendations in the specifications.
 - add two more actions to the etsf_io tool: the content and the check actions.
-- fix some bugs in the buid system and in the low level part.
+- fix some bugs in the build system and in the low level part.
 	
 * Wed Jan 17 2007 Damien Caliste <damien.caliste@cea.fr> 0.7
 - add a new Fortran type to store the split definitions (e.g. my_kpoints...). This
