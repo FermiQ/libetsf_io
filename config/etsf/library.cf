@@ -221,6 +221,8 @@ etsf_subs_copy_args = {
       "lstat logical out",
       "error_data type(etsf_io_low_error) out",
       "split type(etsf_split) in optional",
+      "varids(:,:) integer,allocatable local",
+      "nvarids integer local",
       "start(:) integer,allocatable local",
       "count(:) integer,allocatable local",
       "len integer local",

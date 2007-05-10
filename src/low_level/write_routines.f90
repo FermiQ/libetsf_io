@@ -535,6 +535,99 @@
     end if    
     lstat = .true.
   end subroutine etsf_io_low_def_var_nD
+
+  !!****m* etsf_io_low_write_group/etsf_io_low_copy_all_att
+  !! NAME
+  !!  etsf_io_low_copy_all_att
+  !!
+  !! FUNCTION
+  !!  Copy all attributes from the given variable of the given file to an other
+  !!  variable (of a different file, but not necessary). The variable ids from and to
+  !!  can be either valid variables or etsf_io_low_global_att.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
+  !!
+  !! INPUTS
+  !!  * ncid_from = a NetCDF handler, opened with read access.
+  !!  * ncid_to = a NetCDF handler, opened with write access.
+  !!  * ncvarid_from = a NetCDF variable id with attributes to copy.
+  !!  * ncvarid_to = a NetCDF variable id to copy the attributes to.
+  !!
+  !! OUTPUT
+  !!  * lstat = .true. if the file has been read without error.
+  !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!
+  !!
+  !! SOURCE
+  subroutine etsf_io_low_copy_all_att(ncid_from, ncid_to, ncvarid_from, &
+       & ncvarid_to, lstat, error_data)
+    integer, intent(in)                            :: ncid_from, ncid_to
+    integer, intent(in)                            :: ncvarid_from, ncvarid_to
+    logical, intent(out)                           :: lstat
+    type(etsf_io_low_error), intent(out), optional :: error_data
+
+    character(len = *), parameter :: me = "etsf_io_low_copy_all_att"
+    type(etsf_io_low_var_infos) :: var_infos
+    integer :: i, s, n
+    character(len = NF90_MAX_NAME) :: ncname    
+
+    lstat = .true.
+    if (ncvarid_from /= etsf_io_low_global_att) then
+       call read_var_infos_id(ncid_from, ncvarid_from, var_infos, lstat, &
+            & error_data = error_data, dim_name = .false., att_name = .true.)
+       if (.not. lstat) return
+    else
+       s = nf90_inquire(ncid_from, nAttributes = n)
+       if (s /= nf90_noerr) then
+          if (present(error_data)) then
+             call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_ATT, &
+                  & me, tgtname = "global attributes", errid = s, &
+                  & errmess = nf90_strerror(s))
+          end if
+          lstat = .false.
+          return
+       end if
+       if (n > 0) then
+          allocate(var_infos%ncattnames(1:n))
+          do i = 1, n, 1
+             s = nf90_inq_attname(ncid_from, etsf_io_low_global_att, i, ncname)
+             if (s /= nf90_noerr) then
+                if (present(error_data)) then
+                   call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, &
+                        & ERROR_TYPE_ATT, me, tgtid = i, errid = s, &
+                        & errmess = nf90_strerror(s))
+                end if
+                call etsf_io_low_free_var_infos(var_infos)
+                lstat = .false.
+                return
+             end if
+             write(var_infos%ncattnames(i), "(A)") ncname(1:min(80, len(ncname)))
+          end do
+       end if
+    end if
+
+    if (associated(var_infos%ncattnames)) then
+       do i = 1, size(var_infos%ncattnames, 1), 1
+          s = nf90_copy_att(ncid_from, ncvarid_from, trim(var_infos%ncattnames(i)), &
+               & ncid_to, ncvarid_to)
+          if (s /= nf90_noerr) then
+             if (present(error_data)) then
+                call etsf_io_low_error_set(error_data, ERROR_MODE_COPY, ERROR_TYPE_ATT, &
+                     & me, tgtname = trim(var_infos%ncattnames(i)), errid = s, &
+                     & errmess = nf90_strerror(s))
+             end if
+             lstat = .false.
+             exit
+          end if
+       end do
+    end if
+    call etsf_io_low_free_var_infos(var_infos)
+  end subroutine etsf_io_low_copy_all_att
+  !!***
   
   ! Generic routine, documented in the module file.
   subroutine write_var_double_var(ncid, varname, var, lstat, &

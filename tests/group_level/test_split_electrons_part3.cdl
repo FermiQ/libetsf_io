@@ -27,8 +27,8 @@ variables:
 	char exchange_functional(character_string_length) ;
 	char correlation_functional(character_string_length) ;
 	double fermi_energy ;
-		fermi_energy:units = "atomic units" ;
-		fermi_energy:scale_to_atomic_units = 1. ;
+		fermi_energy:units = "Klingon units" ;
+		fermi_energy:scale_to_atomic_units = 0.123 ;
 	char smearing_scheme(character_string_length) ;
 	double smearing_width ;
 		smearing_width:units = "atomic units" ;

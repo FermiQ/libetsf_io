@@ -152,7 +152,62 @@ contains
       lstat = .false.
     end if
     call tests_read_status(" | checking dimension values", lstat, error)
-    
+
+    call etsf_io_low_read_var_infos(ncid, "atom_species_names", var_infos, lstat, &
+         & error_data = error, dim_name = .true., att_name = .false.)
+    call tests_read_status("argument varname: with dim names", lstat, error)
+    write(error%target_name, "(A)") "atom_species_names"
+    if (.not. associated(var_infos%ncdimnames)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "dim array not associated"
+      lstat = .false.
+    end if
+    call tests_read_status(" | checking dim array association", lstat, error)
+    if (.not. (size(var_infos%ncdimnames, 1) == 2)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong dim array size"
+      lstat = .false.
+    end if
+    call tests_read_status(" | checking dim array size", lstat, error)
+    if (.not. (trim(var_infos%ncdimnames(1)) == "number_of_atom_species") .and. &
+         & .not. (trim(var_infos%ncdimnames(1)) == "character_string_length")) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong dim array names"
+      lstat = .false.
+    end if
+    call tests_read_status(" | checking dim array names", lstat, error)
+    call etsf_io_low_free_var_infos(var_infos)
+
+    call etsf_io_low_read_var_infos(ncid, "atom_species_names", var_infos, lstat, &
+         & error_data = error, dim_name = .false., att_name = .true.)
+    call tests_read_status("argument varname: with att names", lstat, error)
+    write(error%target_name, "(A)") "atom_species_names"
+    if (.not. associated(var_infos%ncattnames)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "att array not associated"
+      lstat = .false.
+    end if
+    call tests_read_status(" | checking att array association", lstat, error)
+    if (.not. (size(var_infos%ncattnames, 1) == 1)) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong att array size"
+      lstat = .false.
+    end if
+    call tests_read_status(" | checking att array size", lstat, error)
+    if (.not. (trim(var_infos%ncattnames(1)) == "units")) then
+      error%access_mode_id = ERROR_MODE_SPEC
+      error%target_type_id = ERROR_TYPE_ATT
+      error%error_message = "wrong att array names"
+      lstat = .false.
+    end if
+    call tests_read_status(" | checking att array names", lstat, error)
+    call etsf_io_low_free_var_infos(var_infos)
+
     call etsf_io_low_close(ncid, lstat)
     
     write(*,*) 
@@ -189,7 +244,6 @@ contains
     var_to%ncshape = 2
     var_from%ncdims(1:4) = (/ 3, 3, 3, 2 /)
     var_to%ncdims(1:2) = (/ 25, 3 /)
-    write(*,*) "----------->"
     call etsf_io_low_check_var(var_from, var_to, (/ 1, 1, 1, 1 /), (/ 3, 3, 3, 2 /), &
                              & (/ 1, 3, 9, 27 /), lstat, error_data = error)
     call tests_read_status("field ncshape: uncompatible values", (.not. lstat), error)

@@ -37,14 +37,15 @@ module etsf_io_low_level
     & etsf_io_low_conventions = "http://www.etsf.eu/fileformats/"
 
   ! Error handling
-  integer, parameter, private :: nb_access_mode = 6
+  integer, parameter, private :: nb_access_mode = 7
   character(len = 15), dimension(nb_access_mode), parameter, private :: &
     & etsf_io_low_error_mode = (/ "define         ", &
                                 & "get            ", &
                                 & "input/output   ", &
                                 & "inquire        ", &
                                 & "put            ", &
-                                & "specifications " /)
+                                & "specifications ", &
+                                & "copy           " /)
 
   integer, parameter, private :: nb_target_type = 12
   character(len = 22), dimension(nb_target_type), parameter, private :: &
@@ -208,6 +209,8 @@ module etsf_io_low_level
   !! SYNOPSIS
   !!  * call etsf_io_low_read_att(ncid, ncvarid, attname, attlen, att, lstat, error_data)
   !!  * call etsf_io_low_read_att(ncid, ncvarid, attname, att, lstat, error_data)
+  !!  * call etsf_io_low_read_att(ncid, varname, attname, attlen, att, lstat, error_data)
+  !!  * call etsf_io_low_read_att(ncid, varname, attname, att, lstat, error_data)
   !!
   !! FUNCTION
   !!  This is a generic interface to read values of an attribute (either integer,
@@ -231,6 +234,7 @@ module etsf_io_low_level
   !!              in the case of global attributes, use the constance
   !!              NF90_GLOBAL (when linking against NetCDF) or #etsf_io_low_global_att
   !!              which is a wrapper exported by this module (see #ETSF_IO_LOW_CONSTANTS).
+  !!  * varname = can be used instead of ncvarid to select a variable by its name.
   !!  * attname = a string identifying an attribute.
   !!  * attlen = the size of the array @att (when required).
   !!
@@ -247,7 +251,7 @@ module etsf_io_low_level
   !!
   !!  Get one single real stored in "file_format_version" which is a global attribute:
   !!   real :: version
-  !!   call etsf_io_low_read_att(ncid, "file_format_version", version, lstat)
+  !!   call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "file_format_version", version, lstat)
   !!
   !!***
   !Generic interface of the routines etsf_io_low_read_att
@@ -599,8 +603,8 @@ module etsf_io_low_level
   !!  etsf_io_low_free_var_infos().
   !!
   !! SYNOPSIS
-  !!  * call etsf_io_low_read_var_infos(ncid, varname, var_infos, lstat, error_data, dim_name)
-  !!  * call etsf_io_low_read_var_infos(ncid, varid, var_infos, lstat, error_data, dim_name)
+  !!  * call etsf_io_low_read_var_infos(ncid, varname, var_infos, lstat, error_data, dim_name, att_name)
+  !!  * call etsf_io_low_read_var_infos(ncid, varid, var_infos, lstat, error_data, dim_name, att_name)
   !!
   !! COPYRIGHT
   !!  Copyright (C) 2006
@@ -613,6 +617,9 @@ module etsf_io_low_level
   !!  * varname = a string identifying a variable.
   !!  * varid = a integer identifying a variable.
   !!  * dim_name = (optional) if .true. retrieve the names of the dimensions,
+  !!               and store them in a newly allocated array in the var_infos
+  !!               structure (see etsf_io_low_free_var_infos()).
+  !!  * att_name = (optional) if .true. retrieve the names of the attributes,
   !!               and store them in a newly allocated array in the var_infos
   !!               structure (see etsf_io_low_free_var_infos()).
   !!
@@ -690,6 +697,7 @@ module etsf_io_low_level
   !! SOURCE
   public :: etsf_io_low_def_var
   public :: etsf_io_low_write_att
+  public :: etsf_io_low_copy_all_att
   public :: etsf_io_low_write_dim
   public :: etsf_io_low_write_var
   !!***
@@ -1092,6 +1100,73 @@ contains
        string(i:l) = repeat(" ", l - i + 1)
     end if
   end subroutine strip
+  !!***
+
+  !!****m* etsf_io_low_var_infos/etsf_io_low_free_all_var_infos
+  !! NAME
+  !!  etsf_io_low_free_all_var_infos
+  !!
+  !! FUNCTION
+  !!  This method is used to free all associated memory in an array of
+  !!  #etsf_io_low_var_infos elements. The array is also deallocated.
+  !!  This routine is convenient after a call to etsf_io_low_read_all_var_infos()
+  !!  with the optional argument @with_dim_name set to true.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
+  !!
+  !! SIDE EFFECTS
+  !!  * var_infos_array <type(etsf_io_low_var_infos)> = a pointer on an associated
+  !!    array to be deallocated.
+  !!
+  !! SOURCE
+  subroutine etsf_io_low_free_all_var_infos(var_infos_array)
+    type(etsf_io_low_var_infos), pointer :: var_infos_array(:)
+    
+    integer :: i
+
+    if (associated(var_infos_array)) then
+       do i = 1, size(var_infos_array), 1
+          call etsf_io_low_free_var_infos(var_infos_array(i))
+       end do
+       deallocate(var_infos_array)
+    end if
+  end subroutine etsf_io_low_free_all_var_infos
+  !!***
+
+  !!****m* etsf_io_low_var_infos/etsf_io_low_free_var_infos
+  !! NAME
+  !!  etsf_io_low_free_var_infos
+  !!
+  !! FUNCTION
+  !!  This method free all internal allocated memory of a given #etsf_io_low_var_infos
+  !!  object after use.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006
+  !!  This file is distributed under the terms of the
+  !!  GNU General Public License, see ~abinit/COPYING
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
+  !!
+  !! SIDE EFFECTS
+  !!  * var_infos <type(etsf_io_low_var_infos)> = the type object to be freed.
+  !!
+  !! SOURCE
+  subroutine etsf_io_low_free_var_infos(var_infos)
+    type(etsf_io_low_var_infos), intent(inout) :: var_infos
+    
+    if (associated(var_infos%ncdimnames)) then
+      deallocate(var_infos%ncdimnames)
+    end if
+    var_infos%ncdimnames => null()
+    if (associated(var_infos%ncattnames)) then
+      deallocate(var_infos%ncattnames)
+    end if
+    var_infos%ncattnames => null()
+  end subroutine etsf_io_low_free_var_infos
   !!***
 
   include "read_routines.f90"

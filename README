@@ -3,9 +3,9 @@ README for etsf_io
 
 
 
-	Copyright (C) 2006
+	Copyright (C) 2006-2007
 
-	This file is part of ABINIT.
+	This file is part of ETSF_IO.
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU Lesser General Public License as published by
@@ -30,21 +30,25 @@ NetCDF files are binary files with key-values access, optimized to store
 large volume of data. The ETSF specifications define all key-value pairs that
 are normalized for a file containing informations of an electronic calculation.
 
-This library is available in Fortran90 (and soon in C). It gives two level access
-on files:
+This library is available in Fortran90 (and a coming day in C). It gives three
+level access on files:
 - the low level (see etsf_io_low_level module). It is a generic API to access NetCDF
   files, with less capabilities than the NetCDF API, but with all in one methods and
   dimension checkings. For instance etsf_io_low_read_var will read a var, knowing its
   name, checking that provided dimensions and shape are compatible with the definition
   of the variable in the NetCDF file.
-- the group level (see etsf_io, which is the main part indeed). In the ETSF specifications,
-  variables are gathered by groups. With this API, one to all groups can be read or write
-  at once, giving a complete structure to store data.
+- the group level (see etsf_io, which is the main part indeed). In the ETSF
+  specifications, variables are gathered by groups. With this API, one to all
+  groups can be read or write at once, giving a complete structure to store data.
+- the utility level (see etsf_io_file and etsf_io_tools modules) with incorporated
+  high level handling routines like file merging, validation checkers... There is also
+  here a command line program to access all these utilities.
 
 Please see the files in the doc/www directory for documentation of the API, browsable
-with a web browser. #MUST BE DONE See also the doc/howto directory for indications on how to use
-the library in an other program (link on it, examples of low level access or group level
-access) MUST BE DONE#.
+with a web browser (use doc/www/index.html).
+ #MUST BE DONE See also the doc/howto directory for indications on how to use the
+               library in an other program (link on it, examples of low level access
+               or group level access).
 
 Please see the file COPYING for copying conditions.
 
@@ -54,4 +58,4 @@ The main targets in the top Makefile are:
 - make, to build the library and the tests executables.
 - make run-tests, to run all incorporated unitary tests.
 
-Please report bugs to Caliste Damien <caliste@pcpm.ucl.ac.be>.
+Please report bugs to Caliste Damien <damien.caliste@cea.fr>.

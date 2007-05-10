@@ -1,4 +1,8 @@
-* Fri May 04 2007 Damien Caliste <damien.caliste@cea.fr> 0.9
+* Fri May 11 2007 Damien Caliste <damien.caliste@cea.fr> 0.9
+- implement a copy_all_attribute routine in the low_level module. This routine
+  is then used by the group level copy routines and the utils level merge routine
+  to keep tracks of attributes in file merging. Several tests have been added
+  in the low level pool to ensure this new copy routine.
 - add a tutorial on the creation of non-ETSF variables, concurrently with ETSF
   ones.
 - change the name of the wavedata group to basisdata for a better consistency.

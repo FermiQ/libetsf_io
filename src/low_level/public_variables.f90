@@ -12,10 +12,12 @@
   !!   * ERROR_MODE_INQ  = error when looking in the NetCDF file for informations.
   !!   * ERROR_MODE_PUT  = error when writing a value to a valid target.
   !!   * ERROR_MODE_SPEC = error of match between read value and awaited type or shape.
+  !!   * ERROR_MODE_COPY = error when copying a value.
   !!
   !! SOURCE
   integer, parameter :: ERROR_MODE_DEF = 1, ERROR_MODE_GET = 2, ERROR_MODE_IO   = 3, &
-                      & ERROR_MODE_INQ = 4, ERROR_MODE_PUT = 5, ERROR_MODE_SPEC = 6
+                      & ERROR_MODE_INQ = 4, ERROR_MODE_PUT = 5, ERROR_MODE_SPEC = 6, &
+                      & ERROR_MODE_COPY = 7
   !!***
 
   !!****d* etsf_io_low_error_group/ERROR_TYPE
@@ -105,17 +107,20 @@
   !!  * name: the variable name.
   !!  * ncshape: the number of dimensions (0 for scalar variable).
   !!  * ncdims: the size for each dimension (only (1:ncshape) are relevent).
-  !!  * ncdimnames: the name corresponding to such dimensions (may be unset,
+  !!  * ncdimnames: the name corresponding to such dimensions (may be unset ;
   !!                if set, use etsf_io_low_free_var_infos()).
+  !!  * ncattnames: the name corresponding to all associated attributes
+  !!                (may be unset ; if set, use etsf_io_low_free_var_infos()).
   !!
   !! SOURCE
   type etsf_io_low_var_infos
+    character(len = 80) :: name
     integer :: nctype
     integer :: ncid
-    character(len = 80) :: name
     integer :: ncshape
     integer :: ncdims(1:16)
     character(len = 80), pointer :: ncdimnames(:) => null()
+    character(len = 80), pointer :: ncattnames(:) => null()
   end type etsf_io_low_var_infos
   !!***
   

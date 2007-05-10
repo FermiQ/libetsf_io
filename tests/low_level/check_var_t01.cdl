@@ -7,6 +7,7 @@ dimensions:
 	number_of_vectors = 3 ;
 variables:
 	char atom_species_names(number_of_atom_species, character_string_length) ;
+                atom_species_names:units = "pouet" ;
 	int atom_species(number_of_atoms) ;
 	double reduced_atom_positions(number_of_atoms, number_of_reduced_dimensions) ;
 	double primitive_vectors(number_of_vectors, number_of_reduced_dimensions) ;

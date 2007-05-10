@@ -60,81 +60,20 @@
   end subroutine etsf_io_low_read_dim
   !!***
   
-  !!****m* etsf_io_low_var_infos/etsf_io_low_free_all_var_infos
-  !! NAME
-  !!  etsf_io_low_free_all_var_infos
-  !!
-  !! FUNCTION
-  !!  This method is used to free all associated memory in an array of
-  !!  #etsf_io_low_var_infos elements. The array is also deallocated.
-  !!  This routine is convenient after a call to etsf_io_low_read_all_var_infos()
-  !!  with the optional argument @with_dim_name set to true.
-  !!
-  !! COPYRIGHT
-  !!  Copyright (C) 2006
-  !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/lesser.txt .
-  !!
-  !! SIDE EFFECTS
-  !!  * var_infos_array <type(etsf_io_low_var_infos)> = a pointer on an associated
-  !!    array to be deallocated.
-  !!
-  !! SOURCE
-  subroutine etsf_io_low_free_all_var_infos(var_infos_array)
-    type(etsf_io_low_var_infos), pointer :: var_infos_array(:)
-    
-    integer :: i
-
-    if (associated(var_infos_array)) then
-       do i = 1, size(var_infos_array), 1
-          call etsf_io_low_free_var_infos(var_infos_array(i))
-       end do
-       deallocate(var_infos_array)
-    end if
-  end subroutine etsf_io_low_free_all_var_infos
-  !!***
-
-  !!****m* etsf_io_low_var_infos/etsf_io_low_free_var_infos
-  !! NAME
-  !!  etsf_io_low_free_var_infos
-  !!
-  !! FUNCTION
-  !!  This method free all internal allocated memory of a given #etsf_io_low_var_infos
-  !!  object after use.
-  !!
-  !! COPYRIGHT
-  !!  Copyright (C) 2006
-  !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/lesser.txt .
-  !!
-  !! SIDE EFFECTS
-  !!  * var_infos <type(etsf_io_low_var_infos)> = the type object to be freed.
-  !!
-  !! SOURCE
-  subroutine etsf_io_low_free_var_infos(var_infos)
-    type(etsf_io_low_var_infos), intent(inout) :: var_infos
-    
-    if (associated(var_infos%ncdimnames)) then
-      deallocate(var_infos%ncdimnames)
-    end if
-  end subroutine etsf_io_low_free_var_infos
-  !!***
-
   subroutine read_var_infos_name(ncid, varname, var_infos, lstat, error_data, &
-                               & dim_name)
+                               & dim_name, att_name)
     integer, intent(in)                            :: ncid
     character(len = *), intent(in)                 :: varname
     type(etsf_io_low_var_infos), intent(out)       :: var_infos
     logical, intent(out)                           :: lstat
     type(etsf_io_low_error), intent(out), optional :: error_data
     logical, intent(in), optional                  :: dim_name
+    logical, intent(in), optional                  :: att_name
 
     !Local
     character(len = *), parameter :: me = "read_var_infos_name"
     integer :: s
-    logical :: my_dim_name
+    logical :: my_dim_name, my_att_name
     
     lstat = .false.
     var_infos%name = varname(1:min(80, len(varname)))
@@ -152,26 +91,32 @@
     else
       my_dim_name = .false.
     end if
-    if (present(error_data)) then
-      call read_var_infos(ncid, var_infos, my_dim_name, lstat, error_data)
+    if (present(att_name)) then
+      my_att_name = att_name
     else
-      call read_var_infos(ncid, var_infos, my_dim_name, lstat)
+      my_att_name = .false.
+    end if
+    if (present(error_data)) then
+      call read_var_infos(ncid, var_infos, my_dim_name, my_att_name, lstat, error_data)
+    else
+      call read_var_infos(ncid, var_infos, my_dim_name, my_att_name, lstat)
     end if
   end subroutine read_var_infos_name
   subroutine read_var_infos_id(ncid, varid, var_infos, lstat, error_data, &
-                               & dim_name)
+                               & dim_name, att_name)
     integer, intent(in)                            :: ncid
     integer, intent(in)                            :: varid
     type(etsf_io_low_var_infos), intent(out)       :: var_infos
     logical, intent(out)                           :: lstat
     type(etsf_io_low_error), intent(out), optional :: error_data
     logical, intent(in), optional                  :: dim_name
+    logical, intent(in), optional                  :: att_name
 
     !Local
     character(len = *), parameter :: me = "read_var_infos_id"
     integer :: s
     character(len = NF90_MAX_NAME) :: varname
-    logical :: my_dim_name
+    logical :: my_dim_name, my_att_name
     
     lstat = .false.
     var_infos%ncid = varid
@@ -190,31 +135,38 @@
     else
       my_dim_name = .false.
     end if
-    if (present(error_data)) then
-      call read_var_infos(ncid, var_infos, my_dim_name, lstat, error_data)
+    if (present(att_name)) then
+      my_att_name = att_name
     else
-      call read_var_infos(ncid, var_infos, my_dim_name, lstat)
+      my_att_name = .false.
+    end if
+    if (present(error_data)) then
+      call read_var_infos(ncid, var_infos, my_dim_name, my_att_name, lstat, error_data)
+    else
+      call read_var_infos(ncid, var_infos, my_dim_name, my_att_name, lstat)
     end if
   end subroutine read_var_infos_id
   ! Read dimensions..., varid must be set, varname is left untouched.
-  subroutine read_var_infos(ncid, var_infos, with_dim_name, lstat, error_data)
+  subroutine read_var_infos(ncid, var_infos, with_dim_name, with_att_name, &
+       & lstat, error_data)
     integer, intent(in)                            :: ncid
     type(etsf_io_low_var_infos), intent(inout)     :: var_infos
     logical, intent(in)                            :: with_dim_name
+    logical, intent(in)                            :: with_att_name
     logical, intent(out)                           :: lstat
     type(etsf_io_low_error), intent(out), optional :: error_data
 
     !Local
     character(len = *), parameter :: me = "read_var_infos"
-    integer :: i, s
+    integer :: i, s, n
     integer, allocatable :: ncdimids(:)
-    character(len = NF90_MAX_NAME) :: dimname    
+    character(len = NF90_MAX_NAME) :: ncname    
     
     lstat = .false.
     ! will inq_vartype()
     ! will inq_varndims()
     s = nf90_inquire_variable(ncid, var_infos%ncid, xtype = var_infos%nctype, &
-                            & ndims = var_infos%ncshape)
+                            & ndims = var_infos%ncshape, nAtts = n)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
         call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, &
@@ -232,9 +184,9 @@
       s = nf90_inquire_variable(ncid, var_infos%ncid, dimids = ncdimids)
       if (s /= nf90_noerr) then
         if (present(error_data)) then
-          call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, &
-                                   & tgtname = var_infos%name, tgtid = var_infos%ncid, &
-                                   & errid = s, errmess = nf90_strerror(s))
+          call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_VAR, &
+               & me, tgtname = var_infos%name, tgtid = var_infos%ncid, &
+               & errid = s, errmess = nf90_strerror(s))
         end if
         deallocate(ncdimids)
         return
@@ -243,25 +195,44 @@
         ! will inq_dimlen()
         if (with_dim_name) then
           s = nf90_inquire_dimension(ncid, ncdimids(i), len = var_infos%ncdims(i), &
-                                   & name = dimname)
-          var_infos%ncdimnames(i) = dimname(1:min(80, len(dimname)))
+                                   & name = ncname)
+          write(var_infos%ncdimnames(i), "(A)") ncname(1:min(80, len(ncname)))
         else
           s = nf90_inquire_dimension(ncid, ncdimids(i), len = var_infos%ncdims(i))
         end if
         if (s /= nf90_noerr) then
           if (present(error_data)) then
-            call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_DIM, me, &
-                         & tgtid = ncdimids(i), errid = s, errmess = nf90_strerror(s))
+            call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, &
+                 & ERROR_TYPE_DIM, me, tgtid = ncdimids(i), errid = s, &
+                 & errmess = nf90_strerror(s))
           end if
           deallocate(ncdimids)
-          if (with_dim_name) then
-            deallocate(var_infos%ncdimnames)
-            var_infos%ncdimnames => null()
-          end if
+          call etsf_io_low_free_var_infos(var_infos)
           return
         end if
       end do
       deallocate(ncdimids)
+    end if
+    ! will inquire the number of attributes and their names.
+    if (with_att_name) then
+       if (n > 0) then
+          allocate(var_infos%ncattnames(1:n))
+          do i = 1, n, 1
+             s = nf90_inq_attname(ncid, var_infos%ncid, i, ncname)
+             if (s /= nf90_noerr) then
+                if (present(error_data)) then
+                   call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, &
+                        & ERROR_TYPE_ATT, me, tgtid = i, errid = s, &
+                        & errmess = nf90_strerror(s))
+                end if
+                call etsf_io_low_free_var_infos(var_infos)
+                return
+             end if
+             write(var_infos%ncattnames(i), "(A)") ncname(1:min(80, len(ncname)))
+          end do
+       else
+          var_infos%ncattnames => null()
+       end if
     end if
     lstat = .true.
   end subroutine read_var_infos
@@ -289,6 +260,10 @@
   !!                    retrieved. In that case, each element of output array
   !!                    @var_infos_array must be freed using
   !!                    etsf_io_low_free_var_infos().
+  !!  * with_att_name = (optional) if set to .true., the attribute names are also
+  !!                    retrieved. In that case, each element of output array
+  !!                    @var_infos_array must be freed using
+  !!                    etsf_io_low_free_var_infos().
   !!
   !! OUTPUT
   !!  * var_infos_array <type(etsf_io_low_var_infos)> = a pointer on an array to
@@ -303,23 +278,29 @@
   !!
   !! SOURCE
   subroutine etsf_io_low_read_all_var_infos(ncid, var_infos_array, lstat, &
-       & error_data, with_dim_name)
+       & error_data, with_dim_name, with_att_name)
     integer, intent(in)                               :: ncid
     type(etsf_io_low_var_infos), pointer              :: var_infos_array(:)
     logical, intent(out)                              :: lstat
     type(etsf_io_low_error), intent(out), optional    :: error_data
     logical, optional, intent(in)                     :: with_dim_name
+    logical, optional, intent(in)                     :: with_att_name
 
     !Local
     character(len = *), parameter :: me = "etsf_io_low_read_all_var_infos"
     integer :: i, j, s, nvars
-    logical :: my_with_dim_name
+    logical :: my_with_dim_name, my_with_att_name
 
     lstat = .false.
     if (present(with_dim_name))then
        my_with_dim_name = with_dim_name
     else
        my_with_dim_name = .false.
+    end if
+    if (present(with_att_name))then
+       my_with_att_name = with_att_name
+    else
+       my_with_att_name = .false.
     end if
     ! Consistency checks...
     if (associated(var_infos_array)) then
@@ -351,10 +332,10 @@
     do i = 1, nvars, 1
        if (present(error_data))then
           call read_var_infos_id(ncid, i, var_infos_array(i), lstat, error_data, &
-               & my_with_dim_name)
+               & dim_name = my_with_dim_name, att_name = my_with_att_name)
        else
           call read_var_infos_id(ncid, i, var_infos_array(i), lstat, &
-               & dim_name = my_with_dim_name)
+               & dim_name = my_with_dim_name, att_name = my_with_att_name)
        end if
        ! Handle the error, if required.
        if (.not. lstat) then
