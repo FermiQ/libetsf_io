@@ -69,7 +69,11 @@
       <li>The contents routine is used to get the specifications the file is matching and reasons why it fails on some.</li>
       <li>The check routine is used to validate the file on themes as defined in the specifications.</li>
     </ul>
-    <p><b>etsf_io_tools</b> is a not mandatory high level module. TODO write something here.</p>
+    <p><b>etsf_io_tools</b> is a not mandatory high level module. It contains some tools to do common high-level actions on ETSF data (see the API <a href="utils/etsf_io_tools_f90.html">page</a>):</p>
+    <ul>
+      <li>A method to retrieve the names of the element in a crystallographic file, whatever variables are present in the read ETSF file.</li>
+      <li><i>Not yet implemented</i> A method to transform the g point grids of all k points to a global list with an access array.</li>
+    </ul>
     <p>There is one tutorial to illustrate usage of these modules:</p>
     <ul>
       <li><a href="convert_to_xyz_f90.html">Tutorial 3</a> shows how to use high level modules <a href="../utils/etsf_io_file_f90.html">etsf_io_file</a> and <a href="../utils/etsf_io_tools_f90.html">etsf_io_tools</a> to check the conformance of an input ETSF file on cristalographic specifications and then to read atomic coordinates and names to create a simple XYZ file.</li>
