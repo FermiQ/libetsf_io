@@ -770,13 +770,13 @@ def code_split_write(dims, var, var_fortran, var_splitted, var_unformatted, stri
     if (not(var_splitted)):
       ret += "call etsf_io_low_write_var(ncid_to, \"%s\", &\n" % var
       ret += "                         & %s%s, lstat, &\n" % (var_fortran, string_len)
-      ret += "                         & error_data = error_data)\n"
+      ret += "                         & error_data = error_data, ncvarid = ncvarid_to)\n"
     else:
       ret += "call etsf_io_low_write_var(ncid_to, \"%s\", &\n" % var
       ret += "                         & %s(%s)%s, &\n" % \
              (var_fortran, var_span, string_len)
       ret += "                         & lstat, error_data = error_data, &\n"
-      ret += "                         & start = start, count = count)\n"
+      ret += "                         & start = start, count = count, ncvarid = ncvarid_to)\n"
     ret += "if (.not. lstat) then\n"
     ret += "  deallocate(%s)\n" % var_fortran
     if (var_splitted):
@@ -839,10 +839,16 @@ def code_group_copy(group):
 
     # Retrieve variable properties of interest.
     unformatted = False
+    att_units   = False
+    att_kdep    = False
+    att_symm    = False
     if (var in etsf_properties):
       props = etsf_properties[var]
       unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED != 0)
-
+      att_symm    = ( props & ETSF_PROP_VAR_SYMMORPHIC != 0)
+      att_units   = ( props & ETSF_PROP_VAR_UNITS != 0)
+      att_kdep    = ( props & ETSF_PROP_VAR_KDEP != 0)
+    
     # Allocate an array for the reading action
     ret += "! Variable '%s'\n" % var
     ret += "!  allocate and read data\n"
@@ -877,7 +883,7 @@ def code_group_copy(group):
     ret += "allocate(%s%s)\n" % (var_fortran, length)
     ret += "call etsf_io_low_read_var(ncid_from, \"%s\", &\n" % var
     ret += "                        & %s%s, lstat, &\n" % (var_fortran, string_len)
-    ret += "                        & error_data = error_data)\n"
+    ret += "                        & error_data = error_data, ncvarid = ncvarid_from)\n"
     # Raise error only if the error is not an inquire one.
     ret += "if (.not. lstat .and. error_data%access_mode_id /= ERROR_MODE_INQ) then\n"
     ret += "  deallocate(%s)\n" % var_fortran
@@ -950,9 +956,42 @@ def code_group_copy(group):
       ret += "  else\n"
       ret += "    ! No split information, we copy everything in the same shape.\n"
       ret += indent_code(code_split_write([], var, var_fortran, False, False, string_len, ""), 2)
-      ret += "  end if\n" 
+      ret += "  end if\n"
+    ret += "  deallocate(%s)\n" % var_fortran
+    # We copy the attributes
+    if (att_units):
+      ret += "  ! We copy the units attributes.\n"
+      ret += "  call etsf_io_low_read_att(ncid_from, ncvarid_from, \"units\", etsf_charlen, &\n"
+      ret += "                          & tmp_str, lstat, error_data = error_data)\n"
+      ret += "  if (.not. lstat) return\n"
+      ret += "  call etsf_io_low_write_att(ncid_to, ncvarid_to, \"units\", trim(tmp_str), &\n"
+      ret += "                           & lstat, error_data = error_data)\n"
+      ret += "  if (.not. lstat) return\n"
+      ret += "  call etsf_io_low_read_att(ncid_from, ncvarid_from, \"scale_to_atomic_units\", &\n"
+      ret += "                          & tmp_real, lstat, error_data = error_data)\n"
+      ret += "  if (.not. lstat) return\n"
+      ret += "  call etsf_io_low_write_att(ncid_to, ncvarid_to, \"scale_to_atomic_units\", &\n"
+      ret += "                           & tmp_real, lstat, error_data = error_data)\n"
+      ret += "  if (.not. lstat) return\n"
+    if (att_kdep):
+      ret += "  ! We copy the k_dependent attributes.\n"
+      ret += "  call etsf_io_low_read_att(ncid_from, ncvarid_from, \"k_dependent\", etsf_charlen, &\n"
+      ret += "                          & tmp_str, lstat, error_data = error_data)\n"
+      ret += "  if (.not. lstat) return\n"
+      ret += "  call etsf_io_low_write_att(ncid_to, ncvarid_to, \"k_dependent\", trim(tmp_str), &\n"
+      ret += "                           & lstat, error_data = error_data)\n"
+      ret += "  if (.not. lstat) return\n"
+    if (att_symm):
+      ret += "  ! We copy the symmorphic attributes.\n"
+      ret += "  call etsf_io_low_read_att(ncid_from, ncvarid_from, \"symmorphic\", etsf_charlen, &\n"
+      ret += "                          & tmp_str, lstat, error_data = error_data)\n"
+      ret += "  if (.not. lstat) return\n"
+      ret += "  call etsf_io_low_write_att(ncid_to, ncvarid_to, \"symmorphic\", trim(tmp_str), &\n"
+      ret += "                           & lstat, error_data = error_data)\n"
+      ret += "  if (.not. lstat) return\n"
+    ret += "else\n"
+    ret += "  deallocate(%s)\n" % var_fortran
     ret += "end if\n"
-    ret += "deallocate(%s)\n" % var_fortran
     ret += "\n"
     ret += "lstat = .true.\n"
 
@@ -1363,7 +1402,7 @@ def init_routine(name,template,info,script,args,type="subroutine"):
  if ( args != None ):
   for arg_str in args:
    arg_info = arg_str.split()
-   if ( arg_info[2] != "local" ):
+   if ( arg_info[-1] != "local" ):
      if ( arg_list != "" ):
       if ( (len(arg_list)+arg_move)/72 > arg_stop ):
        arg_list += ", &\n  & "
@@ -1379,21 +1418,24 @@ def init_routine(name,template,info,script,args,type="subroutine"):
   for arg_str in args:
    arg_info = arg_str.split()
    arg = arg_info[0]
+   intent_id = -1
+   if (arg_info[-1] == "optional"):
+     intent_id = -2
    
    # Build the documentation for in, out, inout
    inout = None
-   if (arg_info[2] == "in"):
+   if (arg_info[intent_id] == "in"):
     inout = 0
-   elif (arg_info[2] == "out"):
+   elif (arg_info[intent_id] == "out"):
     inout = 1
-   elif (arg_info[2] == "inout"):
+   elif (arg_info[intent_id] == "inout"):
     inout = 2
    if (inout is not None):
      arg_doc[inout] += "!! * %s" % arg
      if (arg_info[1].startswith("type")):
-       arg_doc[inout] += " <%s>" % arg_info[1]
+       arg_doc[inout] += " <%s>" % " ".join(arg_info[1:intent_id])
      arg_doc[inout] += " = "
-     if ( (len(arg_info) > 3) and (arg_info[3] == "optional") ):
+     if ( intent_id == -2 ):
        arg_doc[inout] += "(optional) "
      key = arg + "-" + name
      if (key in etsf_subs_doc_args):
@@ -1409,24 +1451,24 @@ def init_routine(name,template,info,script,args,type="subroutine"):
      arg_doc[inout] += "\n"
 
    # Optional arguments
-   if ( (len(arg_info) > 3) and (arg_info[3] == "optional") ):
+   if ( intent_id == -2 ):
     opt = ", optional"
    else:
     opt = ""
 
    # The fortran definition
+   fortran_def = " ".join(arg_info[1:intent_id])
    if (inout is not None):
-     if (arg_info[1].find("pointer") < 0):
+     if (fortran_def.find("pointer") < 0):
        # The intent keyword is not allowed by several compilers
        # with the keyword pointer.
-       arg_desc += "  %s%s, intent(%s) :: %s\n" % (arg_info[1],opt,arg_info[2],arg)
+       arg_desc += "  %s%s, intent(%s) :: %s\n" % (fortran_def,opt,arg_info[intent_id],arg)
      else:
-       arg_desc += "  %s%s :: %s\n" % (arg_info[1],opt,arg)
-     if ( (len(arg_info) > 3) and 
-          ((arg_info[3] == "optional") or (arg_info[3] == "local")) ):
-      loc_vars += "  %s :: my_%s\n" % (arg_info[1],arg)
+       arg_desc += "  %s%s :: %s\n" % (fortran_def,opt,arg)
+     if ( (intent_id == -2) or (arg_info[-1] == "local") ):
+       loc_vars += "  %s :: my_%s\n" % (fortran_def,arg)
    else:
-     loc_vars += "  %s :: %s\n" % (arg_info[1],arg)
+     loc_vars += "  %s :: %s\n" % (fortran_def,arg)
 
    # Build the documentation string
    arg_doc_str = ""

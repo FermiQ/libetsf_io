@@ -208,6 +208,8 @@ module etsf_io_low_level
   !! SYNOPSIS
   !!  * call etsf_io_low_read_att(ncid, ncvarid, attname, attlen, att, lstat, error_data)
   !!  * call etsf_io_low_read_att(ncid, ncvarid, attname, att, lstat, error_data)
+  !!  * call etsf_io_low_read_att(ncid, varname, attname, attlen, att, lstat, error_data)
+  !!  * call etsf_io_low_read_att(ncid, varname, attname, att, lstat, error_data)
   !!
   !! FUNCTION
   !!  This is a generic interface to read values of an attribute (either integer,
@@ -231,6 +233,7 @@ module etsf_io_low_level
   !!              in the case of global attributes, use the constance
   !!              NF90_GLOBAL (when linking against NetCDF) or #etsf_io_low_global_att
   !!              which is a wrapper exported by this module (see #ETSF_IO_LOW_CONSTANTS).
+  !!  * varname = can be used instead of ncvarid to select a variable by its name.
   !!  * attname = a string identifying an attribute.
   !!  * attlen = the size of the array @att (when required).
   !!
@@ -247,7 +250,7 @@ module etsf_io_low_level
   !!
   !!  Get one single real stored in "file_format_version" which is a global attribute:
   !!   real :: version
-  !!   call etsf_io_low_read_att(ncid, "file_format_version", version, lstat)
+  !!   call etsf_io_low_read_att(ncid, etsf_io_low_global_att, "file_format_version", version, lstat)
   !!
   !!***
   !Generic interface of the routines etsf_io_low_read_att
