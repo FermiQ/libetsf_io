@@ -10,9 +10,9 @@
 !!  one again, gathering what was possible with respect to the given input files.
 !!
 !! COPYRIGHT
-!!  Copyright (C) 2006
+!!  Copyright (C) 2006, 2007 (Damien Caliste)
 !!  This file is distributed under the terms of the
-!!  GNU General Public License, see ~abinit/COPYING
+!!  GNU Lesser General Public License, see the COPYING file
 !!  or http://www.gnu.org/copyleft/lesser.txt .
 !!
 !! INPUTS
@@ -199,9 +199,9 @@
 !!  when required is also done.
 !!
 !! COPYRIGHT
-!!  Copyright (C) 2006
+!!  Copyright (C) 2006, 2007 (Damien Caliste)
 !!  This file is distributed under the terms of the
-!!  GNU General Public License, see ~abinit/COPYING
+!!  GNU Lesser General Public License, see the COPYING file
 !!  or http://www.gnu.org/copyleft/lesser.txt .
 !!
 !! INPUTS

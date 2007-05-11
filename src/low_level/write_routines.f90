@@ -17,10 +17,10 @@
   !!  etsf_io_low_open_modify() instead.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * filename = the path to the file to open.
@@ -178,10 +178,10 @@
   !!  If one wants to create a new file, one should use etsf_io_low_open_create() instead.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * filename = the path to the file to open.
@@ -338,10 +338,10 @@
   !!  .true. in @lstat, if the dimension already exists and has the same value.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with write access (define mode).
@@ -546,9 +546,9 @@
   !!  can be either valid variables or etsf_io_low_global_att.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
+  !!  GNU Lesser General Public License, see the COPYING file
   !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS

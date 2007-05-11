@@ -7,9 +7,9 @@
   !!  and its value.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
+  !!  GNU Lesser General Public License, see the COPYING file
   !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
@@ -249,9 +249,9 @@
   !!  with_dim_name is set to .true., the names of dimensions are also stored.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
+  !!  GNU Lesser General Public License, see the COPYING file
   !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
@@ -506,9 +506,9 @@
   !!  is perfect or if the transfer requires convertion (type or shape).
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
+  !!  GNU Lesser General Public License, see the COPYING file
   !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
@@ -642,9 +642,9 @@
   !!  * has the right length (1 for scalar, > 1 for arrays).
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
+  !!  GNU Lesser General Public License, see the COPYING file
   !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
@@ -725,9 +725,9 @@
   !!  file_format_version to ensure high enough value.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
+  !!  GNU Lesser General Public License, see the COPYING file
   !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
@@ -825,9 +825,9 @@
   !!  specifications (see etsf_io_low_check_header()).
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
+  !!  GNU Lesser General Public License, see the COPYING file
   !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS

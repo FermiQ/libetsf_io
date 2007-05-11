@@ -18,10 +18,10 @@
 !!  guaranteed.
 !!
 !! COPYRIGHT
-!!  Copyright (C) 2006
+!!  Copyright (C) 2006, 2007 (Damien Caliste)
 !!  This file is distributed under the terms of the
-!!  GNU General Public License, see ~abinit/COPYING
-!!  or http://www.gnu.org/copyleft/gpl.txt .
+!!  GNU Lesser General Public License, see the COPYING file
+!!  or http://www.gnu.org/copyleft/lesser.txt .
 !!
 !!***
 module etsf_io_low_level
@@ -107,10 +107,10 @@ module etsf_io_low_level
   !!  order).
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with read access.
@@ -223,10 +223,10 @@ module etsf_io_low_level
   !!  to be one dimensional arrays. See the example below on how to read a string.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with read access.
@@ -294,10 +294,10 @@ module etsf_io_low_level
   !!  time with the same type, shape and dimensions.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with write access (define mode).
@@ -346,10 +346,10 @@ module etsf_io_low_level
   !!  of integer, real or double precision.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with write access (define mode).
@@ -440,10 +440,10 @@ module etsf_io_low_level
   !!  order).
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with read access.
@@ -546,10 +546,10 @@ module etsf_io_low_level
   !!  call etsf_io_low_var_associated(array)
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * array <type(etsf_io_low_var_*)> = an undefined shape array.
@@ -574,10 +574,10 @@ module etsf_io_low_level
   !!  call etsf_io_low_var_multiply(array, factor)
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * array <type(etsf_io_low_var_*)> = an undefined shape array.
@@ -607,9 +607,9 @@ module etsf_io_low_level
   !!  * call etsf_io_low_read_var_infos(ncid, varid, var_infos, lstat, error_data, dim_name, att_name)
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
+  !!  GNU Lesser General Public License, see the COPYING file
   !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
@@ -728,10 +728,10 @@ contains
   !!  This routine is used to initialise a #etsf_io_low_error object with values.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * mode = a value from #ERROR_MODE, specifying the action when the error occurs.
@@ -801,10 +801,10 @@ contains
   !!  This method can be used to get a string from the given error.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * error_data <type(etsf_io_low_error)>=informations about an error.
@@ -862,10 +862,10 @@ contains
   !!  if custom error handling is required.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * error_data <type(etsf_io_low_error)>=informations about an error.
@@ -907,10 +907,10 @@ contains
   !!  This method is used to close an openend NetCDF file.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with write access.
@@ -956,10 +956,10 @@ contains
   !!  be in the data mode.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with write access.
@@ -1004,10 +1004,10 @@ contains
   !!  again. This method is then usefull.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * ncid = a NetCDF handler, opened with write access.
@@ -1052,10 +1052,10 @@ contains
   !!  strings.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! INPUTS
   !!  * string = the string to convert to character(len = 256).
@@ -1080,10 +1080,10 @@ contains
   !!  ' ' (space).
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
-  !!  or http://www.gnu.org/copyleft/gpl.txt .
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! SIDE EFFECTS
   !!  * string = the string to convert. It is done in-place.
@@ -1113,9 +1113,9 @@ contains
   !!  with the optional argument @with_dim_name set to true.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
+  !!  GNU Lesser General Public License, see the COPYING file
   !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! SIDE EFFECTS
@@ -1146,9 +1146,9 @@ contains
   !!  object after use.
   !!
   !! COPYRIGHT
-  !!  Copyright (C) 2006
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
   !!  This file is distributed under the terms of the
-  !!  GNU General Public License, see ~abinit/COPYING
+  !!  GNU Lesser General Public License, see the COPYING file
   !!  or http://www.gnu.org/copyleft/lesser.txt .
   !!
   !! SIDE EFFECTS

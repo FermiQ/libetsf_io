@@ -20,10 +20,10 @@
 !!             -L/opt/lib -letsf_io -L/usr/lib -lnetcdf
 !!
 !! COPYRIGHT
-!!  Copyright (C) 2006
+!!  Copyright (C) 2006, 2007 (Damien Caliste)
 !!  This file is distributed under the terms of the
-!!  GNU General Public License, see ~abinit/COPYING
-!!  or http://www.gnu.org/copyleft/gpl.txt .
+!!  GNU Lesser General Public License, see the COPYING file
+!!  or http://www.gnu.org/copyleft/lesser.txt .
 !!
 !! SOURCE
 program MPI_output_of_a_density

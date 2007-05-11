@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (c) 2005-2006
+# Copyright (C) 2005-2006, 2007 (Damien Caliste)
 # All rights reserved.
 #
 # This file is part of the ETSF_IO software package. For license information,
@@ -368,7 +368,7 @@ my_configs = ["config/etsf/specs.cf",
               "config/etsf/code.cf",
               "config/etsf/functions.py"]
 
-# Check if we are in the top of the ABINIT source tree
+# Check if we are in the top of the ETSF_IO source tree
 if ( not os.path.exists("configure.ac") ):
  print "%s: You must be in the top of the library source tree." % my_name
  print "%s: Aborting now." % my_name

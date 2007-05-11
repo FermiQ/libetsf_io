@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (c) 2006
+# Copyright (C) 2006, 2007 (Damien Caliste)
 # All rights reserved.
 #
 # This file is part of the ETSF_IO software package. For license information,

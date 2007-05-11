@@ -1,6 +1,6 @@
 # -*- Autoconf -*-
 #
-# Copyright (c) 2005-2006 Yann Pouillon
+# Copyright (C) 2005-2006 Yann Pouillon
 # All rights reserved.
 #
 

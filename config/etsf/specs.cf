@@ -1,15 +1,15 @@
 # -*- Python -*-
 #
-# Copyright (c) 2006 The ABINIT Group (Yann Pouillon)
+# Copyright (C) 2006 (Yann Pouillon, Damien Caliste)
 # All rights reserved.
 #
-# This file is part of the ABINIT software package. For license information,
-# please see the COPYING file in the top-level directory of the ABINIT source
+# This file is part of the ETSF_IO software package. For license information,
+# please see the COPYING file in the top-level directory of the ETSF_IO source
 # distribution.
 #
 
 #
-# ETSF file format specifications for ABINIT
+# ETSF file format specifications
 #
 # Note: The following statements have to be readable by Python scripts
 #
