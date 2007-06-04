@@ -106,16 +106,16 @@ module etsf_io
 @FLAGS_GROUPS@
   !!***
 
-  !!****d* etsf_io_basics_group/FLAGS_MAIN
+  !!****d* etsf_io_basics_group/FLAGS_VARIABLES
   !! NAME
-  !!  FLAGS_MAIN
+  !!  FLAGS_VARIABLES
   !!
   !! FUNCTION
   !!  These flags are used on data definition (see etsf_io_data_init()) to specify
-  !!  which main variable should be defined in the NetCDF file. They are not exclusive.
+  !!  which variables should be defined in the NetCDF file. They are not exclusive.
   !!
   !! SOURCE
-@FLAGS_MAIN@
+@FLAGS_VARIABLES@
   !!***
 
   !!****d* etsf_io_basics_group/ETSF_IO_VALIDITY_FLAGS
@@ -145,6 +145,18 @@ module etsf_io
   !!***
 
 @STRUCTURES@
+
+  !!****s* etsf_io_basics_group/etsf_groups_flags
+  !! NAME
+  !!  etsf_groups_flags
+  !!
+  !! FUNCTION
+  !!  This structure is a container for each group to specify which variables
+  !!  are required (see etsf_io_data_init()).
+  !!
+  !! SOURCE
+@STRUCT_GROUPS_FLAGS@
+  !!***
 
   !!****s* etsf_io/etsf_groups
   !! NAME

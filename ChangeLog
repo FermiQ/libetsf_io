@@ -1,3 +1,11 @@
+* Fri Jun 01 2007 Damien Caliste <damien.caliste@cea.fr> 0.10
+- Add a way to precisely choose the variables when defining a file. This
+	has bringed some minor in the ETSF group API, for etsf_io_main_*
+	and for etsf_io_data_*.
+- Add the wavelet basis set as discussed in the IT9 meeting in San
+	Sebastian in May 2007 (still in a draft for inclusion in
+	specifications when 0.10 has been shipped).
+	
 * Fri May 11 2007 Damien Caliste <damien.caliste@cea.fr> 0.9
 - complete all TODO occurances in the HTML pages.
 - update all licence citation and remove all ABINIT occurance. Also add 2007 to the

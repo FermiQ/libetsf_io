@@ -75,20 +75,12 @@ etsf_subs_def_args = {
       "dims type(etsf_dims) in",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out"],
-   "main":[
-      "ncid integer in",
-      "mains integer in",
-      "lstat logical out",
-      "error_data type(etsf_io_low_error) out",
-      "k_dependent logical in optional",
-      "split type(etsf_split) in optional",
-      "ivar integer local",
-      "split_dims type(split_dim_names) local"],
    "@GROUP@":[
       "ncid integer in",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out",
       "k_dependent logical in optional",
+      "flags integer in optional",
       "split type(etsf_split) in optional",
       "ivar integer local",
       "split_dims type(split_dim_names) local"],
@@ -124,7 +116,7 @@ etsf_subs_get_args = {
       "error_data type(etsf_io_low_error) out"],
    "data":[
       "etsf_group integer out",
-      "etsf_main integer out",
+      "etsf_variable integer out",
       "etsf_split logical out",
       "varname character(len=*) in"]
 }
@@ -152,8 +144,7 @@ etsf_subs_put_args = {
 etsf_subs_init_args = {
    "data":[
       "filename character(len=*) in",
-      "mains integer in",
-      "groups integer in",
+      "groups type(etsf_groups_flags) in",
       "dims type(etsf_dims) inout",
       "title character(len=*) in",
       "history character(len=*) in",
@@ -173,8 +164,8 @@ etsf_subs_contents_args = {
       "filename character(len=*) in",
       "dims type(etsf_dims) out",
       "split type(etsf_split) out",
-      "etsf_main integer out",
-      "etsf_group integer out",
+      "etsf_groups integer out",
+      "etsf_variables type(etsf_groups_flags) out",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out",
       "vars_infos type(etsf_vars) inout optional",
@@ -188,7 +179,6 @@ etsf_subs_contents_args = {
 etsf_subs_read_args = {
    "data":[
       "filename character(len=*) in",
-      "groups integer in",
       "group_folder type(etsf_groups) inout",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out",
@@ -199,7 +189,6 @@ etsf_subs_read_args = {
 etsf_subs_write_args = {
    "data":[
       "filename character(len=*) in",
-      "groups integer in",
       "group_folder type(etsf_groups) in",
       "lstat logical out",
       "error_data type(etsf_io_low_error) out"]
@@ -359,16 +348,16 @@ etsf_subs_doc_args = {
      set this flag to .true. makes the library use the value of the attribute
      scale_to_atomic_units to multiply the read variables (that are units dependent)
      by this factor (if different from 1.0d0).""",
-   "mains-*":"""
-     unless other groups, one can choose the variables of the main group
+   "flags-*":"""
+     One can choose the variables of the group
      that will be defined (and disk allocated) using this flag. This is a sum
-     of values taken from #FLAGS_MAIN.""",
+     of values taken from #FLAGS_VARIABLES.""",
    "filename-*":"""
      the path to the file to be accessed.""",
    "groups-data_init":"""
-     choose the groups (from #etsf_groups) that will be used. This is a sum of
-     values taken from #FLAGS_GROUPS. Except for the main group, all variables
-     of the chosen groups will be defined (and disk allocated).""",
+     choose the groups and the variables (from #etsf_groups_flags) that will
+     be used. This is a sum of values taken from #FLAGS_VARIABLES for each group.
+     Let the value to etsf_<grp>_none not to define a wall group.""",
    "title-data_init":"""
      the title of the file (maybe null but should not).""",
    "history-data_init":"""
@@ -540,7 +529,7 @@ etsf_subs_doc_desc = {
   "data_contents":"""
     High-level routine that get informations from a given @filename. Returned values
     are the list of dimensions, allocated split definitions (if any), flags for
-    main variables (see FLAGS_MAIN) and flags for groups (see FLAGS_GROUPS).
+    main variables (see FLAGS_VARIABLES) and flags for groups (see FLAGS_GROUPS).
 
     This routine can also be used to get the comprehensive list of read variables
     with their definitions (name, shape, dimension names...). Use

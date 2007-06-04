@@ -9,7 +9,7 @@ dnl  - PACKAGE_TARNAME, the name used for the tarball ;
 dnl  - PACKAGE_VERSION, the version ;
 dnl  - PACKAGE_STRING, the name + the version ;
 dnl  - PACKAGE_BUGREPORT, the mail.
-AC_INIT([ETSF - IO library], [0.9], [damien.caliste@cea.fr], [etsf_io])
+AC_INIT([ETSF - IO library], [0.10], [damien.caliste@cea.fr], [etsf_io])
 
 dnl All temporary building files are put in this directory.
 dnl his must be called before AM_INIT_AUTOMAKE
@@ -36,6 +36,7 @@ dnl It will define fc_type and fc_version that are required when installing.
 ABI_PROG_FC()
 
 dnl Set if the module name are capitalized or not with the FC compiler.
+AC_MSG_CHECKING([for module extension for compiler '$fc_type'])
 case "$fc_type" in
   "pathscale")
      capitalize_module=yes
@@ -44,6 +45,7 @@ case "$fc_type" in
      capitalize_module=no
      capitalize_module_ext="mod" ;;
 esac
+AC_MSG_RESULT([$capitalize_module_ext])
 
 dnl We custom the module naming scheme depending on the compiler
 dnl and the platform.

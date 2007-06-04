@@ -7,7 +7,8 @@ lib_LIBRARIES = libetsf_io_utils.a
 EXTRA_DIST = \
 @SPEC_CHECK_LIST@
 	etsf_io_file_contents.f90 \
-	etsf_io_file_private.f90
+	etsf_io_file_private.f90 \
+	etsf_io_file_public.f90
 
 if CAPITALIZE
 module_DATA = ETSF_IO_FILE.@MODULE_EXT@ ETSF_IO_TOOLS.@MODULE_EXT@ 
@@ -29,7 +30,8 @@ etsf_io_LDADD = -letsf_io_utils -letsf_io
 etsf_io_file.o: libetsf_io.a \
 @SPEC_CHECK_LIST@
 	etsf_io_file_contents.f90 \
-	etsf_io_file_private.f90
+	etsf_io_file_private.f90 \
+	etsf_io_file_public.f90
 
 etsf_io_tools.o: libetsf_io.a
 
