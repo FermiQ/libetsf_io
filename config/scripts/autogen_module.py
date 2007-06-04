@@ -90,12 +90,14 @@ edt += " end type etsf_dims"
 egc = "\n\n ! Constants for groups of variables"
 egc += "\n integer, parameter :: etsf_grp_%-16s = 0" % "none"
 egf = "\n\n ! Folder for the groups of variables\n type etsf_groups"
+egk = "\n\n ! Folder for the variable ids in each group\n type etsf_groups_flags"
 egv = 1
 egn = 0
 est = ""
 for grp in etsf_group_list:
  egc += "\n integer, parameter :: etsf_grp_%-16s = %d" % (grp,egv)
  egf += "\n  type(etsf_%s), pointer :: %s => null()" % (grp,grp)
+ egk += "\n integer :: %-16s = etsf_%s_none" % (grp,grp)
  egv *= 2
  egn += 1
   
@@ -154,10 +156,13 @@ for grp in etsf_group_list:
    for dim in dsc[1:]:
      if (dim.startswith("max_")):
        out_spe += "  integer :: %s__%s = etsf_spec_dimension\n" % (var_shortname(var), dim[4:])
+   for dim in dsc[1:]:
      if (splitted and dim == "number_of_spins"):
        out_spe += "  integer :: %s__spin_access = etsf_no_sub_access\n" % var_shortname(var)
      if (splitted and dim == "number_of_kpoints"):
        out_spe += "  integer :: %s__kpoint_access = etsf_no_sub_access\n" % var_shortname(var)
+     if (splitted and dim == "max_number_of_states"):
+       out_spe += "  integer :: %s__state_access = etsf_no_sub_access\n" % var_shortname(var)
     
  if (out_att != ""):
    out_str += "\n  ! Attributes\n"
@@ -188,23 +193,27 @@ for grp in etsf_group_list:
  !!***"""
 
 egf += "\n end type etsf_groups"
+egk += "\n end type etsf_groups_flags"
 
 # Number of groups
 egc += "\n integer, parameter :: etsf_%-20s = %d" % ("ngroups",egn)
 
-# Main variables
-emc = "\n\n ! Main variables"
-emc += "\n integer, parameter :: etsf_main_%-15s = 0" % "none"
-egv  = 1
-egn  = 0
-for var in etsf_groups["main"]:
- emc += "\n integer, parameter :: etsf_main_%-15s = %d" % \
-         (var_shortname(var),egv)
- egv *= 2
- egn += 1
+# group variables
+emc = ""
+for grp in etsf_group_list:
+  emc += "\n\n ! '%s' variables" % grp
+  emc += "\n integer, parameter :: etsf_%s_%-20s = 0" % (grp, "none")
+  egv  = 1
+  egn  = 0
+  for var in etsf_groups[grp]:
+    emc += "\n integer, parameter :: etsf_%s_%-20s = %d" % \
+           (grp, var_shortname(var), egv)
+    egv *= 2
+    egn += 1
 
-# Number of main variables
-emc += "\n integer, parameter :: etsf_%-20s = %d" % ("main_nvars",egn)
+  # Number of main variables
+  emc += "\n integer, parameter :: etsf_%s_%-20s = %d" % (grp, "all",2 ** egn - 1)
+  emc += "\n integer, parameter :: etsf_%s_%-20s = %d" % (grp, "nvars",egn)
 
 # Additional variables for splitted files.
 vsp = " type etsf_split\n"
@@ -236,11 +245,12 @@ src = file("config/etsf/template.%s" % (etsf_modules["etsf_io"]),"r").read()
 src = re.sub("@SCRIPT@",my_name,src)
 src = re.sub("@CONSTANTS@",ead,src)
 src = re.sub("@FLAGS_GROUPS@",egc,src)
-src = re.sub("@FLAGS_MAIN@",emc,src)
+src = re.sub("@FLAGS_VARIABLES@",emc,src)
 src = re.sub("@ETSF_IO_VALIDITY_FLAGS@",vlf,src)
 src = re.sub("@DIMENSIONS@",edt,src)
 src = re.sub("@STRUCTURES@",est,src)
 src = re.sub("@STRUCT_GROUPS@",egf,src)
+src = re.sub("@STRUCT_GROUPS_FLAGS@",egk,src)
 src = re.sub("@SPLIT_GROUP@",vsp,src)
 src = re.sub("@SPLIT_NAME_GROUP@",vsn,src)
 

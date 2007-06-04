@@ -189,8 +189,8 @@ def code_data_contents():
   ret += "end if\n\n"
 
   # Get for all variable its group and main id.
-  ret += "etsf_group = etsf_grp_none\n"
-  ret += "etsf_main  = etsf_main_none\n"
+  for grp in etsf_group_list:
+    ret += "etsf_variables%%%s  = etsf_%s_none\n" % (grp, grp)
   ret += "if (associated(my_vars_infos%parent)) then\n"
   ret += "  my_vars_infos%n_vars = size(my_vars_infos%parent)\n"
   ret += "  if (present(vars_infos)) then\n"
@@ -204,8 +204,12 @@ def code_data_contents():
   ret += "  do i = 1, my_vars_infos%n_vars, 1\n"
   ret += "    call etsf_io_data_get(group_id, var_id, &\n"
   ret += "      & split_id, my_vars_infos%parent(i)%name)\n"
-  ret += "    etsf_group = ior(etsf_group, group_id)\n"
-  ret += "    etsf_main  = ior(etsf_main, var_id)\n"
+  ret += "    select case (group_id)\n"
+  for grp in etsf_group_list:
+    ret += "      case (etsf_grp_%s)\n" % grp
+    ret += "        etsf_variables%%%s = ior(etsf_variables%%%s, var_id)\n" % (grp, grp)
+  ret += "    end select\n"
+  ret += "    etsf_groups = ior(etsf_groups, group_id)\n"
   ret += "    if (present(vars_infos)) then\n"
   ret += "      ! Update vars_infos arrays.\n"
   ret += "      vars_infos%group(i) = group_id\n"
@@ -247,7 +251,8 @@ def code_data_read():
 call etsf_io_low_open_read(ncid, trim(filename), lstat, error_data = error_data)
 if (.not. lstat) return
 
-! Get Data"""
+! Get Data
+"""
 
   # Read the other groups.
   ret += code_data_select("get")
@@ -268,51 +273,27 @@ call etsf_io_low_close(ncid, lstat, error_data = error_data)"""
 # In case of read/write action, the corresponding group in
 # group_folder must be associated.
 def code_data_select(action):
-
- # Consistency check.
- ret = """
-if (groups < 0 .or. groups >= 2 ** etsf_ngroups) then
-  call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_ARG, my_name, &
-                           & tgtname = "groups", errmess = "value out of bounds")
-  lstat = .false.
-  return
-end if
-
-"""
-
- ret += "do i = 1, etsf_ngroups\n"
- ret += "  select case ( iand(groups, 2 ** (i - 1)) )\n"
-
+ ret = ""
  for group in etsf_group_list:
-   ret += "    case (etsf_grp_%s)\n" % group
    if ( action == "def" ):
-    if (group == "main"):
-     buf = "call etsf_io_main_def(ncid, mains, lstat, error_data, &\n" \
-         + "                     & split = my_split_definition)\n"
-    else:
-     buf  = "call etsf_io_%s_def(ncid, lstat, error_data, &\n" % group
-     buf += "                     & k_dependent = my_k_dependent, &\n" \
-         +  "                     & split = my_split_definition)\n"
-    buf += "if (.not. lstat) return\n"
+     ret += "if (groups%%%s /= etsf_%s_none) then\n" % (group, group)
+     ret += "  call etsf_io_%s_def(ncid, lstat, error_data, &\n" % group
+     ret += "                    & k_dependent = my_k_dependent, &\n" \
+         +  "                    & flags = groups%%%s, &\n" % group\
+         +  "                    & split = my_split_definition)\n"
+     ret += "  if (.not. lstat) return\n"
+     ret += "end if\n"
    else:
-    # Check the association
-    buf = "if (.not. associated(group_folder%%%s)) then\n" % group
-    buf += "  call etsf_io_low_error_set(error_data, ERROR_MODE_%s, ERROR_TYPE_VAR, &\n" % action.upper()
-    buf += "                           & my_name, tgtname = \"%s\", &\n" % group
-    buf += "                           & errmess = \"No data type associated\")\n"
-    buf += "  lstat = .false.\n"
-    buf += "  return\n"
-    buf += "end if\n"
-    # Call the action routine
-    if (action == "get"):
-     buf += "call etsf_io_%s_get(ncid, group_folder%%%s, lstat, error_data, &\n" % (group, group)
-     buf += "                       & use_atomic_units = my_use_atomic_units)\n"
-    else:
-     buf += "call etsf_io_%s_put(ncid, group_folder%%%s, lstat, error_data)\n" % (group, group)
-    buf += "if (.not. lstat) return\n"
-   ret += indent_code(buf,3)
- ret += "  end select\n"
- ret += "end do\n"
+     # Check the association
+     ret += "if (associated(group_folder%%%s)) then\n" % group
+     # Call the action routine
+     if (action == "get"):
+       ret += "  call etsf_io_%s_get(ncid, group_folder%%%s, lstat, error_data, &\n" % (group, group)
+       ret += "                       & use_atomic_units = my_use_atomic_units)\n"
+     else:
+       ret += "  call etsf_io_%s_put(ncid, group_folder%%%s, lstat, error_data)\n" % (group, group)
+     ret += "  if (.not. lstat) return\n"
+     ret += "end if\n"
 
  return ret
 
@@ -350,15 +331,14 @@ call etsf_io_low_close(ncid, lstat, error_data = error_data)"""
 def code_data_get():
   ret = ""
   ret += "etsf_group = etsf_grp_none\n"
-  ret += "etsf_main  = etsf_main_none\n"
+  ret += "etsf_variable = 0\n"
   ret += "etsf_split = .false.\n"
   fmt_else = ""
   for grp in etsf_groups:
     for var in etsf_groups[grp]:
       ret += "%sif (trim(varname) == \"%s\") then\n" % (fmt_else, var)
       ret += "  etsf_group = etsf_grp_%s\n" % grp
-      if (grp == "main"):
-        ret += "  etsf_main = etsf_main_%s\n" % etsf_variables_shortnames[var]
+      ret += "  etsf_variable = etsf_%s_%s\n" % (grp, var_shortname(var))
       if (fmt_else == ""):
         fmt_else = "else "
   # Add the split variables
@@ -628,18 +608,6 @@ def code_group_def(group):
  # then the dimension is splitted.
  set_of_dims = {}
  
- # Consistency check
- if (group == "main"):
-  ret += """! Consistency checks.
-if (mains < 0 .or. mains >= 2 ** etsf_main_nvars) then
-  call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_ARG, my_name, &
-                           & tgtname = "mains", errmess = "value out of bounds")
-  lstat = .false.
-  return
-end if
-
-"""
-
  # Handling of different optional variables
  ret += "! Get values for optional arguments, set default.\n"
  ret += "if (present(k_dependent)) then\n"
@@ -647,6 +615,24 @@ end if
  ret += "else\n"
  ret += "  my_k_dependent = .true.\n"
  ret += "end if\n"
+ ret += "if (present(flags)) then\n"
+ ret += "  my_flags = flags\n"
+ ret += "else\n"
+ ret += "  my_flags = etsf_%s_all\n" % group
+ ret += "end if\n"
+
+ # Consistency check
+ ret += """! Consistency checks.
+if (my_flags < etsf_%s_none .or. my_flags > etsf_%s_all) then
+  call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_ARG, my_name, &
+                           & tgtname = "flags", errmess = "value out of bounds")
+  lstat = .false.
+  return
+end if
+
+""" % (group, group)
+
+
  for var in etsf_groups[group]:
    var_desc = etsf_variables[var]
    if (len(var_desc) > 1):
@@ -760,12 +746,9 @@ end if
     buf += "end if\n"
 
   # Print the variable definition        
-  if (group == "main"):
-    ret += "if (iand(mains, etsf_main_%s) /= 0) then\n" % var_shortname(var)
-    ret += indent_code(buf, 1)
-    ret += "end if\n"
-  else:
-    ret += buf
+  ret += "if (iand(my_flags, etsf_%s_%s) /= 0) then\n" % (group, var_shortname(var))
+  ret += indent_code(buf, 1)
+  ret += "end if\n"
 
  ret += "! If we reach the end, then it should be OK.\n"
  ret += "lstat = .true.\n"
@@ -1119,6 +1102,13 @@ end if
           else:
             spl += "if (folder%%%s__kpoint_access /= etsf_no_sub_access) then\n" % var_shortname(var)
           spl += "  start(%d) = folder%%%s__kpoint_access\n" % (i, var_shortname(var))
+          spl += "  count(%d) = 1\n" % (i)
+          spl += "end if\n"
+        if (dim == "max_number_of_states"):
+          spl += "if (folder%%%s__state_access /= etsf_no_sub_access) then\n" % \
+                 var_shortname(var)
+          spl += "  start(%d) = folder%%%s__state_access\n" % \
+                 (i, var_shortname(var))
           spl += "  count(%d) = 1\n" % (i)
           spl += "end if\n"
         i -= 1

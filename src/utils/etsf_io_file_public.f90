@@ -36,10 +36,11 @@
 
     ! Local variables
     integer :: ncid_to, n_files, i_file, i, ncid
-    integer :: etsf_group, etsf_main, grp, main
+    integer :: etsf_main, grp
     type(file_infos_type), allocatable :: infos_file(:)
     type(etsf_split) :: output_split
     type(etsf_dims) :: output_dims
+    type(etsf_groups_flags) :: etsf_variables
     character(len = *), parameter :: me = "etsf_io_file_merge"
 
     lstat = .false.
@@ -57,7 +58,6 @@
     ! Read all definitions from all files.
     !*************************************
     ! We read the different dimensions.
-    etsf_group = etsf_grp_none
     etsf_main  = etsf_main_none
     do i_file = 1, n_files, 1
        ! We copy the path.
@@ -66,15 +66,14 @@
        ! We also get the list of all variables in the files.
        call etsf_io_data_contents(trim(source_files(i_file)), &
             & infos_file(i_file)%dims, infos_file(i_file)%split, &
-            & main, grp, lstat, error_data, &
+            & grp, etsf_variables, lstat, error_data, &
             & vars_infos = infos_file(i_file)%var_list)
        if (.not. lstat) then
           call file_infos_free(infos_file, i_file)
           deallocate(infos_file)
           return
        end if
-       etsf_group = ior(etsf_group, grp)
-       etsf_main  = ior(etsf_main, main)
+       etsf_main  = ior(etsf_main, etsf_variables%main)
     end do
 
 
@@ -113,9 +112,9 @@
     ! The main group is also ignored at that time to allow to add new
     ! non ETSF variables.
     if (etsf_main /= etsf_main_none) then
-       etsf_group = etsf_group - etsf_grp_main
+       etsf_variables%main = etsf_main_none
     end if
-    call etsf_io_data_init(trim(dest_file), etsf_main_none, etsf_group, output_dims, &
+    call etsf_io_data_init(trim(dest_file), etsf_variables, output_dims, &
          & "Merging files", "", lstat, error_data = error_data, &
          & split_definition = output_split) 
     if (.not. lstat) goto 1000
@@ -136,7 +135,7 @@
 
     ! We add the main group.
     if (etsf_main /= etsf_main_none) then
-       call etsf_io_main_def(ncid_to, etsf_main, lstat, error_data, &
+       call etsf_io_main_def(ncid_to, lstat, error_data, flags = etsf_main, &
             & split = output_split)
        if (.not. lstat) goto 1000
     end if

@@ -225,7 +225,7 @@ contains
     write(*, "(A)") "Merge three files, etsf_io -a merge -i file1.nc -i file2.nc"
     write(*, "(A)") "                   -i file3.nc -o output.nc"
     write(*, "(A)") ""
-    write(*, "(A)") "Get the contents of file test.nc, etsf_io -a contents test.nc"
+    write(*, "(A)") "Get the contents of file test.nc, etsf_io -a content test.nc"
     write(*, "(A)") ""
     write(*, "(A)") "Get the list of flags for validity checks, etsf_io -a check -l"
     write(*, "(A)") ""
