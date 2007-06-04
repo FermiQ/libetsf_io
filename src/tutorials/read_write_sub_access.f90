@@ -49,6 +49,7 @@ program read_write_sub_access
   type(etsf_io_low_error) :: error_data
 
   ! Specific variables required by the library
+  type(etsf_groups_flags) :: flags
   type(etsf_dims)         :: dims
   type(etsf_kpoints)      :: kpoints
   type(etsf_basisdata)    :: basisdata
@@ -72,6 +73,8 @@ program read_write_sub_access
   ! Variables that will be used in the kpoints group.
   double precision, allocatable, target :: red_coord_kpt(:, :)
   double precision, allocatable, target :: kpoint_weights(:)
+  ! Variable to store the definition of the basis set
+  character(len = etsf_charlen), target :: basis
   
 !! NOTES
 !!  We set the dimension (2 k points, no spin, 5 bands and 100 planewave
@@ -91,9 +94,17 @@ program read_write_sub_access
 !!  routine etsf_io_data_init to define all dimensions and variables for the file
 !!  we want to create.
 !!
+!!  In that case, we will use a precise definition of variables, not creating all
+!!  variables of each included groups. For instance, the basis set will be limited
+!!  to the required variables for a plane wave description.
+!!
 !! SOURCE
-  call etsf_io_data_init("read_write_sub_access.nc", etsf_main_wfs_pw, &
-                       & etsf_grp_kpoints + etsf_grp_basisdata + etsf_grp_main, dims, &
+  flags%basisdata = etsf_basisdata_basis_set + &
+       & etsf_basisdata_red_coord_pw + &
+       & etsf_basisdata_n_coeff
+  flags%kpoints   = etsf_kpoints_red_coord_kpt + etsf_kpoints_kpoint_weights
+  flags%main      = etsf_main_wfs_coeff
+  call etsf_io_data_init("read_write_sub_access.nc", flags, dims, &
                        & "Tutorial ETSF_IO, use sub access to read or write", &
                        & "Created by the tutorial example of the library", &
                        & lstat, error_data)
@@ -107,6 +118,8 @@ program read_write_sub_access
 !!  informations has been reserved. In a real case, we let the main program computing
 !!  the plane waves and the arrays that describe them.
 !! SOURCE
+  write(basis, "(A)") "plane_waves"
+
   ! The main program allocate memory for its computation.
   allocate(coef_pw_k(2, dims%max_number_of_coefficients * dims%max_number_of_states))
   allocate(number_of_coefficients(dims%number_of_kpoints))
@@ -169,7 +182,7 @@ program read_write_sub_access
      ! We associate the data
      main%coefficients_of_wavefunctions%data2D => coef_pw_k
      ! We set the sub access.
-     main%wfs_pw__kpoint_access = i_kpt
+     main%wfs_coeff__kpoint_access = i_kpt
      ! Idem for the reduced coordinates of coefficients.
      basisdata%reduced_coordinates_of_plane_waves%data2D => red_coord_pw_k
      basisdata%red_coord_pw__kpoint_access = i_kpt
@@ -199,12 +212,13 @@ program read_write_sub_access
 !!  We write the other data that are independent of the kpoint loop.
 !!
 !! WARNINGS
-!!  It is important to associate to null() the already used pointers
+!!  It is important to associate to nullify the already used pointers
 !!  to avoid to write them again.
 !! SOURCE
   ! We set the associations.
   kpoints%reduced_coordinates_of_kpoints => red_coord_kpt
   kpoints%kpoint_weights => kpoint_weights
+  basisdata%basis_set => basis
   basisdata%reduced_coordinates_of_plane_waves%data2D => null()
   basisdata%number_of_coefficients => number_of_coefficients
   ! We call the group level write routines.

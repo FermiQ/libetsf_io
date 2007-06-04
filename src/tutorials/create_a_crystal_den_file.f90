@@ -62,6 +62,7 @@ program create_a_crystal_den_file
 !!
 !! SOURCE
   ! Specific variables required by the library
+  type(etsf_groups_flags)     :: flags
   type(etsf_groups)           :: groups
   type(etsf_geometry), target :: geometry
   type(etsf_main), target     :: main
@@ -96,15 +97,14 @@ program create_a_crystal_den_file
   
 !! NOTES
 !!  Now that dimensions have been stored in the appropriated structure, we can call the
-!!  etsf_io_data_init() routine itself. Two arguments are very important:
-!!  * groups, which is an integer. It will tell which variables will we allocated
-!!    on disk. All variables are gathered by groups and one can choose one or several
-!!    groups to be defined. To do it, use the flags from #FLAGS_GROUPS, in a summation.
-!!  * mains, which is also an integer. The etsf_main is a special group since it
-!!    gathered all the big variables of an ETSF file (density, wavefunctions...).
-!!    Since all variables of each selected group are allocated on disk, it is possible
-!!    for this group "main" to choose one or several variables to be defined. Once again
-!!    one can use flags (#FLAGS_MAIN) in a summation.
+!!  etsf_io_data_init() routine itself. The 'groups' argument is very important
+!!  It will tell which variables will we allocated
+!!  on disk. All variables are gathered by groups and one can choose one or several
+!!  groups to be defined. To do it, use the flags from #FLAGS_VARIABLES,
+!!  in a summation for each group in the etsf_groups_flags structure. By default
+!!  no group will be defined, to add the geometry group, we will use the value
+!!  etsf_geometry_all (from #FLAGS_VARIABLES) ; and to add the density variable (from
+!!  the main group), and only this one, we will use etsf_main_denisty.
 !!
 !!  Other arguments of the routine are quite easy to understand. The optional k_dependent
 !!  argument is here to handle the case of reduced_coordinates_of_plane_waves which
@@ -113,8 +113,9 @@ program create_a_crystal_den_file
 !!  variable reduced_coordinates_of_plane_waves will be a two dimensional array.
 !!
 !! SOURCE
-  call etsf_io_data_init("create_a_crystal_den_file.nc", etsf_main_density, &
-                       & etsf_grp_geometry + etsf_grp_main, dims, &
+  flags%geometry = etsf_geometry_all
+  flags%main     = etsf_main_density
+  call etsf_io_data_init("create_a_crystal_den_file.nc", flags, dims, &
                        & "Tutorial ETSF_IO, create a density file", &
                        & "Created by the tutorial example of the library", &
                        & lstat, error_data)
@@ -194,7 +195,6 @@ program create_a_crystal_den_file
 
   ! We write.
   call etsf_io_data_write("create_a_crystal_den_file.nc", &
-                        & etsf_grp_main + etsf_grp_geometry, &
                         & groups, lstat, error_data)
   ! We handle the error
   if (.not. lstat) then

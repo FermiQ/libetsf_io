@@ -39,6 +39,7 @@ program mix_ETSF_and_non_ETSF
   integer                 :: ncid
   logical                 :: lstat
   type(etsf_io_low_error) :: error_data
+  type(etsf_groups_flags) :: flags
   type(etsf_dims)         :: dims
   ! Specific variables required by the library
   !FIRST# type(etsf_groups)           :: groups
@@ -86,8 +87,9 @@ program mix_ETSF_and_non_ETSF
 !!
 !! SOURCE
   !FIRST# the etsf_grp_main was declared here.
-  call etsf_io_data_init("mix_ETSF_and_non_ETSF.nc", etsf_main_none, &
-                       & etsf_grp_geometry, dims, &
+  flags%geometry = etsf_geometry_all
+  flags%main     = etsf_main_none
+  call etsf_io_data_init("mix_ETSF_and_non_ETSF.nc", flags, dims, &
                        & "Tutorial ETSF_IO, create a density file", &
                        & "Created by the tutorial example of the library", &
                        & lstat, error_data, overwrite = .true.)
@@ -188,11 +190,11 @@ program mix_ETSF_and_non_ETSF
 
 !! NOTES
 !!  Now that the non-ETSF variables has been added, we can defined the main
-!!  ETSF variables taht will be at the end of the file, as required in the
+!!  ETSF variables that will be at the end of the file, as required in the
 !!  specifications.
 !!
 !! SOURCE
-  call etsf_io_main_def(ncid, etsf_main_density, lstat, error_data)
+  call etsf_io_main_def(ncid, lstat, error_data, flags = etsf_main_density)
   if (.not. lstat) then
     call etsf_io_low_error_handle(error_data)
     stop
