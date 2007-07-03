@@ -55,6 +55,7 @@ program MPI_output_of_a_density
 !! SOURCE
   ! Specific variables required by the library
   type(etsf_dims)             :: dims
+  type(etsf_groups_flags)     :: flags
   type(etsf_split)            :: split
   type(etsf_groups)           :: groups
   type(etsf_geometry), target :: geometry
@@ -132,8 +133,9 @@ program MPI_output_of_a_density
 !!
 !! SOURCE
   write(my_filename, "(A,I2.2,A)") "MPI_density_", i_proc, ".nc"
-  call etsf_io_data_init(trim(my_filename), etsf_main_density, &
-       & etsf_grp_geometry + etsf_grp_main, dims, &
+  flags%geometry = etsf_geometry_primitive_vectors
+  flags%main     = etsf_main_density
+  call etsf_io_data_init(trim(my_filename), flags, dims, &
        & "Tutorial ETSF_IO, create a density file with MPI", &
        & "Created by the tutorial example of the library", &
        & lstat, error_data, overwrite = .true., split_definition = split)
@@ -170,8 +172,7 @@ program MPI_output_of_a_density
 !!  The write part is not modified by the usage of split data.
 !!
 !! SOURCE
-  call etsf_io_data_write(trim(my_filename), etsf_grp_main + etsf_grp_geometry, &
-       & groups, lstat, error_data)
+  call etsf_io_data_write(trim(my_filename), groups, lstat, error_data)
   ! We handle the error
   if (.not. lstat) then
     call etsf_io_low_error_handle(error_data)
