@@ -645,9 +645,10 @@ module etsf_io_low_level
   !!
   !! SOURCE
   public :: etsf_io_low_error
-  public :: etsf_io_low_error_handle
   public :: etsf_io_low_error_set
+  public :: etsf_io_low_error_update
   public :: etsf_io_low_error_to_str
+  public :: etsf_io_low_error_handle
   !!***
 
   !!****g* etsf_io_low_level/etsf_io_low_file_group
@@ -764,12 +765,15 @@ contains
       return
     end if
     
-    ! Storing informations
-    write(error_data%parent, "(A)") parent(1:min(80, len(parent)))
+    ! Storing mandatory informations
+    write(error_data%backtrace(1), "(A)") parent(1:min(80, len(parent)))
+    error_data%backtraceId    = 1
     error_data%access_mode_id = mode
     write(error_data%access_mode_str, "(A)") etsf_io_low_error_mode(mode)
     error_data%target_type_id = type
     write(error_data%target_type_str, "(A)") etsf_io_low_error_type(type)
+
+    ! Storing possible other informations
     if (present(tgtid)) then
       error_data%target_id = tgtid
     else
@@ -793,6 +797,38 @@ contains
   end subroutine etsf_io_low_error_set
   !!***
 
+  !!****m* etsf_io_low_error_group/etsf_io_low_error_update
+  !! NAME
+  !!  etsf_io_low_error_update
+  !!
+  !! FUNCTION
+  !!  This method must be called when a routine receives an error and need
+  !!  to propagate it further.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
+  !!  This file is distributed under the terms of the
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
+  !!
+  !! INPUTS
+  !!  * method = the name of the routine that propagate the error.
+  !!
+  !! SIDE EFFECTS
+  !!  * error <type(etsf_io_low_error)> = informations about an error.
+  !!
+  !! SOURCE
+  subroutine etsf_io_low_error_update(error, method)
+    type(etsf_io_low_error), intent(inout) :: error
+    character(len = *), intent(in)         :: method
+
+    if (error%backtraceId == 100) return
+
+    error%backtraceId = error%backtraceId + 1
+    write(error%backtrace(error%backtraceId), "(A)") method(1:min(80, len(method)))
+  end subroutine etsf_io_low_error_update
+  !!***
+
   !!****m* etsf_io_low_error_group/etsf_io_low_error_to_str
   !! NAME
   !!  etsf_io_low_error_to_str
@@ -814,11 +850,12 @@ contains
   !!
   !! SOURCE
   subroutine etsf_io_low_error_to_str(str, error_data)
-    character(len = 1024), intent(out)   :: str
+    character(len = 4096), intent(out)   :: str
     type(etsf_io_low_error), intent(in) :: error_data
     
-    character(len = 80) :: line_tgtname, line_tgtid, line_messid
+    character(len = 80)  :: line_tgtname, line_tgtid, line_messid
     character(len = 256) :: line_mess
+    integer              :: i
     
     if (trim(error_data%target_name) /= "") then
       write(line_tgtname, "(A,A,A)") "  Target (name)      : ", trim(error_data%target_name), char(10)
@@ -841,8 +878,18 @@ contains
       write(line_messid, "(A)") ""
     end if
 
-    ! Error handling
-    write(str,*) " Calling subprogram : ", trim(error_data%parent), char(10), &
+    ! Write the back trace
+    write(str, "(A,A,A)") "  Backtrace          : ", &
+         & trim(error_data%backtrace(error_data%backtraceId)), "()"
+    do i = error_data%backtraceId - 1, 1, -1
+       if (len(trim(str)) + 80 + 26 < 4096) then
+          write(str, "(5A)") trim(str(1:3900)), char(10), &
+               & "                       ", trim(error_data%backtrace(i)), "()"
+       end if
+    end do
+
+    ! Write all the rest.
+    write(str, "(11A)") trim(str(1:3000)), char(10),&
                & "  Action performed   : ", trim(error_data%access_mode_str), &
                & " ", trim(error_data%target_type_str), char(10), &
                & trim(line_tgtname), &
@@ -873,13 +920,19 @@ contains
   !! SOURCE
   subroutine etsf_io_low_error_handle(error_data)
     type(etsf_io_low_error), intent(in) :: error_data
+
+    integer :: i
       
     ! Error handling
     write(*,*) 
     write(*,*) "    ***"
     write(*,*) "    *** ETSF I/O ERROR"
     write(*,*) "    ***"
-    write(*,*) "    *** Calling subprogram : ", trim(error_data%parent)
+    write(*,*) "    *** Backtrace          : ", &
+         & trim(error_data%backtrace(error_data%backtraceId)), "()"
+    do i = error_data%backtraceId - 1, 1, -1
+       write(*,*) "    ***                      ", trim(error_data%backtrace(i)), "()"
+    end do
     write(*,*) "    *** Action performed   : ", trim(error_data%access_mode_str), &
              & " ", trim(error_data%target_type_str)
     if (trim(error_data%target_name) /= "") then

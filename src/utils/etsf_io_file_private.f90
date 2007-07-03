@@ -12,7 +12,10 @@ subroutine test_var(ncid, var_infos_ref, lstat, error_data)
   ! Test variable existence.
   call etsf_io_low_read_var_infos(ncid, trim(var_infos_ref%name), var_infos, &
                                 & lstat, error_data, .true.)
-  if (.not. lstat) return
+  if (.not. lstat) then
+     call etsf_io_low_error_update(error_data, me)
+     return
+  end if
   ! Now test variable definition.
   !  Type.
   if (var_infos_ref%nctype /= var_infos%nctype) then
@@ -105,6 +108,7 @@ subroutine non_etsf_init(ncid, infos_file, lstat, error_data)
                 & infos_file(i_file)%var_list%parent(i_var)%ncdims(i_dim), &
                 & lstat, error_data = error_data)
            if (.not.lstat) then
+              call etsf_io_low_error_update(error_data, me)
               return
            end if
         end do
@@ -121,13 +125,19 @@ subroutine non_etsf_init(ncid, infos_file, lstat, error_data)
                 & infos_file(i_file)%var_list%parent(i_var)%nctype, &
                 & infos_file(i_file)%var_list%parent(i_var)%ncdimnames, lstat, &
                 & error_data = error_data)
-           if (.not.lstat) return
+           if (.not.lstat) then
+              call etsf_io_low_error_update(error_data, me)
+              return
+           end if
         else
            call etsf_io_low_def_var( &
                 & ncid, trim(infos_file(i_file)%var_list%parent(i_var)%name), &
                 & infos_file(i_file)%var_list%parent(i_var)%nctype, &
                 & lstat, error_data = error_data)
-           if (.not.lstat) return
+           if (.not.lstat) then
+              call etsf_io_low_error_update(error_data, me)
+              return
+           end if
         end if
      end if
   end do
@@ -202,10 +212,16 @@ subroutine non_etsf_copy(ncid, infos_file, lstat, error_data)
   i_file = 1
   call etsf_io_low_open_read(ncid_from, trim(infos_file(i_file)%path), lstat, &
        & error_data = error_data)
-  if (.not. lstat) return
+  if (.not.lstat) then
+     call etsf_io_low_error_update(error_data, me)
+     return
+  end if
 
   call etsf_io_low_set_write_mode(ncid, lstat, error_data = error_data)
-  if (.not. lstat) return
+  if (.not.lstat) then
+     call etsf_io_low_error_update(error_data, me)
+     return
+  end if
 
   allocate(varids_to(infos_file(i_file)%var_list%n_vars))
   do i_var = 1, infos_file(i_file)%var_list%n_vars, 1
@@ -295,13 +311,17 @@ subroutine non_etsf_copy(ncid, infos_file, lstat, error_data)
         if (allocated(string_data)) then
            deallocate(string_data)
         end if
-        if (.not. lstat) exit
+        if (.not.lstat) then
+           call etsf_io_low_error_update(error_data, me)
+           exit
+        end if
      end if
   end do
 
   call etsf_io_low_set_define_mode(ncid, lstat, error_data = error_data)
   if (.not. lstat) then
      deallocate(varids_to)
+     call etsf_io_low_error_update(error_data, me)
      return
   end if
   do i_var = 1, infos_file(i_file)%var_list%n_vars, 1
@@ -311,7 +331,10 @@ subroutine non_etsf_copy(ncid, infos_file, lstat, error_data)
         call etsf_io_low_copy_all_att(ncid_from, ncid, &
              & infos_file(i_file)%var_list%parent(i_var)%ncid, varids_to(i_var), &
              & lstat, error_data = error_data)
-        if (.not. lstat) exit
+        if (.not.lstat) then
+           call etsf_io_low_error_update(error_data, me)
+           exit
+        end if
      end if
   end do
   deallocate(varids_to)

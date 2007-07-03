@@ -71,6 +71,7 @@
        if (.not. lstat) then
           call file_infos_free(infos_file, i_file)
           deallocate(infos_file)
+          call etsf_io_low_error_update(error_data, me)
           return
        end if
        etsf_main  = ior(etsf_main, etsf_variables%main)
@@ -91,6 +92,7 @@
        if (.not. lstat) then
           call file_infos_free(infos_file, n_files)
           deallocate(infos_file)
+          call etsf_io_low_error_update(error_data, me)
           return
        end if
     end do
@@ -184,6 +186,7 @@
     call file_infos_free(infos_file, n_files)
     deallocate(infos_file)
     call etsf_io_split_free(output_split)
+    if (.not. lstat) call etsf_io_low_error_update(error_data, me)
   end subroutine etsf_io_file_merge
 !!***
 
@@ -223,18 +226,23 @@
     logical, intent(out)                 :: lstat
     type(etsf_io_low_error), intent(out) :: error_data
 
+    character(len = *), parameter :: me = "etsf_io_file_check"
     integer :: read_flags
     type(etsf_io_low_error), dimension(etsf_nspecs_data) :: errors
     integer :: i
     
     call etsf_io_file_contents(read_flags, errors, file_name, lstat, error_data)
-    if (.not. lstat) return
+    if (.not. lstat) then
+       call etsf_io_low_error_update(error_data, me)
+       return
+    end if
     
     do i = 1, etsf_nspecs_data
        if (iand(file_flags, 2 ** (i - 1)) /= 0 .and. &
             & iand(read_flags, 2 ** (i - 1)) == 0) then
           lstat = .false.
           error_data = errors(i)
+          call etsf_io_low_error_update(error_data, me)
           return
        end if
     end do

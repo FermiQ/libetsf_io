@@ -82,8 +82,8 @@
     s = nf90_create(path = filename, cmode = cmode, ncid = ncid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_OWR, me, tgtname = filename, &
-                     & errid = s, errmess = nf90_strerror(s))
+        call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_OWR, &
+             & me, tgtname = filename, errid = s, errmess = nf90_strerror(s))
       end if
       return
     end if
@@ -101,8 +101,8 @@
     s = nf90_put_att(ncid, NF90_GLOBAL, "file_format", etsf_io_low_file_format)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, tgtname = "file_format", &
-                     & errid = s, errmess = nf90_strerror(s))
+        call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, &
+             & me, tgtname = "file_format", errid = s, errmess = nf90_strerror(s))
       end if
       call etsf_io_low_close(ncid, stat)
       return
@@ -112,7 +112,7 @@
     if (s /= nf90_noerr) then
       if (present(error_data)) then
         call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, &
-                     & tgtname = "file_format_version", errid = s, errmess = nf90_strerror(s))
+             & tgtname = "file_format_version", errid = s, errmess = nf90_strerror(s))
       end if
       call etsf_io_low_close(ncid, stat)
       return
@@ -121,8 +121,8 @@
     s = nf90_put_att(ncid, NF90_GLOBAL, "Conventions", etsf_io_low_conventions)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, tgtname = "Conventions", &
-                     & errid = s, errmess = nf90_strerror(s))
+        call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, &
+             & tgtname = "Conventions", errid = s, errmess = nf90_strerror(s))
       end if
       call etsf_io_low_close(ncid, stat)
       return
@@ -132,8 +132,8 @@
       s = nf90_put_att(ncid, NF90_GLOBAL, "title", title(1:min(80, len(title))))
       if (s /= nf90_noerr) then
         if (present(error_data)) then
-          call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, tgtname = "title", &
-                       & errid = s, errmess = nf90_strerror(s))
+          call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, &
+               & me, tgtname = "title", errid = s, errmess = nf90_strerror(s))
         end if
         call etsf_io_low_close(ncid, stat)
         return
@@ -144,8 +144,8 @@
       s = nf90_put_att(ncid, NF90_GLOBAL, "history", history(1:min(1024, len(history))))
       if (s /= nf90_noerr) then
         if (present(error_data)) then
-          call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, me, tgtname = "history", &
-                       & errid = s, errmess = nf90_strerror(s))
+          call etsf_io_low_error_set(error_data, ERROR_MODE_PUT, ERROR_TYPE_ATT, &
+               & me, tgtname = "history", errid = s, errmess = nf90_strerror(s))
         end if
         call etsf_io_low_close(ncid, stat)
         return
@@ -222,8 +222,8 @@
       if (version < 1.0) then
         if (present(error_data)) then
           write(err, "(A,I0,A)") "Wrong version argument (given: ", version, " ; awaited >= 1.0)"
-          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, &
-                       & tgtname = "file_format_version", errmess = err)
+          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, &
+               & me, tgtname = "file_format_version", errmess = err)
         end if
         return
       end if
@@ -232,8 +232,8 @@
     s = nf90_open(path = filename, mode = NF90_WRITE, ncid = ncid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_OWR, me, tgtname = filename, &
-                     & errid = s, errmess = nf90_strerror(s))
+        call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_OWR, &
+             & me, tgtname = filename, errid = s, errmess = nf90_strerror(s))
       end if
       return
     end if
@@ -250,6 +250,7 @@
     if (my_with_etsf_header) then
       if (present(error_data)) then
         call etsf_io_low_check_header(ncid, stat, error_data = error_data)
+        if (.not. stat) call etsf_io_low_error_update(error_data, me)
       else
         call etsf_io_low_check_header(ncid, stat)
       end if
@@ -262,6 +263,7 @@
     ! We switch to define mode to set attributes.
     if (present(error_data)) then
       call etsf_io_low_set_define_mode(ncid, stat, error_data = error_data)
+      if (.not. stat) call etsf_io_low_error_update(error_data, me)
     else
       call etsf_io_low_set_define_mode(ncid, stat)
     end if
@@ -302,7 +304,8 @@
     end if
     ! If an history value is given, we append it.
     if (present(history)) then
-      call etsf_io_low_read_att(ncid, NF90_GLOBAL, "history", 1024, current_history, stat)
+      call etsf_io_low_read_att(ncid, NF90_GLOBAL, "history", 1024, &
+           & current_history, stat)
       if (stat) then
         ! appending mode
         if (len(trim(current_history)) + len(history) < 1024) then
@@ -492,6 +495,7 @@
       if (present(error_data)) then
         call etsf_io_low_read_dim(ncid, trim(vardims(i)), ncdims(0, i), &
                                 & stat, ncdimid = ncdims(1, i), error_data = error_data)
+        if (.not. stat) call etsf_io_low_error_update(error_data, me)
       else
         call etsf_io_low_read_dim(ncid, trim(vardims(i)), ncdims(0, i), &
                                 & stat, ncdimid = ncdims(1, i))
@@ -577,8 +581,14 @@
 
     lstat = .true.
     if (ncvarid_from /= etsf_io_low_global_att) then
-       call read_var_infos_id(ncid_from, ncvarid_from, var_infos, lstat, &
-            & error_data = error_data, dim_name = .false., att_name = .true.)
+       if (present(error_data)) then
+          call read_var_infos_id(ncid_from, ncvarid_from, var_infos, lstat, &
+               & error_data = error_data, dim_name = .false., att_name = .true.)
+          if (.not. lstat) call etsf_io_low_error_update(error_data, me)
+       else
+          call read_var_infos_id(ncid_from, ncvarid_from, var_infos, lstat, &
+               & dim_name = .false., att_name = .true.)
+       end if
        if (.not. lstat) return
     else
        s = nf90_inquire(ncid_from, nAttributes = n)
@@ -862,6 +872,7 @@
     end if
     if (present(error_data)) then
       error_data = error
+      if (.not. lstat) call etsf_io_low_error_update(error_data, me)
     end if
     if (present(ncvarid)) then
       ncvarid = varid
@@ -1101,6 +1112,7 @@
     end if
     if (present(error_data)) then
       error_data = error
+      if (.not. lstat) call etsf_io_low_error_update(error_data, me)
     end if
     if (present(ncvarid)) then
       ncvarid = varid

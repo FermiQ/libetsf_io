@@ -54,7 +54,10 @@ def code_data_init():
 call etsf_io_low_open_create(ncid, filename, etsf_file_format_version, lstat, &
                            & title = trim(title), history = trim(history), &
                            & error_data = error_data, overwrite = my_overwrite)
-if (.not. lstat) return
+if (.not. lstat) then
+  call etsf_io_low_error_update(error_data, my_name)
+  return
+end if
 
 ! Define dimensions
 dims%character_string_length        = etsf_charlen
@@ -70,7 +73,10 @@ end if
 
 ! We write the dimensions to the file.
 call etsf_io_dims_def(ncid, dims, lstat, error_data)
-if (.not. lstat) return
+if (.not. lstat) then
+  call etsf_io_low_error_update(error_data, my_name)
+  return
+end if
 
 """
 
@@ -78,7 +84,10 @@ if (.not. lstat) return
  # Call the def subroutine for possible splitted variables.
  ret += "if (present(split_definition)) then\n"
  ret += "  call etsf_io_split_def(ncid, dims, lstat, error_data)\n"
- ret += "  if (.not. lstat) return\n"
+ ret += "  if (.not. lstat) then\n"
+ ret += "    call etsf_io_low_error_update(error_data, my_name)\n"
+ ret += "    return\n"
+ ret += "  end if\n"
  ret += "end if\n"
  # Write the select case for the argument groups.
  ret += "! Define groups.\n"
@@ -90,15 +99,24 @@ if (.not. lstat) return
 if (present(split_definition)) then
   ! Begin by putting the file in write mode.
   call etsf_io_low_set_write_mode(ncid, lstat, error_data = error_data)
-  if (.not. lstat) return
+  if (.not. lstat) then
+    call etsf_io_low_error_update(error_data, my_name)
+    return
+  end if
   ! Write the arrays.
   call etsf_io_split_put(ncid, split_definition, lstat, error_data)
-  if (.not. lstat) return
+  if (.not. lstat) then
+    call etsf_io_low_error_update(error_data, my_name)
+    return
+  end if
 end if
 
 ! End definitions and close file
 call etsf_io_low_close(ncid, lstat, error_data = error_data)
-if (.not. lstat) return"""
+if (.not. lstat) then
+  call etsf_io_low_error_update(error_data, my_name)
+  return
+end if"""
 
  return ret
 
@@ -108,24 +126,36 @@ def code_data_copy():
   ret = "lstat = .false.\n\n"
 
   # Open the files for reading and writing.
-  ret += "! Open file for writing\n"
+  ret += "! Open destination file for writing\n"
   ret += "call etsf_io_low_open_modify(ncid_to, trim(dest_file), &\n"
   ret += "  & lstat, error_data = error_data)\n"
-  ret += "if (.not. lstat) return\n"
-  ret += "! Open file for reading\n"
+  ret += "if (.not. lstat) then\n"
+  ret += "  call etsf_io_low_error_update(error_data, my_name)\n"
+  ret += "  return\n"
+  ret += "end if\n"
+  ret += "! Open source file for reading\n"
   ret += "call etsf_io_low_open_read(ncid, trim(source_file), &\n"
   ret += "  & lstat, error_data = error_data)\n"
-  ret += "if (.not. lstat) return\n\n"
+  ret += "if (.not. lstat) then\n"
+  ret += "  call etsf_io_low_error_update(error_data, my_name)\n"
+  ret += "  return\n"
+  ret += "end if\n\n"
   
   # We copy the attributes
   ret += "! We copy all the global attributes (ETSF and non-ETSF).\n"
   ret += "call etsf_io_low_copy_all_att(ncid, ncid_to, etsf_io_low_global_att, etsf_io_low_global_att, &\n"
   ret += "                            & lstat, error_data = error_data)\n"
-  ret += "if (.not. lstat) return\n\n"
+  ret += "if (.not. lstat) then\n"
+  ret += "  call etsf_io_low_error_update(error_data, my_name)\n"
+  ret += "  return\n"
+  ret += "end if\n\n"
 
   ret += "! We switch to write mode.\n"
   ret += "call etsf_io_low_set_write_mode(ncid_to, lstat, error_data = error_data)\n"
-  ret += "if (.not. lstat) return\n"
+  ret += "if (.not. lstat) then\n"
+  ret += "  call etsf_io_low_error_update(error_data, my_name)\n"
+  ret += "  return\n"
+  ret += "end if\n"
   for grp in etsf_groups:
     ret += "if (present(split)) then\n"
     ret += "  call etsf_io_%s_copy(ncid_to, ncid, dims, &\n" % grp
@@ -134,13 +164,22 @@ def code_data_copy():
     ret += "  call etsf_io_%s_copy(ncid_to, ncid, dims, &\n" % grp
     ret += "    & lstat, error_data)\n"
     ret += "end if\n"
-    ret += "if (.not. lstat) return\n\n"
+    ret += "if (.not. lstat) then\n"
+    ret += "  call etsf_io_low_error_update(error_data, my_name)\n"
+    ret += "  return\n"
+    ret += "end if\n"
 
   ret += "!Close files.\n"
   ret += "call etsf_io_low_close(ncid_to, lstat, error_data = error_data)\n"
-  ret += "if (.not. lstat) return\n"
+  ret += "if (.not. lstat) then\n"
+  ret += "  call etsf_io_low_error_update(error_data, my_name)\n"
+  ret += "  return\n"
+  ret += "end if\n"
   ret += "call etsf_io_low_close(ncid, lstat, error_data = error_data)\n"
-  ret += "if (.not. lstat) return\n"
+  ret += "if (.not. lstat) then\n"
+  ret += "  call etsf_io_low_error_update(error_data, my_name)\n"
+  ret += "  return\n"
+  ret += "end if\n"
   
   return ret
 
@@ -161,12 +200,18 @@ def code_data_contents():
   ret += "! Open file for reading\n"
   ret += "call etsf_io_low_open_read(ncid, trim(filename), &\n"
   ret += "  & lstat, error_data = error_data)\n"
-  ret += "if (.not. lstat) return\n"
+  ret += "if (.not. lstat) then\n"
+  ret += "  call etsf_io_low_error_update(error_data, my_name)\n"
+  ret += "  return\n"
+  ret += "end if\n"
 
   # We read the dimensions.
   ret += "! Get the dimensions.\n"
   ret += "call etsf_io_dims_get(ncid, dims, lstat, error_data)\n"
-  ret += "if (.not. lstat) return\n"
+  ret += "if (.not. lstat) then\n"
+  ret += "  call etsf_io_low_error_update(error_data, my_name)\n"
+  ret += "  return\n"
+  ret += "end if\n"
 
   # We handle the split definition, if required.
   ret += "! We allocate the split arrays.\n"
@@ -175,6 +220,7 @@ def code_data_contents():
   ret += "call etsf_io_split_get(ncid, split, lstat, error_data)\n"
   ret += "if (.not. lstat) then\n"
   ret += "  call etsf_io_split_free(split)\n"
+  ret += "  call etsf_io_low_error_update(error_data, my_name)\n"
   ret += "  return\n"
   ret += "end if\n"
 
@@ -185,6 +231,7 @@ def code_data_contents():
   ret += "  & lstat, error_data, with_dim_name = with_dim_name)\n"
   ret += "if (.not. lstat) then\n"
   ret += "  call etsf_io_split_free(split)\n"
+  ret += "  call etsf_io_low_error_update(error_data, my_name)\n"
   ret += "  return\n"
   ret += "end if\n\n"
 
@@ -227,6 +274,7 @@ def code_data_contents():
 
   ret += "! Close file\n"
   ret += "call etsf_io_low_close(ncid, lstat, error_data = error_data)\n"
+  ret += "if (.not. lstat) call etsf_io_low_error_update(error_data, my_name)\n"
 
   return ret
 
@@ -249,7 +297,10 @@ def code_data_read():
   ret += """
 ! Open file for reading
 call etsf_io_low_open_read(ncid, trim(filename), lstat, error_data = error_data)
-if (.not. lstat) return
+if (.not. lstat) then
+  call etsf_io_low_error_update(error_data, my_name)
+  return
+end if
 
 ! Get Data
 """
@@ -261,7 +312,8 @@ if (.not. lstat) return
   ret += """
 
 ! Close file
-call etsf_io_low_close(ncid, lstat, error_data = error_data)"""
+call etsf_io_low_close(ncid, lstat, error_data = error_data)
+if (.not. lstat) call etsf_io_low_error_update(error_data, my_name)"""
 
   return ret
 
@@ -281,7 +333,10 @@ def code_data_select(action):
      ret += "                    & k_dependent = my_k_dependent, &\n" \
          +  "                    & flags = groups%%%s, &\n" % group\
          +  "                    & split = my_split_definition)\n"
-     ret += "  if (.not. lstat) return\n"
+     ret += "  if (.not. lstat) then\n"
+     ret += "    call etsf_io_low_error_update(error_data, my_name)\n"
+     ret += "    return\n"
+     ret += "  end if\n"
      ret += "end if\n"
    else:
      # Check the association
@@ -292,7 +347,10 @@ def code_data_select(action):
        ret += "                       & use_atomic_units = my_use_atomic_units)\n"
      else:
        ret += "  call etsf_io_%s_put(ncid, group_folder%%%s, lstat, error_data)\n" % (group, group)
-     ret += "  if (.not. lstat) return\n"
+     ret += "  if (.not. lstat) then\n"
+     ret += "    call etsf_io_low_error_update(error_data, my_name)\n"
+     ret += "    return\n"
+     ret += "  end if\n"
      ret += "end if\n"
 
  return ret
@@ -307,11 +365,17 @@ def code_data_write():
  # Open a NetCDF file for writing.
  ret = """! Open file for writing
 call etsf_io_low_open_modify(ncid, trim(filename), lstat, error_data = error_data)
-if (.not. lstat) return
+if (.not. lstat) then
+  call etsf_io_low_error_update(error_data, my_name)
+  return
+end if
 
 ! We switch to write mode.
 call etsf_io_low_set_write_mode(ncid, lstat, error_data = error_data)
-if (.not. lstat) return
+if (.not. lstat) then
+  call etsf_io_low_error_update(error_data, my_name)
+  return
+end if
 
 ! Put Data
 """
@@ -323,7 +387,8 @@ if (.not. lstat) return
  ret += """
 
 ! Close file
-call etsf_io_low_close(ncid, lstat, error_data = error_data)"""
+call etsf_io_low_close(ncid, lstat, error_data = error_data)
+if (.not. lstat) call etsf_io_low_error_update(error_data, my_name)"""
 
  return ret
 
@@ -396,7 +461,10 @@ def code_dims(action):
     ret += "  call etsf_io_low_write_dim(ncid, \"%s\", &\n" % expand_length(dim) \
         +  "                           & dims%%%s, &\n" % dim \
         +  "                           & lstat, error_data = error_data)\n" \
-        +  "  if (.not. lstat) return\n" \
+        +  "  if (.not. lstat) then\n" \
+        +  "    call etsf_io_low_error_update(error_data, my_name)\n" \
+        +  "    return\n" \
+        +  "  end if\n" \
         +  "end if\n"
   elif ( action == "get" ):
     ret += "call etsf_io_low_read_dim(ncid, \"%s\", &\n" % expand_length(dim) \
@@ -409,6 +477,7 @@ def code_dims(action):
     else:
       ret += "    dims%%%s = etsf_no_dimension\n" % dim
     ret += "  else\n" \
+         + "    call etsf_io_low_error_update(error_data, my_name)\n" \
          + "    return\n" \
          + "  end if\n" \
          + "end if\n"
@@ -514,12 +583,14 @@ def code_split(action):
         ret += "                          & split_array, lstat, error_data = error_data)\n"
         ret += "  if (.not. lstat) then\n"
         ret += "    deallocate(split_array)\n"
+        ret += "    call etsf_io_low_error_update(error_data, my_name)\n"
         ret += "    return\n"
         ret += "  end if\n"
         ret += "  call etsf_io_low_write_var(ncid_to, \"%s\", &\n" % var
         ret += "                           & split_array, lstat, error_data = error_data)\n"
         ret += "  if (.not. lstat) then\n"
         ret += "    deallocate(split_array)\n"
+        ret += "    call etsf_io_low_error_update(error_data, my_name)\n"
         ret += "    return\n"
         ret += "  end if\n"
         ret += "  deallocate(split_array)\n"
@@ -558,45 +629,6 @@ def code_split(action):
     ret += "lstat = .true.\n"
   
   return ret
-
-# Code for global attributes
-# WARNING! this definition is obsolete since
-# all global attributes are handled by the low level part.
-def code_globals(action):
-  ret = ""
-
-  for att in etsf_attributes.keys():
-    att_desc = etsf_attributes[att]
-
-    if ( att in etsf_properties ):
-      att_specs = etsf_properties[att]
-    else:
-      att_specs = ETSF_PROP_NONE
-
-    if ( (att_specs & ETSF_PROP_ATT_GLOBAL) != 0 ):
-      # val is the name of the variable to read/write the value
-      if ( (action == "get") or (len(att_desc) < 2) ):
-        val = att.lower()
-      else:
-        val = "etsf_%s" % (att.lower())
-      # att_len is the length of the variable, when needed
-      if ( att_desc[0].startswith("string") ):
-        att_len = etsf_constants[att_desc[0].split()[1]]
-      else:
-        att_len = ""
-
-      if ( ret != "" ):
-        ret += "\n"
-
-      if ( action == "put" ):
-        ret += code_attributes("write", "etsf_io_low_global_att", att, val, "")
-        ret += "if (.not. lstat) return\n"
-      elif ( action == "get" ):
-        ret += code_attributes("read", "etsf_io_low_global_att", att, val, att_len)
-        ret += "if (.not. lstat) return\n"
-
-  return ret
-# WARNING! this definition is obsolete
 
 # Code for def action on a group
 def code_group_def(group):
@@ -733,7 +765,10 @@ end if
       buf = buf_kdep
   buf += "! We raise don't raise an error if a dimension is missing.\n"
   buf += "if (.not. lstat .and. (error_data%access_mode_id /= ERROR_MODE_INQ .or. &\n"
-  buf += "  & error_data%target_type_id /= ERROR_TYPE_DID)) return\n"
+  buf += "  & error_data%target_type_id /= ERROR_TYPE_DID)) then\n"
+  buf += "  call etsf_io_low_error_update(error_data, my_name)\n"
+  buf += "  return\n"
+  buf += "end if\n"
   # Handle attributes of the variable
   if (att_units or att_kdep or var == "reduced_coordinates_of_plane_waves" or att_symm):
     buf += "if (ivar >= 0) then\n"
@@ -774,6 +809,7 @@ def code_split_write(dims, var, var_fortran, var_splitted, var_unformatted, stri
       if (not(var_unformatted)):
         ret += "  deallocate(jstart, jend)\n"
     ret += "  deallocate(varids)\n"
+    ret += "  call etsf_io_low_error_update(error_data, my_name)\n"
     ret += "  return\n"
     ret += "end if\n"
     if (var_splitted and var_unformatted):
@@ -883,6 +919,7 @@ def code_group_copy(group):
     ret += "if (.not. lstat .and. error_data%access_mode_id /= ERROR_MODE_INQ) then\n"
     ret += "  deallocate(%s)\n" % var_fortran
     ret += "  deallocate(varids)\n"
+    ret += "  call etsf_io_low_error_update(error_data, my_name)\n"
     ret += "  return\n"
     ret += "end if\n"
     ret += "!  write data and deallocate (if read succeed)\n"
@@ -966,7 +1003,10 @@ def code_group_copy(group):
   ret += "do len = 1, nvarids - 1, 1\n"
   ret += "  call etsf_io_low_copy_all_att(ncid_from, ncid_to, varids(1, len), varids(2, len), &\n"
   ret += "                              & lstat, error_data = error_data)\n"
-  ret += "  if (.not. lstat) exit\n"
+  ret += "  if (.not. lstat) then\n"
+  ret += "    call etsf_io_low_error_update(error_data, my_name)\n"
+  ret += "    exit\n"
+  ret += "  end if\n"
   ret += "end do\n"
   ret += "deallocate(varids)"
   return ret
@@ -1013,7 +1053,10 @@ end if
   if (action == "put"):
     ret += "! Begin by putting the file in write mode.\n"
     ret += "call etsf_io_low_set_write_mode(ncid, lstat, error_data = error_data)\n"
-    ret += "if (.not. lstat) return\n"
+    ret += "if (.not. lstat) then\n"
+    ret += "  call etsf_io_low_error_update(error_data, my_name)\n"
+    ret += "  return\n"
+    ret += "end if\n"
 
   # Process each variable in the group
   ivar = 0
@@ -1142,7 +1185,10 @@ end if
     # If variable may be splitted
     if (splitted):
       ret += "  deallocate(start, count)\n"
-    ret += "  if (.not. lstat) return\n"
+    ret += "  if (.not. lstat) then\n"
+    ret += "    call etsf_io_low_error_update(error_data, my_name)\n"
+    ret += "    return\n"
+    ret += "  end if\n"
 
     # End the if associated
     ret += "end if\n"
@@ -1165,7 +1211,10 @@ end if
     ret += "\n! Handle all attributes for the group.\n"
     if (action == "put"):
       ret += "call etsf_io_low_set_define_mode(ncid, lstat, error_data = error_data)\n"
-      ret += "if (.not. lstat) return\n"
+      ret += "if (.not. lstat) then\n"
+      ret += "  call etsf_io_low_error_update(error_data, my_name)\n"
+      ret += "  return\n"
+      ret += "end if\n"
     ret += ret_att
   if (action != "def"):
     ret += "\ndeallocate(varid)"
@@ -1201,7 +1250,10 @@ def code_attribute_units(action, att_unit, att_scale, ivar, \
   else:
     ret += code_attributes("write", ivar, \
                            "scale_to_atomic_units", att_scale, "")
-    ret += "if (.not. lstat) return\n"
+    ret += "if (.not. lstat) then\n"
+    ret += "  call etsf_io_low_error_update(error_data, my_name)\n"
+    ret += "  return\n"
+    ret += "end if\n"
     
   return ret
   
@@ -1216,7 +1268,10 @@ def code_attribute_kdep(action, ivar, att_value = None):
     ret += "end if\n"
   else:
     ret += code_attributes(action, ivar, "k_dependent", att_value, "etsf_charlen")
-  ret += "if (.not. lstat) return\n"
+  ret += "if (.not. lstat) then\n"
+  ret += "  call etsf_io_low_error_update(error_data, my_name)\n"
+  ret += "  return\n"
+  ret += "end if\n"
     
   return ret
 
@@ -1236,7 +1291,10 @@ def code_attribute_symm(action, ivar, att_value = None):
     att_value = "trim(flag)"
     action = "write"
   ret += code_attributes(action, ivar, "symmorphic", att_value, "etsf_charlen")
-  ret += "if (.not. lstat) return\n"
+  ret += "if (.not. lstat) then\n"
+  ret += "  call etsf_io_low_error_update(error_data, my_name)\n"
+  ret += "  return\n"
+  ret += "end if\n"
   return ret
 
 # Code for read/write attributes.

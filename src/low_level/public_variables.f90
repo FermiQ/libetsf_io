@@ -70,7 +70,9 @@
   !! FUNCTION
   !!  This structure is used to store error informations. Three fields are mandatory
   !!  and can always be read:
-  !!   * parent, which is a string with the name of the method where the error occurs ;
+  !!   * backtrace, which is a list of strings with the name of the methods where
+  !!     the error occurs and come from (the number of relevent names is given
+  !!     by @backtraceId) ;
   !!   * access_mode_id, which is a #ERROR_MODE value ;
   !!   * target_type_id, which is a #ERROR_TYPE value.
   !!  All other fields may be filled depending on the calling method. When a field
@@ -79,18 +81,19 @@
   !!
   !! SOURCE
   type etsf_io_low_error
-    character(len = 80) :: parent
-    
-    integer :: access_mode_id
-    character(len = 80) :: access_mode_str
-    integer :: target_type_id
-    character(len = 80) :: target_type_str
-    
-    integer :: target_id
-    character(len = 80) :: target_name
-    
-    integer :: error_id
-    character(len = 256) :: error_message
+     character(len = 80), dimension(100) :: backtrace
+     integer :: backtraceId = 0
+
+     integer :: access_mode_id
+     character(len = 80) :: access_mode_str
+     integer :: target_type_id
+     character(len = 80) :: target_type_str
+
+     integer :: target_id
+     character(len = 80) :: target_name
+
+     integer :: error_id
+     character(len = 256) :: error_message
   end type etsf_io_low_error
   !!***
 

@@ -40,16 +40,16 @@
     s = nf90_inq_dimid(ncid, dimname, dimid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_DID, me, tgtname = dimname, &
-                     & errid = s, errmess = nf90_strerror(s))
+        call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_DID, me, &
+             & tgtname = dimname, errid = s, errmess = nf90_strerror(s))
       end if
       return
     end if
     s = nf90_inquire_dimension(ncid, dimid, len = dimvalue)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_DIM, me, tgtname = dimname, &
-                     & tgtid = dimid, errid = s, errmess = nf90_strerror(s))
+        call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_DIM, me, &
+             & tgtname = dimname, tgtid = dimid, errid = s, errmess = nf90_strerror(s))
       end if
       return
     end if
@@ -82,7 +82,7 @@
     if (s /= nf90_noerr) then
       if (present(error_data)) then
         call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_VID, me, &
-                                 & tgtname = varname, errid = s, errmess = nf90_strerror(s))
+             & tgtname = varname, errid = s, errmess = nf90_strerror(s))
       end if
       return
     end if
@@ -97,7 +97,9 @@
       my_att_name = .false.
     end if
     if (present(error_data)) then
-      call read_var_infos(ncid, var_infos, my_dim_name, my_att_name, lstat, error_data)
+      call read_var_infos(ncid, var_infos, my_dim_name, my_att_name, &
+           & lstat, error_data)
+      if (.not. lstat) call etsf_io_low_error_update(error_data, me)
     else
       call read_var_infos(ncid, var_infos, my_dim_name, my_att_name, lstat)
     end if
@@ -125,7 +127,7 @@
     if (s /= nf90_noerr) then
       if (present(error_data)) then
         call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_VAR, me, &
-                                 & tgtid = varid, errid = s, errmess = nf90_strerror(s))
+             & tgtid = varid, errid = s, errmess = nf90_strerror(s))
       end if
       return
     end if
@@ -141,7 +143,9 @@
       my_att_name = .false.
     end if
     if (present(error_data)) then
-      call read_var_infos(ncid, var_infos, my_dim_name, my_att_name, lstat, error_data)
+      call read_var_infos(ncid, var_infos, my_dim_name, my_att_name, &
+           & lstat, error_data)
+      if (.not. lstat) call etsf_io_low_error_update(error_data, me)
     else
       call read_var_infos(ncid, var_infos, my_dim_name, my_att_name, lstat)
     end if
@@ -333,6 +337,7 @@
        if (present(error_data))then
           call read_var_infos_id(ncid, i, var_infos_array(i), lstat, error_data, &
                & dim_name = my_with_dim_name, att_name = my_with_att_name)
+          if (.not. lstat) call etsf_io_low_error_update(error_data, me)
        else
           call read_var_infos_id(ncid, i, var_infos_array(i), lstat, &
                & dim_name = my_with_dim_name, att_name = my_with_att_name)
@@ -379,8 +384,8 @@
       ! Size checks.
       if (size(opt_start) /= var_infos%ncshape) then
         if (present(error_data)) then
-          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                                    & tgtname = "opt_start", errmess = "inconsistent length")
+          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, &
+               & me, tgtname = "opt_start", errmess = "inconsistent length")
         end if
         lstat = .false.
         return
@@ -395,8 +400,8 @@
       ! Size checks.
       if (size(opt_count) /= var_infos%ncshape) then
         if (present(error_data)) then
-          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                                    & tgtname = "opt_count", errmess = "inconsistent length")
+          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, &
+               & me, tgtname = "opt_count", errmess = "inconsistent length")
         end if
         lstat = .false.
         return
@@ -417,8 +422,8 @@
       ! Size checks.
       if (size(opt_map) /= var_infos%ncshape) then
         if (present(error_data)) then
-          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                                    & tgtname = "opt_map", errmess = "inconsistent length")
+          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, &
+               & me, tgtname = "opt_map", errmess = "inconsistent length")
         end if
         lstat = .false.
         return
@@ -430,8 +435,8 @@
           permut = .true.
         end if
         if (permut .and. opt_map(i) > 0) then
-          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                                    & tgtname = "opt_map", errmess = "inconsistent values")
+          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, &
+               & me, tgtname = "opt_map", errmess = "inconsistent values")
         end if
       end do
       if (permut) then
@@ -459,8 +464,8 @@
         do i = 1, var_infos%ncshape, 1
           if (-opt_map(i) <= 0 .or. -opt_map(i) > var_infos%ncshape) then
             if (present(error_data)) then
-              call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                                        & tgtname = "opt_map", errmess = "out of bounds permutation")
+              call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, &
+                   & me, tgtname = "opt_map", errmess = "out of bounds permutation")
             end if
             lstat = .false.
             return
@@ -553,7 +558,8 @@
       & size(count) /= var_ref%ncshape .or. size(map) /= var_ref%ncshape)) then
       if (present(error_data)) then
         call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                                  & tgtname = trim(var_ref%name)//" (start | count | map)", errmess = "inconsistent length")
+             & tgtname = trim(var_ref%name) // " (start | count | map)", &
+             & errmess = "inconsistent length")
       end if
       return
     end if
@@ -563,8 +569,8 @@
         if (present(error_data)) then
           write(err, "(A,I0,A,I0,A,I5,A)") "wrong start value for index ", i, &
                                          & " (start(", i, ") = ", start(i), ")"
-          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                                   & tgtname = trim(var_ref%name)//" (start)", errmess = err)
+          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, &
+               & me, tgtname = trim(var_ref%name)//" (start)", errmess = err)
         end if
         return
       end if
@@ -575,8 +581,8 @@
         if (present(error_data)) then
           write(err, "(A,I0,A,I0,A,I5,A)") "wrong count value for index ", i, &
                                          & " (count(", i, ") = ", count(i), ")"
-          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                                   & tgtname = trim(var_ref%name)//" (count)", errmess = err)
+          call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, &
+               & me, tgtname = trim(var_ref%name)//" (count)", errmess = err)
         end if
         return
       end if
@@ -605,7 +611,7 @@
                                   & " (map address = ", nb_ele_ref, &
                                   & " & max address = ", nb_ele , ")"
         call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ARG, me, &
-                                  & tgtname = trim(var_ref%name)//" (map)", errmess = err)
+             & tgtname = trim(var_ref%name)//" (map)", errmess = err)
       end if
       return
     end if
@@ -683,8 +689,8 @@
     s = nf90_inquire_attribute(ncid, ncvarid, attname, xtype = nctype, len = nclen) 
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_ATT, me, tgtname = attname, &
-                     & errid = s, errmess = nf90_strerror(s))
+        call etsf_io_low_error_set(error_data, ERROR_MODE_INQ, ERROR_TYPE_ATT, &
+             & me, tgtname = attname, errid = s, errmess = nf90_strerror(s))
       end if
       return
     end if
@@ -693,8 +699,8 @@
       write(err, "(A,I5,A,I5,A)") "wrong type (read = ", nctype, &
                                 & ", awaited = ", atttype, ")"
       if (present(error_data)) then
-        call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, tgtname = attname, &
-                     & errmess = err)
+        call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, &
+             & me, tgtname = attname, errmess = err)
       end if
       return
     end if
@@ -704,8 +710,8 @@
       write(err, "(A,I5,A,I5,A)") "wrong length (read = ", nclen, &
                                 & ", awaited = ", attlen, ")"
       if (present(error_data)) then
-        call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, tgtname = attname, &
-                     & errmess = err)
+        call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, &
+             & me, tgtname = attname, errmess = err)
       end if
       return
     end if
@@ -757,7 +763,9 @@
     ! Check the header
     write(format, "(A80)") " "
     if (present(error_data)) then
-      call etsf_io_low_read_att(ncid, NF90_GLOBAL, "file_format", 80, format, stat, error_data) 
+      call etsf_io_low_read_att(ncid, NF90_GLOBAL, "file_format", 80, format, &
+           & stat, error_data) 
+      if (.not. stat) call etsf_io_low_error_update(error_data, me)
     else
       call etsf_io_low_read_att(ncid, NF90_GLOBAL, "file_format", 80, format, stat) 
     end if
@@ -768,8 +776,8 @@
     if (trim(adjustl(format)) /= "ETSF Nanoquanta") then
       write(err, "(A,A,A)") "wrong value: '", trim(adjustl(format(1:60))), "'"
       if (present(error_data)) then
-        call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, tgtname = "file_format", &
-                     & errmess = err)
+        call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, &
+             & me, tgtname = "file_format", errmess = err)
       end if
       call etsf_io_low_close(ncid, stat)
       return
@@ -778,6 +786,7 @@
     if (present(error_data)) then
       call etsf_io_low_read_att(ncid, NF90_GLOBAL, "file_format_version", &
                               & version_real, stat, error_data) 
+      if (.not. stat) call etsf_io_low_error_update(error_data, me)
     else
       call etsf_io_low_read_att(ncid, NF90_GLOBAL, "file_format_version", &
                               & version_real, stat)
@@ -794,8 +803,8 @@
     if (.not. stat) then
       write(err, "(A,F10.5)") "wrong value: ", version_real
       if (present(error_data)) then
-        call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, tgtname = "file_format_version", &
-                     & errmess = err)
+        call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, ERROR_TYPE_ATT, &
+             & me, tgtname = "file_format_version", errmess = err)
       end if
       call etsf_io_low_close(ncid, stat)
       return
@@ -804,6 +813,7 @@
     if (present(error_data)) then
       call etsf_io_low_check_att(ncid, NF90_GLOBAL, "Conventions", &
                                & NF90_CHAR, 80, stat, error_data) 
+      if (.not. stat) call etsf_io_low_error_update(error_data, me)
     else
       call etsf_io_low_check_att(ncid, NF90_GLOBAL, "Conventions", NF90_CHAR, 80, stat) 
     end if
@@ -862,8 +872,8 @@
     s = nf90_open(path = filename, mode = NF90_NOWRITE, ncid = ncid)
     if (s /= nf90_noerr) then
       if (present(error_data)) then
-        call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_ORD, me, tgtname = filename, &
-                     & errid = s, errmess = nf90_strerror(s))
+        call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_ORD, &
+             & me, tgtname = filename, errid = s, errmess = nf90_strerror(s))
       end if
       return
     end if
@@ -882,6 +892,7 @@
         else
           call etsf_io_low_check_header(ncid, lstat, error_data = error_data)
         end if
+        if (.not. lstat) call etsf_io_low_error_update(error_data, me)
       else
         if (present(version_min)) then
           call etsf_io_low_check_header(ncid, lstat, version_min = version_min)
@@ -1130,6 +1141,7 @@
     end if
     if (present(error_data)) then
       error_data = error
+      if (.not. lstat) call etsf_io_low_error_update(error_data, me)
     end if
     if (present(ncvarid)) then
       ncvarid = varid
@@ -1371,6 +1383,7 @@
     end if
     if (present(error_data)) then
       error_data = error
+      if (.not. lstat) call etsf_io_low_error_update(error_data, me)
     end if
     if (present(ncvarid)) then
       ncvarid = varid

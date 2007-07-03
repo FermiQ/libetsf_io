@@ -59,7 +59,10 @@ def code_check_spec(mandatory, optional):
     if (type == "var"):
       # We check this existence and definition of this variable.
       ret += code_check_var(value, "lstat")
-      ret += "if (.not. lstat) return\n"
+      ret += "if (.not. lstat) then\n" \
+             + "  call etsf_io_low_error_update(error_data, me)\n" \
+             + "  return\n" \
+             + "end if\n"
       ret += "\n"
     elif (type == "list"):
       # We check the existence and definition of at least one of these variables.
@@ -90,7 +93,10 @@ def code_check_spec(mandatory, optional):
       ret += "! Read the condition value.\n"
       ret += "call etsf_io_low_read_var(ncid, \"%s\", string_value, etsf_charlen, &\n" % value[0]
       ret += "                        & lstat, error_data = error_data)\n"
-      ret += "if (.not. lstat) return\n"
+      ret += "if (.not. lstat) then\n" \
+             + "  call etsf_io_low_error_update(error_data, me)\n" \
+             + "  return\n" \
+             + "end if\n"
       ret += "call strip(string_value)\n"
       first = True
       for key in value[1].keys():
@@ -117,6 +123,8 @@ def code_contents():
     ret += "call etsf_io_file_check_%s(ncid, lstat, errors(%d))\n" % (id, i)
     ret += "if (lstat) then\n"
     ret += "  read_flags = read_flags + etsf_%s\n" % id
+    ret += "else\n"
+    ret += "  call etsf_io_low_error_update(errors(%d), me)\n" % i
     ret += "end if\n"
     i += 1
   return ret

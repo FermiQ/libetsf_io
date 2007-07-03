@@ -60,6 +60,7 @@ subroutine @SUB_NAME@(@ARG_LIST@)
   if (.not. stat) then
     if (present(error_data)) then
       error_data = error
+      if (.not. lstat) call etsf_io_low_error_update(error_data, me)
     end if
     return
   end if
@@ -72,6 +73,7 @@ subroutine @SUB_NAME@(@ARG_LIST@)
   if (.not. stat) then
     if (present(error_data)) then
       error_data = error
+      if (.not. lstat) call etsf_io_low_error_update(error_data, me)
     end if
     return
   end if
