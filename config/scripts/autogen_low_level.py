@@ -217,6 +217,7 @@ for (action, tgt_file) in NC_ACTION:
              "  if (present(error_data)) then\n" \
            + "    call etsf_io_low_read_var_infos(ncid, %s, var_infos, &\n" % subargname \
            + "                                  & lstat, error_data = error_data)\n" \
+           + "    if (.not. lstat) call etsf_io_low_error_update(error_data, me)\n" \
            + "  else\n" \
            + "    call etsf_io_low_read_var_infos(ncid, %s, var_infos, lstat)\n" % subargname \
            + "  end if\n" \
@@ -229,6 +230,7 @@ for (action, tgt_file) in NC_ACTION:
              + "  if (present(error_data)) then\n" \
              + "    call etsf_io_low_check_att(ncid, %s, attname, %s, &\n" % (subvarid, nctype) \
              + "                             & %s, lstat, error_data = error_data)\n" % (attlen) \
+             + "    if (.not. lstat) call etsf_io_low_error_update(error_data, me)\n" \
              + "  else\n" \
              + "    call etsf_io_low_check_att(ncid, %s, attname, %s, &\n" % (subvarid, nctype) \
              + "                             & %s, lstat)\n" % (attlen) \
