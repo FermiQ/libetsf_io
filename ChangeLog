@@ -1,4 +1,10 @@
-* Fri Jun 01 2007 Damien Caliste <damien.caliste@cea.fr> 0.10
+* Fri Jul 03 2007 Damien Caliste <damien.caliste@cea.fr> 0.10
+- Add a tutorial on the reading part, very simple with the basics of the
+	etsf_io_<group>_get routines and the possible split definitions.
+- Add gestion of the use_time_reversal_at_gamma attribute as introduced by
+	the 2.2 specifications.
+- Add a full backtrace for the routines in the library to ease the
+	tracking of errors when called from an other program.
 - Add a way to precisely choose the variables when defining a file. This
 	has bringed some minor in the ETSF group API, for etsf_io_main_*
 	and for etsf_io_data_*.

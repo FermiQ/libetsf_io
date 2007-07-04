@@ -22,6 +22,7 @@
 	<a class="level2" href="convert_to_xyz_f90.html">Converter and validity checks</a>
 	<a class="level2" href="MPI_output_of_a_density_f90.html">Use MPI and split capabilities</a>
 	<a class="level2" href="mix_ETSF_and_non_ETSF_f90.html">Mix ETSF and non-ETSF variables</a>
+	<a class="level2" href="read_a_file_f90.html">Simple read of wavefunctions</a>
 	<a href="../utils/binary.html">Binary utility</a>
       </div> <!-- navigation -->
       <div id="content">
@@ -36,9 +37,16 @@
 	<p><a href="MPI_output_of_a_density_f90.html">The fourth tutorial</a> shows how to use the split definitions as defined in the specifications to handle MPI computations. This is possible with the help of the <a href="../group_level/etsf_io_f90.html#robo107">etsf_split</a> structure. This tutorial create a density file with a paralelisation on z planes. Each process compute a gaussian in its own z planes and create an ETSF file with a split on <em>number_of_grid_points_vector3</em>. Thanks to <a href="../utils/binary.html"><code>etsf_io</code></a> the created files can be then gathered into one unique file.</p>
 	<h1>Tutorial 5 - mixing ETSF and non-ETSF variables in file creation (tutorial 1 enhancement)</h1>
 	<p><a href="mix_ETSF_and_non_ETSF_f90.html">The fifth tutorial</a> is not focus on the low level API but it uses it in several areas. This tutorial shows how to write an ETSF file with additional non-ETSF variables. These variables are defined and written directly by using the low level API. Besides it also shows how to use the etsf_io_<group>_put() methods in the context of a concurrent list of ETSF and non-ETSF variables.</p>
+	<h1>Tutorial 6 - simple read of a wavefunction file
+(continuation of tutorial 2)</h1>
+	<p><a href="read_a_file_f90.html">The sixth tutorial</a>
+introduces the read actions in a simple case. Here, we know that the
+file should contains the variables of a wavefunction description. This
+tutorial uses the file created by tutorial 2 but does not read it with
+sub access. Everything is read once as a bloc.</p>
       </div>
       <div id="footer">
-	<p>Manually maintained file, last edition 2007-05-11 by Damien Caliste.</p>
+	<p>Manually maintained file, last edition 2007-07-04 by Damien Caliste.</p>
       </div> <!-- footer -->
     </body>
 </html>

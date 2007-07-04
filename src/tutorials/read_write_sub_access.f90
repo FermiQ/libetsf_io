@@ -11,7 +11,7 @@
 !!
 !!  To compile this exemple, use (assuming default installation paths):
 !!   ${F90} -I/opt/include/${F90} -o read_write_sub_access read_write_sub_access.f90
-!!          -L/opt/lib -letsf_io -L/usr/lib -lnetcdf
+!!          -L/opt/lib -letsf_io -letsf_io_utils -L/usr/lib -lnetcdf
 !!
 !! COPYRIGHT
 !!  Copyright (C) 2006, 2007 (Damien Caliste)
@@ -23,6 +23,7 @@
 program read_write_sub_access
 
   use etsf_io
+  use etsf_io_tools
 
   integer :: i, i_kpt, ncid
   
@@ -231,6 +232,20 @@ program read_write_sub_access
   if (.not. lstat) then
      call etsf_io_low_error_handle(error_data)
      stop
+  end if
+
+!! NOTES
+!!  We then set the use_time_reversal_at_gamma attribute for this file using
+!!  the etsf_io_tools module. We write it after the other data since the routine
+!!  will check that the basis set is indeed a plane wave one and the two variables
+!!  impacted by this attributes must already exist.
+!!
+!! SOURCE
+  call etsf_io_tools_set_time_reversal_symmetry(ncid, .false., lstat, error_data)
+  ! We handle the error
+  if (.not. lstat) then
+    call etsf_io_low_error_handle(error_data)
+    stop
   end if
   
 !! NOTES

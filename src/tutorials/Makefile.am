@@ -8,15 +8,20 @@ EXTRA_DIST = MPI_output_of_a_density.f90
 noinst_PROGRAMS = create_a_crystal_den_file \
 	read_write_sub_access \
 	convert_to_xyz \
-	mix_ETSF_and_non_ETSF
+	mix_ETSF_and_non_ETSF \
+	read_a_file
 
 create_a_crystal_den_file_SOURCES = create_a_crystal_den_file.f90
 create_a_crystal_den_file_LDFLAGS = -L$(top_builddir)/src/group_level
 create_a_crystal_den_file_LDADD = -letsf_io
 
 read_write_sub_access_SOURCES = read_write_sub_access.f90
-read_write_sub_access_LDFLAGS = -L$(top_builddir)/src/group_level
-read_write_sub_access_LDADD = -letsf_io
+read_write_sub_access_LDFLAGS = -L$(top_builddir)/src/group_level -L$(top_builddir)/src/utils
+read_write_sub_access_LDADD = -letsf_io -letsf_io_utils
+
+read_a_file_SOURCES = read_a_file.f90
+read_a_file_LDFLAGS = -L$(top_builddir)/src/group_level -L$(top_builddir)/src/utils
+read_a_file_LDADD = -letsf_io -letsf_io_utils
 
 convert_to_xyz_SOURCES = convert_to_xyz.f90
 convert_to_xyz_LDFLAGS = -L$(top_builddir)/src/utils -L$(top_builddir)/src/group_level
@@ -31,7 +36,12 @@ create_a_crystal_den_file.o: create_a_crystal_den_file.f90 \
 	libetsf_io.a
 
 read_write_sub_access.o: read_write_sub_access.f90 \
-	libetsf_io.a
+	libetsf_io.a \
+	libetsf_io_utils.a
+
+read_a_file.o: read_a_file.f90 \
+	libetsf_io.a \
+	libetsf_io_utils.a
 
 convert_to_xyz.o: convert_to_xyz.f90 \
 	libetsf_io.a \
