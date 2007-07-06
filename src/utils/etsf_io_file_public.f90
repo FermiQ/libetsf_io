@@ -5,9 +5,10 @@
 !! FUNCTION
 !!  This is a high level routine to merge several files into one single. The files
 !!  to be merged should conform to the ETSF specification on splitted files. The
-!!  given input files must not be a complete list to create a non-splitted file.
-!!  In the case some arrays are still partial, the created output file is a splitted
-!!  one again, gathering what was possible with respect to the given input files.
+!!  given input files must not be necessarily a complete list to create a
+!!  non-splitted file. In the case some arrays are still partial, the created
+!!  output file is a splitted one again, gathering what was possible with respect
+!!  to the given input files.
 !!
 !! COPYRIGHT
 !!  Copyright (C) 2006, 2007 (Damien Caliste)

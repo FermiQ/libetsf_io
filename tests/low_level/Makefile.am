@@ -17,11 +17,12 @@ EXTRA_DIST = \
 	open_read_t03.cdl \
 	open_read_t04.cdl \
 	read_var_t01.cdl \
-	$(test_dependencies)
+	$(test_dependencies) \
+	tests_run.sh
 
 AM_FCFLAGS = -I$(top_builddir)/src/low_level -I@NETCDF_CFLAGS@
 
-noinst_PROGRAMS = tests_read \
+check_PROGRAMS = tests_read \
 	tests_write
 
 tests_read_SOURCES = tests_read.f90
@@ -37,6 +38,10 @@ tests_write_LDFLAGS = -L$(top_builddir)/src/low_level
 
 tests_write_LDADD = -letsf_io_low_level
 
+TESTS = tests_run.sh
+
+CLEANFILES = tests_read.log tests_write.log
+
 #dependencies
 tests_read.o: tests_read.f90 \
 	etsf_io_low_level.o
@@ -45,11 +50,14 @@ tests_write.o: tests_write.f90 \
 	etsf_io_low_level.o
 
 #additional rules
-run-tests: run-tests-read run-tests-write
+tests_run.sh: tests_read.log tests_write.log
 
-run-tests-read: $(test_dependencies) tests_read
-	./tests_read $(srcdir)
+run-tests: tests_read.log tests_write.log
+	cat *.log
 
-run-tests-write: $(test_dependencies) tests_write
+run-tests-read tests_read.log: $(test_dependencies) tests_read
+	./tests_read $(srcdir) > tests_read.log
+
+run-tests-write tests_write.log: $(test_dependencies) tests_write
 	\rm -f open_create_t*.nc
-	./tests_write $(srcdir)
+	./tests_write $(srcdir) > tests_write.log

@@ -8,9 +8,10 @@ EXTRA_DIST = \
 	test_split_electrons_part2.cdl \
 	test_split_electrons_part2.nc \
 	test_split_electrons_part3.cdl \
-	test_split_electrons_part3.nc
+	test_split_electrons_part3.nc \
+	tests_run.sh
 
-noinst_PROGRAMS = tests_init tests_write tests_read tests_copy
+check_PROGRAMS = tests_init tests_write tests_read tests_copy
 
 tests_init_SOURCES = tests_init.f90
 tests_init_LDFLAGS = -L$(top_builddir)/src/group_level
@@ -28,7 +29,9 @@ tests_copy_SOURCES = tests_module.f90 tests_copy.f90
 tests_copy_LDFLAGS = -L$(top_builddir)/src/group_level
 tests_copy_LDADD = -letsf_io
 
-CLEANFILES=tests_init_done tests_write_done
+TESTS = tests_run.sh
+
+CLEANFILES = tests_init.log tests_write.log tests_read.log tests_copy.log
 
 #dependencies
 tests_init.o: tests_init.f90 \
@@ -49,22 +52,23 @@ tests_copy.o: tests_copy.f90 \
 tests_module.o: tests_module.f90
 
 #additional rules
-run-tests: run-tests-init run-tests-write run-tests-read run-tests-copy
+tests_run.sh: tests_init.log tests_write.log tests_read.log tests_copy.log
 
-run-tests-init tests_init_done: tests_init
+run-tests: tests_init.log tests_write.log tests_read.log tests_copy.log
+	cat *.log
+
+run-tests-init tests_init.log: tests_init
 	\rm -f test_init_*.nc
-	./tests_init
-	touch tests_init_done
+	./tests_init > tests_init.log
 
-run-tests-write tests_write_done: tests_write tests_init_done
+run-tests-write tests_write.log: tests_write tests_init.log
 	\rm -f test_write_*.nc
-	./tests_write
-	touch tests_write_done
+	./tests_write > tests_write.log
 
-run-tests-read: tests_read tests_init_done
+run-tests-read tests_read.log: tests_read tests_init.log
 	\rm -f test_read_*.nc
-	./tests_read
+	./tests_read > tests_read.log
 
-run-tests-copy: tests_copy tests_init_done tests_write_done
+run-tests-copy tests_copy.log: tests_copy tests_write.log
 	\rm -f test_copy_*.nc
-	./tests_copy
+	./tests_copy > tests_copy.log

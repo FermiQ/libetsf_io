@@ -115,12 +115,6 @@ if test "$withnetcdf" = "no" ; then
 fi
 
 dnl Test if only the library must be built
-ac_build_tests="yes"
-AC_ARG_ENABLE(build-tests,
-              AS_HELP_STRING([--disable-build-tests],
-                             [Don't create the tests binaries (enable by default).]),
-              ac_build_tests=$enableval, ac_build_tests="yes")
-AM_CONDITIONAL(BUILD_TESTS, test "$ac_build_tests" = "yes")
 ac_build_tutorials="no"
 AC_ARG_ENABLE(build-tutorials,
               AS_HELP_STRING([--enable-build-tutorials],

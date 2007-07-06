@@ -108,6 +108,7 @@ etsf_attributes = {
 etsf_dimensions = [
    "character_string_length",
    "max_number_of_angular_momenta",
+   "max_number_of_basis_grid_points",
    "max_number_of_coefficients",
    "max_number_of_projectors",
    "max_number_of_states",
@@ -119,13 +120,12 @@ etsf_dimensions = [
    "number_of_grid_points_vector2",
    "number_of_grid_points_vector3",
    "number_of_kpoints",
-   "number_of_localisation_regions",
+   "number_of_localization_regions",
    "number_of_reduced_dimensions",
    "number_of_spinor_components",
    "number_of_spins",
    "number_of_symmetry_operations",
    "number_of_vectors",
-   "number_of_used_grid_points",
    "real_or_complex_coefficients",
    "real_or_complex_density",
    "real_or_complex_gw_corrections",
@@ -160,10 +160,10 @@ etsf_variables = {
       "number_of_spinor_components",
       "max_number_of_coefficients",
       "real_or_complex_coefficients"],
-   "coordinates_of_grid_points":[
+   "coordinates_of_basis_grid_points":[
       "integer",
-      "number_of_localisation_regions",
-      "number_of_used_grid_points",
+      "number_of_localization_regions",
+      "max_number_of_basis_grid_points",
       "number_of_reduced_dimensions"],
    "correlation_functional":[
       "string",
@@ -275,7 +275,8 @@ etsf_variables = {
       "number_of_kpoints"],
    "number_of_coefficients_per_grid_point":[
       "integer",
-      "number_of_used_grid_points"],
+      "number_of_localization_regions",
+      "max_number_of_basis_grid_points"],
    "number_of_electrons":[
       "integer"],
    "number_of_states":[
@@ -373,7 +374,7 @@ etsf_groups = {
       "kinetic_energy_cutoff",
       "number_of_coefficients",
       "reduced_coordinates_of_plane_waves",
-      "coordinates_of_grid_points",
+      "coordinates_of_basis_grid_points",
       "number_of_coefficients_per_grid_point"],
    "gwdata":[
       "gw_corrections",
@@ -416,7 +417,7 @@ etsf_variables_shortnames = {
    "correlation_functional":"c_functional",
    "number_of_coefficients":"n_coeff",
    "number_of_coefficients_per_grid_point":"n_coeff_grid",
-   "coordinates_of_grid_points":"coord_grid",
+   "coordinates_of_basis_grid_points":"coord_grid",
    "monkhorst_pack_folding":"mp_folding",
    "kb_formfactors":"kb_coeff",
    "kb_formfactor_derivative":"kb_coeff_der",
@@ -476,7 +477,7 @@ etsf_specifications_files = {
                             "real_space":
                             [("var", "real_space_wavefunctions")],
                             "daubechies_wavelets":
-                            [("var", "coordinates_of_grid_points"),
+                            [("var", "coordinates_of_basis_grid_points"),
                              ("var", "number_of_coefficients_per_grid_point"),
                              ("var", "coefficients_of_wavefunctions")]}))
     ],
