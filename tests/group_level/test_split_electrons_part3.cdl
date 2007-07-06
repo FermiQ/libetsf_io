@@ -47,17 +47,17 @@ variables:
 		:history = "" ;
 data:
 
- number_of_electrons = 456 ;
+ number_of_electrons = 1 ;
 
- exchange_functional = "He" ;
+ exchange_functional = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ;
 
- correlation_functional = "He" ;
+ correlation_functional = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ;
 
- fermi_energy = 456 ;
+ fermi_energy = 1 ;
 
- smearing_scheme = "He" ;
+ smearing_scheme = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ;
 
- smearing_width = 456 ;
+ smearing_width = 1 ;
 
  my_kpoints =
   2, 6, 8, 10 ;

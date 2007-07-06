@@ -16,25 +16,37 @@ tests_init_SOURCES = tests_init.f90
 tests_init_LDFLAGS = -L$(top_builddir)/src/group_level
 tests_init_LDADD = -letsf_io
 
-tests_write_SOURCES = tests_write.f90
+tests_write_SOURCES = tests_module.f90 tests_write.f90
 tests_write_LDFLAGS = -L$(top_builddir)/src/group_level
 tests_write_LDADD = -letsf_io
 
-tests_read_SOURCES = tests_read.f90
+tests_read_SOURCES = tests_module.f90 tests_read.f90
 tests_read_LDFLAGS = -L$(top_builddir)/src/group_level
 tests_read_LDADD = -letsf_io
 
-tests_copy_SOURCES = tests_copy.f90
+tests_copy_SOURCES = tests_module.f90 tests_copy.f90
 tests_copy_LDFLAGS = -L$(top_builddir)/src/group_level
 tests_copy_LDADD = -letsf_io
 
-CLEANFILES=tests_init_done
+CLEANFILES=tests_init_done tests_write_done
 
 #dependencies
 tests_init.o: tests_init.f90 \
 	libetsf_io.a
 
-tests_copy.o: libetsf_io.a
+tests_read.o: tests_read.f90 \
+	tests_module.o \
+	libetsf_io.a
+
+tests_write.o: tests_write.f90 \
+	tests_module.o \
+	libetsf_io.a
+
+tests_copy.o: tests_copy.f90 \
+	tests_module.o \
+	libetsf_io.a
+
+tests_module.o: tests_module.f90
 
 #additional rules
 run-tests: run-tests-init run-tests-write run-tests-read run-tests-copy
@@ -44,14 +56,15 @@ run-tests-init tests_init_done: tests_init
 	./tests_init
 	touch tests_init_done
 
-run-tests-write: tests_write tests_init_done
+run-tests-write tests_write_done: tests_write tests_init_done
 	\rm -f test_write_*.nc
 	./tests_write
+	touch tests_write_done
 
 run-tests-read: tests_read tests_init_done
 	\rm -f test_read_*.nc
 	./tests_read
 
-run-tests-copy: tests_copy
+run-tests-copy: tests_copy tests_init_done tests_write_done
 	\rm -f test_copy_*.nc
-	./tests_copy $(srcdir)
+	./tests_copy

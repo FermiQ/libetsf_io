@@ -170,6 +170,7 @@ etsf_subs_contents_args = {
       "error_data type(etsf_io_low_error) out",
       "vars_infos type(etsf_vars) inout optional",
       "with_dim_name logical local",
+      "with_att_name logical local",
       "group_id integer local",
       "var_id integer local",
       "split_id logical local"]
@@ -330,6 +331,12 @@ etsf_subs_doc_args = {
    "dims-data_copy":"""
      these dimensions correspond to the source_file ones and are used to allocate
      temporary arrays in memory during the copy.""",
+   "etsf_groups-data_contents":"""
+     an integer which is the sum of all present group ids in the read file (see
+     FLAGS_GROUPS).""",
+   "etsf_variables-data_contents":"""
+     an integer for each group detailling which ETSF variables are indeed
+     present in the read file (see FLAGS_VARIABLES).""",
    "k_dependent-*":"""
      use this argument to set the attribute flag 'k_dependent' to 'yes'
      or 'no' on variables that have it. If no variable in the group has
@@ -370,6 +377,8 @@ etsf_subs_doc_args = {
      values taken from #FLAGS_GROUPS.""",
    "overwrite-data_init":"""
      will overwrite an existing file with the same file name (default is .false.).""",
+   "source_file-data_copy":"""
+     A path to the file from which copy the ETSF variables.""",
    "split-*_def":"""
      for each array associated in the type, the dimension used to declared the
      variables sizes will be 'my_/something/'.""",

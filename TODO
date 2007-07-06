@@ -1,3 +1,2 @@
 * add split on checks (currently say that file is invalid).
-* add tests for the copy actions (in group API).
 * add tests for exotic actions (in group API).

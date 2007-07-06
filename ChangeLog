@@ -1,4 +1,5 @@
 * Fri Jul 03 2007 Damien Caliste <damien.caliste@cea.fr> 0.10
+- Add tests for the copy action of the ETSF groups.
 - Add a tutorial on the reading part, very simple with the basics of the
 	etsf_io_<group>_get routines and the possible split definitions.
 - Add gestion of the use_time_reversal_at_gamma attribute as introduced by
