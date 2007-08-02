@@ -21,6 +21,8 @@ variables:
   // Variable attributes
   atom_species:comment = "bonjour";
   atom_species:mass = 1.2f;
+  atom_species:flag_yes="yes";
+  atom_species:flag_no="no";
   
 data:
   atom_species_names = "Si", "H";

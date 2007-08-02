@@ -273,6 +273,45 @@ module etsf_io_low_level
   end interface etsf_io_low_read_att
   !End of the generic interface of etsf_io_low_read_att
 
+  !!****m* etsf_io_low_read_flag/etsf_io_low_read_flag
+  !! NAME
+  !!  etsf_io_low_read_flag
+  !!
+  !! SYNOPSIS
+  !!  * call etsf_io_low_read_flag(ncid, flag, ncvarid, attname, lstat, error_data)
+  !!  * call etsf_io_low_read_flag(ncid, flag, varname, attname, lstat, error_data)
+  !!
+  !! FUNCTION
+  !!  This method is a specialized version of etsf_io_low_read_att(). It reads
+  !!  the attribute @attname of the given variable and set @flag to .true. if
+  !!  the attribute value is "yes" or "YES" or "Yes", .false. otherwise.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2006, 2007 (Damien Caliste)
+  !!  This file is distributed under the terms of the
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
+  !!
+  !! INPUTS
+  !!  * ncid = a NetCDF handler, opened with read access.
+  !!  * ncvarid = the id of the variable the attribute is attached to.
+  !!              in the case of global attributes, use the constance
+  !!              NF90_GLOBAL (when linking against NetCDF) or #etsf_io_low_global_att
+  !!              which is a wrapper exported by this module (see #ETSF_IO_LOW_CONSTANTS).
+  !!  * varname = can be used instead of ncvarid to select a variable by its name.
+  !!  * attname = a string identifying an attribute.
+  !!
+  !! OUTPUT
+  !!  * flag = .true. if the attribute match "yes" or its variant.
+  !!  * lstat = .true. if operation succeed.
+  !!  * error_data <type(etsf_io_low_error)> = (optional) location to store error data.
+  !!***
+  interface etsf_io_low_read_flag
+    module procedure read_flag_id
+    module procedure read_flag
+  end interface etsf_io_low_read_flag
+  !End of the generic interface of etsf_io_low_read_flag
+
   !!****m* etsf_io_low_write_group/etsf_io_low_def_var
   !! NAME
   !!  etsf_io_low_def_var
@@ -684,6 +723,7 @@ module etsf_io_low_level
   !!
   !! SOURCE
   public :: etsf_io_low_read_att
+  public :: etsf_io_low_read_flag
   public :: etsf_io_low_read_dim
   public :: etsf_io_low_read_var
   !!***

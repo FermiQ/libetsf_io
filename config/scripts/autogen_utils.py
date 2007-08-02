@@ -32,6 +32,17 @@ def indent_code(code,offset):
    return tmp+re.sub("\n","\n"+tmp,code[:-1])+"\n"
  else:
    return tmp+re.sub("\n","\n"+tmp,code)
+ 
+# Subpart of code_check_var
+def sub_code_check_var(var_desc):
+  ret  = "var_infos%%ncshape = %d\n" % len(var_desc)
+  if (len(var_desc) > 0):
+    ret += "allocate(var_infos%%ncdimnames(%d))\n" % len(var_desc)
+    i = 0
+    for dim in var_desc:
+      ret += "write(var_infos%%ncdimnames(%d), \"(A)\") \"%s\"\n" % (len(var_desc) - i, dim)
+      i += 1
+  return ret
 
 # Create lines to check a variable.
 def code_check_var(varname, condname):
@@ -40,13 +51,17 @@ def code_check_var(varname, condname):
   ret += "! Variable %s\n" % varname
   ret += "write(var_infos%%name, \"(A)\") \"%s\"\n" % varname
   ret += "var_infos%%nctype  = %s\n" % nf90_type(var_desc)
-  ret += "var_infos%%ncshape = %d\n" % (len(var_desc) - 1)
-  if (len(var_desc) > 1):
-    ret += "allocate(var_infos%%ncdimnames(%d))\n" % (len(var_desc) - 1)
-    i = 0
-    for dim in var_desc[1:]:
-      ret += "write(var_infos%%ncdimnames(%d), \"(A)\") \"%s\"\n" % (len(var_desc) - i - 1, dim)
-      i += 1
+  # We treat the variable 'reduced_coordinates_of_plane_waves' as a special case.
+  if (varname == "reduced_coordinates_of_plane_waves"):
+    ret += "call etsf_io_low_read_flag(ncid, valid, \"reduced_coordinates_of_plane_waves\", &\n"
+    ret += "                         & \"k_dependent\", lstat, error_data = error_data)\n"
+    ret += "if (valid) then\n"
+    ret += indent_code(sub_code_check_var(var_desc[1:]), 1)
+    ret += "else\n"
+    ret += indent_code(sub_code_check_var(var_desc[2:]), 1)
+    ret += "end if\n"
+  else:
+    ret += sub_code_check_var(var_desc[1:])
   ret += "call test_var(ncid, var_infos, %s, error_data)\n" % condname
   if (len(var_desc) > 1):
     ret += "deallocate(var_infos%ncdimnames)\n"

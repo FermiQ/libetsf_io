@@ -359,6 +359,46 @@
   end subroutine etsf_io_low_read_all_var_infos
   !!***
 
+  subroutine read_flag_id(ncid, flag, ncvarid, attname, lstat, error_data)
+    logical, intent(out)                           :: flag
+    integer, intent(in)                            :: ncid, ncvarid
+    character(len = *), intent(in)                 :: attname
+    logical, intent(out)                           :: lstat
+    type(etsf_io_low_error), intent(out), optional :: error_data
+
+    character(len = *), parameter :: me = "read_flag_id"
+    character(len = 3) :: value
+
+    flag = .false.
+
+    call etsf_io_low_read_att(ncid, ncvarid, attname, 3, value, lstat, error_data)
+    if (.not. lstat) then
+       call etsf_io_low_error_update(error_data, me)
+       return
+    end if
+    flag = (value == "Yes" .or. value == "YES" .or. value == "yes")
+  end subroutine read_flag_id
+  subroutine read_flag(ncid, flag, varname, attname, lstat, error_data)
+    logical, intent(out)                           :: flag
+    integer, intent(in)                            :: ncid
+    character(len = *), intent(in)                 :: varname
+    character(len = *), intent(in)                 :: attname
+    logical, intent(out)                           :: lstat
+    type(etsf_io_low_error), intent(out), optional :: error_data
+
+    character(len = *), parameter :: me = "read_flag"
+    character(len = 3) :: value
+
+    flag = .false.
+
+    call etsf_io_low_read_att(ncid, varname, attname, 3, value, lstat, error_data)
+    if (.not. lstat) then
+       call etsf_io_low_error_update(error_data, me)
+       return
+    end if
+    flag = (value == "Yes" .or. value == "YES" .or. value == "yes")
+  end subroutine read_flag
+
   ! Create the start, count and map arrays for a put or a get action using the
   ! NetCDF routines.
   subroutine etsf_io_low_make_access(start, count, map, var_infos, lstat, &

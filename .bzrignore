@@ -11,4 +11,6 @@ src/low_level/write_routines_auto.f90*
 src/group_level/*
 src/utils/*
 tests/group_level/tests_*.f90
-doc/www*
+doc/www/*
+doc/www/tutorials/*
+doc/www/utils/*

@@ -19,6 +19,7 @@ program tests_read
   call tests_read_var_infos(trim(path))
   call tests_check_att(trim(path))
   call tests_read_att(trim(path))
+  call tests_read_flag(trim(path))
   call tests_check_var(trim(path))
   call tests_read_var_integer(trim(path))
   call tests_read_var_double(trim(path))
@@ -382,6 +383,54 @@ contains
 
     write(*,*)
   end subroutine tests_read_att
+
+  subroutine tests_read_flag(path)
+    character(len = *), intent(in) :: path
+    integer :: ncid, atttype, attlen
+    logical :: lstat, flag
+    character(len = *), parameter :: me = "tests_check_flag"
+    character(len = 80) :: valString
+    type(etsf_io_low_error) :: error
+    
+    write(*,*)
+    write(*,*) "Testing etsf_io_low_read_flag()..."
+    
+    call etsf_io_low_read_flag(0, flag, etsf_io_low_global_att, "toto", &
+         & lstat, error_data = error)
+    call tests_read_status("argument ncid: wrong value", (.not. lstat), error)
+    
+    call etsf_io_low_open_read(ncid, path//"/check_att_t01.nc", lstat)
+    if (.not. lstat) then
+      write(*,*) "Abort, can't open file"
+      return
+    end if
+
+    call etsf_io_low_read_flag(ncid, flag, -1, "toto", &
+                            & lstat, error_data = error)
+    call tests_read_status("argument ncvarid: wrong value", (.not. lstat), error)
+
+    call etsf_io_low_read_flag(ncid, flag, "atom_species", "flag_yes", &
+         & lstat, error_data = error)
+    call tests_read_status("argument varname: accessing variable through its name (yes)", lstat, error)
+    if (lstat .and. .not.flag) then
+      call etsf_io_low_error_set(error, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, errmess = "Wrong value")
+      lstat = .false.
+    end if
+    call tests_read_status(" | cheking value", lstat, error)
+
+    call etsf_io_low_read_flag(ncid, flag, "atom_species", "flag_no", &
+         & lstat, error_data = error)
+    call tests_read_status("argument varname: accessing variable through its name (No)", lstat, error)
+    if (lstat .and. flag) then
+       call etsf_io_low_error_set(error, ERROR_MODE_SPEC, ERROR_TYPE_ATT, me, errmess = "Wrong value")
+       lstat = .false.
+    end if
+    call tests_read_status(" | cheking value", lstat, error)
+
+    call etsf_io_low_close(ncid, lstat)
+
+    write(*,*)
+  end subroutine tests_read_flag
 
   subroutine tests_check_att(path)
     character(len = *), intent(in) :: path
