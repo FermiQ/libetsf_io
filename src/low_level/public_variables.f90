@@ -63,6 +63,18 @@
   integer, parameter :: etsf_io_low_character  = NF90_CHAR
   !!***
 
+  !!****d* etsf_io_low_level/etsf_io_low_error_len
+  !! NAME
+  !!  etsf_io_low_error_len
+  !!
+  !! FUNCTION
+  !!  This value is the length of the strings used to represent errors, see
+  !!  etsf_io_low_error_to_str().
+  !!
+  !! SOURCE
+  integer, parameter :: etsf_io_low_error_len  = 4096
+  !!***
+
   !!****s* etsf_io_low_error_group/etsf_io_low_error
   !! NAME
   !!  etsf_io_low_error

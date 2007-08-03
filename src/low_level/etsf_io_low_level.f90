@@ -890,7 +890,7 @@ contains
   !!
   !! SOURCE
   subroutine etsf_io_low_error_to_str(str, error_data)
-    character(len = 4096), intent(out)   :: str
+    character(len = etsf_io_low_error_len), intent(out)   :: str
     type(etsf_io_low_error), intent(in) :: error_data
     
     character(len = 80)  :: line_tgtname, line_tgtid, line_messid
@@ -922,7 +922,7 @@ contains
     write(str, "(A,A,A)") "  Backtrace          : ", &
          & trim(error_data%backtrace(error_data%backtraceId)), "()"
     do i = error_data%backtraceId - 1, 1, -1
-       if (len(trim(str)) + 80 + 26 < 4096) then
+       if (len(trim(str)) + 80 + 26 < etsf_io_low_error_len) then
           write(str, "(5A)") trim(str(1:3900)), char(10), &
                & "                       ", trim(error_data%backtrace(i)), "()"
        end if
