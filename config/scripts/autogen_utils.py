@@ -40,7 +40,19 @@ def sub_code_check_var(var_desc):
     ret += "allocate(var_infos%%ncdimnames(%d))\n" % len(var_desc)
     i = 0
     for dim in var_desc:
-      ret += "write(var_infos%%ncdimnames(%d), \"(A)\") \"%s\"\n" % (len(var_desc) - i, dim)
+      # If the dim is potentialy splitable, we do something.
+      if (dim in etsf_properties and \
+          etsf_properties[dim] & ETSF_PROP_DIM_SPLIT != 0):
+        ret += "if (associated(split%%%s)) then\n" % (dim_get_split_array("my_" + dim))
+        ret += "  write(var_infos%%ncdimnames(%d), \"(A)\") \"%s\"\n" % \
+               (len(var_desc) - i, limit_length("my_" + dim))
+        ret += "else\n"
+        ret += "  write(var_infos%%ncdimnames(%d), \"(A)\") \"%s\"\n" % \
+               (len(var_desc) - i, dim)
+        ret += "end if\n"
+      else:
+        ret += "write(var_infos%%ncdimnames(%d), \"(A)\") \"%s\"\n" % \
+               (len(var_desc) - i, dim)
       i += 1
   return ret
 
@@ -75,6 +87,7 @@ def code_check_spec(mandatory, optional):
       # We check this existence and definition of this variable.
       ret += code_check_var(value, "lstat")
       ret += "if (.not. lstat) then\n" \
+             + "  call etsf_io_split_free(split)\n" \
              + "  call etsf_io_low_error_update(error_data, me)\n" \
              + "  return\n" \
              + "end if\n"
@@ -94,6 +107,7 @@ def code_check_spec(mandatory, optional):
       else:
         listname = listname[:-2]
       ret += "if (.not. lstat) then\n"
+      ret += "  call etsf_io_split_free(split)\n"
       ret += "  call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, &\n"
       ret += "                           & ERROR_TYPE_ARG, me, &\n"
       ret += " & tgtname = \"%s\", &\n" % listname
@@ -109,6 +123,7 @@ def code_check_spec(mandatory, optional):
       ret += "call etsf_io_low_read_var(ncid, \"%s\", string_value, etsf_charlen, &\n" % value[0]
       ret += "                        & lstat, error_data = error_data)\n"
       ret += "if (.not. lstat) then\n" \
+             + "  call etsf_io_split_free(split)\n" \
              + "  call etsf_io_low_error_update(error_data, me)\n" \
              + "  return\n" \
              + "end if\n"
@@ -122,6 +137,7 @@ def code_check_spec(mandatory, optional):
           ret += "else if (trim(string_value) == \"%s\") then\n" % key
         ret += indent_code(code_check_spec(value[1][key], []), 1)
       ret += "else\n"
+      ret += "  call etsf_io_split_free(split)\n"
       ret += "  call etsf_io_low_error_set(error_data, ERROR_MODE_SPEC, &\n"
       ret += "                           & ERROR_TYPE_ARG, me, &\n"
       ret += "                           & tgtname = \"%s\", &\n" % value[0]

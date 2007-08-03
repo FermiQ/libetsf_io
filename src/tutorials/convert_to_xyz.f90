@@ -29,7 +29,7 @@ program convert_to_xyz
   implicit none
 
   integer :: iargc
-  character(len = 4096) :: filename, error_string
+  character(len = etsf_io_low_error_len) :: filename, error_string
   logical :: lstat
   type(etsf_io_low_error) :: error_data
   integer :: i_atom

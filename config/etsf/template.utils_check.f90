@@ -39,8 +39,28 @@ subroutine etsf_io_file_check_@SPEC_NAME@(ncid, lstat, error_data)
   type(etsf_io_low_var_infos)          :: var_infos
   logical                              :: valid
   character(len = etsf_charlen)        :: string_value
+  type(etsf_dims)                      :: dims
+  type(etsf_split)                     :: split
+
+  ! Read the dimensions
+  call etsf_io_dims_get(ncid, dims, lstat, error_data)
+  if (.not. lstat) then
+     call etsf_io_low_error_update(error_data, me)
+     return
+  end if
+
+  ! Allocate the split and read it (this will verify variable exist.
+  call etsf_io_split_allocate(split, dims)
+  call etsf_io_split_get(ncid, split, lstat, error_data)
+  if (.not. lstat) then
+     call etsf_io_low_error_update(error_data, me)
+     return
+  end if
 
 @CODE@
+
+  ! Deallocate the split data.
+  call etsf_io_split_free(split)
 
   lstat = .true.
 end subroutine etsf_io_file_check_@SPEC_NAME@
