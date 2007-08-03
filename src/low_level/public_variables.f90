@@ -63,7 +63,7 @@
   integer, parameter :: etsf_io_low_character  = NF90_CHAR
   !!***
 
-  !!****d* etsf_io_low_level/etsf_io_low_error_len
+  !!****d* etsf_io_low_error_group/etsf_io_low_error_len
   !! NAME
   !!  etsf_io_low_error_len
   !!
