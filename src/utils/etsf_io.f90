@@ -50,7 +50,7 @@ program etsf_io_ploumploum
         if (opt_value(1:2) == "-") then
            write(*, "(A)") "Error: unknown option or argument '", trim(opt_value), "'"
            call usage()
-           stop
+           stop 1
         else
            ! Store remaining argments in an array.
            n_input_args = 0
@@ -122,17 +122,17 @@ program etsf_io_ploumploum
         do i = 1, etsf_nspecs_data, 1
            write(*,"(A)") trim(etsf_specs_names(i))
         end do
-        stop
+        stop 1
      end if
      if (n_input_flags < 1) then
         write(*, "(A)") "Error: not enough flags for action check."
         call usage()
-        stop
+        stop 1
      end if
      if (n_input_args /= 1) then
         write(*, "(A)") "Error: exactly one arguments is required for action check."
         call usage()
-        stop
+        stop 1
      end if
      check_flags = 0
      do j = 1, n_input_args, 1
@@ -146,12 +146,12 @@ program etsf_io_ploumploum
      call etsf_io_file_check(trim(input_args(1)), check_flags, lstat, error)
      if (.not. lstat) then
         call etsf_io_low_error_handle(error)
-        stop
+        stop 1
      end if
   else
      write(*, "(A)") "Error: missing or unknown action, use -a option."
      call usage()
-     stop
+     stop 1
   end if
   
 contains

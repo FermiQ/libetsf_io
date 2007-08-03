@@ -1,3 +1,10 @@
+* Thu Aug 02 2007 Damien Caliste <damien.caliste@cea.fr> 1.0-rc2
+- correct a bug in etsf_io when checking the wavefunctions in plane_waves
+	mode with k_dependent = "no".
+- add a simple routine in etsf_io_low_level to read the flag attribute as
+	defined in the specifications. Also add tests for this routine.
+- add the support of split definition in the check routines.
+
 * Fri Jul 06 2007 Damien Caliste <damien.caliste@cea.fr> 1.0-rc1
 - add tests for the copy action of the ETSF groups.
 - add a tutorial on the reading part, very simple with the basics of the

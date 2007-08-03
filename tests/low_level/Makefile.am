@@ -38,9 +38,9 @@ tests_write_LDFLAGS = -L$(top_builddir)/src/low_level
 
 tests_write_LDADD = -letsf_io_low_level
 
-TESTS = tests_run.sh
+TESTS = run
 
-CLEANFILES = tests_read.log tests_write.log
+CLEANFILES = run tests_read.log tests_write.log
 
 #dependencies
 tests_read.o: tests_read.f90 \
@@ -50,7 +50,8 @@ tests_write.o: tests_write.f90 \
 	etsf_io_low_level.o
 
 #additional rules
-tests_run.sh: tests_read.log tests_write.log
+run: $(srcdir)/tests_run.sh tests_read.log tests_write.log
+	\cp $(srcdir)/tests_run.sh run
 
 run-tests: tests_read.log tests_write.log
 	cat *.log

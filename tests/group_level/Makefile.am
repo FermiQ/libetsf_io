@@ -29,9 +29,9 @@ tests_copy_SOURCES = tests_module.f90 tests_copy.f90
 tests_copy_LDFLAGS = -L$(top_builddir)/src/group_level
 tests_copy_LDADD = -letsf_io
 
-TESTS = tests_run.sh
+TESTS = run
 
-CLEANFILES = tests_init.log tests_write.log tests_read.log tests_copy.log
+CLEANFILES = run tests_init.log tests_write.log tests_read.log tests_copy.log
 
 #dependencies
 tests_init.o: tests_init.f90 \
@@ -52,7 +52,8 @@ tests_copy.o: tests_copy.f90 \
 tests_module.o: tests_module.f90
 
 #additional rules
-tests_run.sh: tests_init.log tests_write.log tests_read.log tests_copy.log
+run: $(srcdir)/tests_run.sh tests_init.log tests_write.log tests_read.log tests_copy.log
+	\cp $(srcdir)/tests_run.sh run
 
 run-tests: tests_init.log tests_write.log tests_read.log tests_copy.log
 	cat *.log
