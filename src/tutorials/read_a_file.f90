@@ -1,4 +1,4 @@
-!!****e* tutorial_group_level/read_a_file
+!!****e* etsf_io_tutorials/read_a_file
 !! NAME
 !!  read_a_file
 !!

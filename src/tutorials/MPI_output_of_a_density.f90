@@ -1,4 +1,4 @@
-!!****e* tutorial_group_level/MPI_output_of_a_density
+!!****e* etsf_io_tutorials/MPI_output_of_a_density
 !! NAME
 !!  MPI_output_of_a_density
 !!

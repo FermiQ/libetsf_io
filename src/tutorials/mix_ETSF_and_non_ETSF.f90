@@ -1,4 +1,4 @@
-!!****e* tutorial_group_level/mix_ETSF_and_non_ETSF
+!!****e* etsf_io_tutorials/mix_ETSF_and_non_ETSF
 !! NAME
 !!  mix_ETSF_and_non_ETSF
 !!

@@ -1,4 +1,4 @@
-!!****e* tutorial_group_level/convert_to_xyz
+!!****e* etsf_io_tutorials/convert_to_xyz
 !! NAME
 !!  convert_to_xyz
 !!

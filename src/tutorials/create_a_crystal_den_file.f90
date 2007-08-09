@@ -1,4 +1,4 @@
-!!****e* tutorial_group_level/create_a_crystal_den_file
+!!****e* etsf_io_tutorials/create_a_crystal_den_file
 !! NAME
 !!  create_a_crystal_den_file
 !!

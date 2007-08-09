@@ -177,7 +177,7 @@ module etsf_io
 @STRUCT_GROUPS@
   !!***
 
-  !!****g* etsf_io_basics_group/etsf_split
+  !!****s* etsf_io_basics_group/etsf_split
   !! FUNCTION
   !!  This group is used to store description array in the case of a splitted file.
   !!

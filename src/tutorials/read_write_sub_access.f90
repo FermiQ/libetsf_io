@@ -1,4 +1,4 @@
-!!****e* tutorial_group_level/read_write_sub_access
+!!****e* etsf_io_tutorials/read_write_sub_access
 !! NAME
 !!  read_write_sub_access
 !!
