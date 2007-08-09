@@ -57,8 +57,8 @@ run-tests: tests_read.log tests_write.log
 	cat *.log
 
 run-tests-read tests_read.log: $(test_dependencies) tests_read
-	./tests_read $(srcdir) > tests_read.log
+	./tests_read $(srcdir) | tee tests_read.log
 
 run-tests-write tests_write.log: $(test_dependencies) tests_write
 	\rm -f open_create_t*.nc
-	./tests_write $(srcdir) > tests_write.log
+	./tests_write $(srcdir) | tee tests_write.log

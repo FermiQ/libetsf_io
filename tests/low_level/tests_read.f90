@@ -172,7 +172,7 @@ contains
       lstat = .false.
     end if
     call tests_read_status(" | checking dim array size", lstat, error)
-    if (.not. (trim(var_infos%ncdimnames(1)) == "number_of_atom_species") .and. &
+    if (.not. (trim(var_infos%ncdimnames(2)) == "number_of_atom_species") .or. &
          & .not. (trim(var_infos%ncdimnames(1)) == "character_string_length")) then
       error%access_mode_id = ERROR_MODE_SPEC
       error%target_type_id = ERROR_TYPE_ATT

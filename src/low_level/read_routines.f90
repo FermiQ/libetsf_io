@@ -345,11 +345,9 @@
        ! Handle the error, if required.
        if (.not. lstat) then
           ! Free the var_infos_array argument before leaving
-          if (my_with_dim_name) then
-             do j = 1, i, 1
-                deallocate(var_infos_array(i)%ncdimnames)
-             end do
-          end if
+          do j = 1, i, 1
+             call etsf_io_low_free_var_infos(var_infos_array(i))
+          end do
           deallocate(var_infos_array)
           var_infos_array => null()
           return

@@ -60,16 +60,16 @@ run-tests: tests_init.log tests_write.log tests_read.log tests_copy.log
 
 run-tests-init tests_init.log: tests_init
 	\rm -f test_init_*.nc
-	./tests_init > tests_init.log
+	./tests_init | tee tests_init.log
 
 run-tests-write tests_write.log: tests_write tests_init.log
 	\rm -f test_write_*.nc
-	./tests_write > tests_write.log
+	./tests_write | tee tests_write.log
 
 run-tests-read tests_read.log: tests_read tests_init.log
 	\rm -f test_read_*.nc
-	./tests_read > tests_read.log
+	./tests_read | tee tests_read.log
 
 run-tests-copy tests_copy.log: tests_copy tests_write.log
 	\rm -f test_copy_*.nc
-	./tests_copy > tests_copy.log
+	./tests_copy | tee tests_copy.log

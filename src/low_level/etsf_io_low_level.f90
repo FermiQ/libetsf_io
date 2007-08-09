@@ -273,7 +273,7 @@ module etsf_io_low_level
   end interface etsf_io_low_read_att
   !End of the generic interface of etsf_io_low_read_att
 
-  !!****m* etsf_io_low_read_flag/etsf_io_low_read_flag
+  !!****m* etsf_io_low_read_group/etsf_io_low_read_flag
   !! NAME
   !!  etsf_io_low_read_flag
   !!
