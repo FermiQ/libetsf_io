@@ -1,3 +1,6 @@
+* Tue Aug 21 2007 Damien Caliste <damien.caliste@cea.fr> 1.0.0
+- Official publication of version 1.0.0.
+
 * Thu Aug 09 2007 Damien Caliste <damien.caliste@cea.fr> 1.0-rc2
 - correct a bug in etsf_io when checking the wavefunctions in plane_waves
 	mode with k_dependent = "no".

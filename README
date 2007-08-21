@@ -46,9 +46,9 @@ level access on files:
 
 Please see the files in the doc/www directory for documentation of the API, browsable
 with a web browser (use doc/www/index.html).
- #MUST BE DONE See also the doc/howto directory for indications on how to use the
-               library in an other program (link on it, examples of low level access
-               or group level access).
+See also the doc/tutorials/index.html directory for indications on how to use the
+library in an other program (link on it, examples of low level access or group
+level access).
 
 Please see the file COPYING for copying conditions.
 
@@ -56,6 +56,6 @@ See the file INSTALL for generic compilation and installation instructions.
 
 The main targets in the top Makefile are:
 - make, to build the library and the tests executables.
-- make run-tests, to run all incorporated unitary tests.
+- make check, to run all incorporated unitary tests.
 
 Please report bugs to Caliste Damien <damien.caliste@cea.fr>.

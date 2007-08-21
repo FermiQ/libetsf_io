@@ -418,7 +418,7 @@
     type(etsf_io_low_error), intent(out), optional :: error_data
     
     ! Local
-    character(len = *), parameter :: me = "etsf_io_low_def_var"
+    character(len = *), parameter :: me = "etsf_io_low_def_var_0D"
     type(etsf_io_low_var_infos) :: var_infos
     integer :: s, varid
 
@@ -476,7 +476,7 @@
     type(etsf_io_low_error), intent(out), optional :: error_data
     
     ! Local
-    character(len = *), parameter :: me = "etsf_io_low_def_var"
+    character(len = *), parameter :: me = "etsf_io_low_def_var_nD"
     type(etsf_io_low_var_infos) :: var_infos
     integer :: s, varid, ndims, i
     integer, allocatable :: ncdims(:, :)
@@ -517,10 +517,11 @@
         ! Variable differs, raise error.
         if (present(error_data)) then
           call etsf_io_low_error_set(error_data, ERROR_MODE_DEF, ERROR_TYPE_VAR, me, &
-                                   & tgtname = varname, errmess = &
-                                   & "variable already exists with a different definition.")
+               & tgtname = varname, errmess = &
+               & "variable already exists with a different definition.")
         end if
       end if        
+      deallocate(ncdims)
       return
     end if
     ! Define variable since it don't already exist.
