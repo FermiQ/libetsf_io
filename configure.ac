@@ -110,7 +110,7 @@ AC_MSG_RESULT([$withnetcdf])
 FCFLAGS=$FCFLAGS_SVG
 if test "$withnetcdf" = "no" ; then
   echo "LDFLAGS was $LDFLAGS"
-  echo "Action: install NetCDF and set the libaray link path with --with-netcdf-ldflags."
+  echo "Action: install NetCDF and set the library link path with --with-netcdf-ldflags."
   AC_MSG_ERROR(["No 'NetCDF' library found."])
 fi
 

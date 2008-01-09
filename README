@@ -46,16 +46,27 @@ level access on files:
 
 Please see the files in the doc/www directory for documentation of the API, browsable
 with a web browser (use doc/www/index.html).
-See also the doc/tutorials/index.html directory for indications on how to use the
+See also the doc/www/tutorials/index.html directory for indications on how to use the
 library in an other program (link on it, examples of low level access or group
 level access).
 
 Please see the file COPYING for copying conditions.
 
 See the file INSTALL for generic compilation and installation instructions.
+In addition to the usual configure options ETSF_IO requires the pathes to the  
+netcdf library to be specified.
+
+  --with-netcdf-module-path
+                          Give the path of the NetCDF Fortran90 module
+                          (default = /usr/include).
+  --with-netcdf-ldflags   
+                          Give the flags required to link with the NetCDF
+                          library (default is -L/usr/lib).
+
 
 The main targets in the top Makefile are:
 - make, to build the library and the tests executables.
 - make check, to run all incorporated unitary tests.
+- make install, to install the program
 
 Please report bugs to Caliste Damien <damien.caliste@cea.fr>.
