@@ -9,7 +9,7 @@ dnl  - PACKAGE_TARNAME, the name used for the tarball ;
 dnl  - PACKAGE_VERSION, the version ;
 dnl  - PACKAGE_STRING, the name + the version ;
 dnl  - PACKAGE_BUGREPORT, the mail.
-AC_INIT([ETSF - IO library], [1.0.0], [damien.caliste@cea.fr], [etsf_io])
+AC_INIT([ETSF - IO library], [1.0.1], [damien.caliste@cea.fr], [etsf_io])
 
 dnl All temporary building files are put in this directory.
 dnl his must be called before AM_INIT_AUTOMAKE
@@ -123,7 +123,15 @@ AC_ARG_ENABLE(build-tutorials,
 AM_CONDITIONAL(BUILD_TUTORIALS, test "$ac_build_tutorials" = "yes")
 
 dnl default installation directories
-moduledir=${includedir}/${fc_type}
+AC_ARG_WITH(moduledir,
+            AS_HELP_STRING([--with-moduledir],
+                           [installation directory for module files [[INCLUDEDIR/FC_TYPE]]]),
+              ac_moduledir=$withval, ac_moduledir="no")
+if test x"$ac_moduledir" != x"no" ; then
+  moduledir=$ac_moduledir
+else
+  moduledir=${includedir}/${fc_type}
+fi
 AC_SUBST(moduledir)
 
 dnl Append $FCFLAGS_SRCEXT to $FCFLAGS since the former is not

@@ -1,3 +1,8 @@
+* Fri Apr 04 2008 Damien Caliste <damien.caliste@cea.fr> 1.0.1
+- Add a --with-moduledir option to the configure to be able to choose the
+	installation path for modules.
+- Update the fortran.m4 macro to recognise newest version of gfortran (>4.1).
+
 * Tue Aug 21 2007 Damien Caliste <damien.caliste@cea.fr> 1.0.0
 - Official publication of version 1.0.0.
 
