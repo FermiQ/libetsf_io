@@ -1,3 +1,7 @@
+* Thu Sep 11 2008 Damien Caliste <damien.caliste@cea.fr> 1.0.2
+- Update the fortran.m4 macro to recognise the open64 compiler.
+- Update the configure.ac to handle the open64 compiler.
+
 * Fri Apr 04 2008 Damien Caliste <damien.caliste@cea.fr> 1.0.1
 - Add a --with-moduledir option to the configure to be able to choose the
 	installation path for modules.

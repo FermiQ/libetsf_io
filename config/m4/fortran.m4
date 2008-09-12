@@ -1,6 +1,6 @@
 # -*- Autoconf -*-
 #
-# Copyright (c) 2005-2007 The ABINIT Group (Yann Pouillon)
+# Copyright (c) 2005-2008 ABINIT Group (Yann Pouillon)
 # All rights reserved.
 #
 # This file is part of the ABINIT software package. For license information,
@@ -137,7 +137,6 @@ AC_DEFUN([_ABI_CHECK_FC_G95],
   fc_type="UNKNOWN"
   fc_version="UNKNOWN"
  else
-  AC_DEFINE([FC_GCC],1,[Define to 1 if you are using the GCC Fortran compiler])
   AC_DEFINE([FC_G95],1,[Define to 1 if you are using the G95 Fortran compiler])
   fc_type="g95"
   fc_version=`echo ${abi_result} | sed -e 's/.*GCC //; s/ .*//'`
@@ -164,7 +163,7 @@ AC_DEFUN([_ABI_CHECK_FC_GCC],
 
  dnl AC_MSG_CHECKING([if we are using the GCC Fortran compiler])
  fc_info_string=`$1 --version 2>&1`
- abi_result=`echo "${fc_info_string}" | grep '^GNU Fortran 95'`
+ abi_result=`echo "${fc_info_string}" | grep '^GNU Fortran'`
  if test "${abi_result}" = ""; then
   abi_result="no"
   fc_info_string=""
@@ -174,9 +173,6 @@ AC_DEFUN([_ABI_CHECK_FC_GCC],
   AC_DEFINE([FC_GCC],1,[Define to 1 if you are using the GNU Fortran compiler])
   fc_type="gcc"
   fc_version=`echo ${abi_result} | sed -e 's/.*(GCC) //; s/.*GCC //; s/ .*//'`
-  if test "${fc_version}" = "${abi_result}"; then
-   fc_version="UNKNOWN"
-  fi
   abi_result="yes"
  fi
  dnl AC_MSG_RESULT(${abi_result})
@@ -327,6 +323,40 @@ AC_DEFUN([_ABI_CHECK_FC_MIPSPRO],
 
 
 
+# _ABI_CHECK_FC_OPEN64(COMPILER)
+# ------------------------------
+#
+# Checks whether the specified Fortran compiler is the Open64
+# Fortran compiler.
+# If yes, tries to determine its version number and sets the fc_type
+# and fc_version variables accordingly.
+#
+AC_DEFUN([_ABI_CHECK_FC_OPEN64],
+[dnl Do some sanity checking of the arguments
+ m4_if([$1], , [AC_FATAL([$0: missing argument 1])])dnl
+
+ dnl AC_MSG_CHECKING([if we are using the PathScale Fortran compiler])
+ fc_info_string=`$1 --version 2>&1`
+ abi_result=`echo "${fc_info_string}" | grep '^Open64'`
+ if test "${abi_result}" = ""; then
+  abi_result="no"
+  fc_info_string=""
+  fc_type="UNKNOWN"
+  fc_version="UNKNOWN"
+ else
+  AC_DEFINE([FC_OPEN64],1,[Define to 1 if you are using the Open64 Fortran compiler])
+  fc_type="open64"
+  fc_version=`echo "${abi_result}" | sed -e 's/.* Version //; s/ .*//'`
+  if test "${fc_version}" = "${abi_result}"; then
+   fc_version="UNKNOWN"
+  fi
+  abi_result="yes"
+ fi
+ dnl AC_MSG_RESULT(${abi_result})
+]) # _ABI_CHECK_FC_OPEN64
+
+
+
 # _ABI_CHECK_FC_PATHSCALE(COMPILER)
 # ---------------------------------
 #
@@ -384,9 +414,13 @@ AC_DEFUN([_ABI_CHECK_FC_PGI],
  else
   AC_DEFINE([FC_PGI],1,[Define to 1 if you are using the Portland Group Fortran compiler])
   fc_type="pgi"
-  fc_version=`echo "${abi_result}" | sed -e 's/.* //; s/-.*//'`
+  fc_version=`echo "${abi_result}" | sed -e 's/^pgf9[[05]] //' | sed -e 's/-.*//'`
   if test "${fc_version}" = "${abi_result}"; then
    fc_version="UNKNOWN"
+  else
+   if test "${fc_version}" = "6.0"; then
+        AC_DEFINE([FC_PGI6],1,[Define to 1 if you are using the Portland Group Fortran compiler version 6])
+   fi
   fi
   abi_result="yes"
  fi
@@ -432,16 +466,16 @@ AC_DEFUN([_ABI_CHECK_FC_SUN],
 
 
 
-# ABI_CHECK_FORTRAN_EXIT()
-# ------------------------
+# _ABI_CHECK_FC_EXIT()
+# --------------------
 #
 # Checks whether the Fortran compiler supports the exit() subroutine.
 #
-AC_DEFUN([ABI_CHECK_FORTRAN_EXIT],
+AC_DEFUN([_ABI_CHECK_FC_EXIT],
 [dnl Init
  fc_has_exit="no"
 
- dnl AC_MSG_CHECKING([whether the Fortran compiler accepts exit()])
+ AC_MSG_CHECKING([whether the Fortran compiler accepts exit()])
 
  dnl Try to compile a program calling exit()
  AC_LANG_PUSH([Fortran])
@@ -452,12 +486,41 @@ AC_DEFUN([ABI_CHECK_FORTRAN_EXIT],
  AC_LANG_POP()
 
  if test "${fc_has_exit}" = "yes"; then
-  AC_DEFINE([HAVE_FORTRAN_EXIT],1,
+  AC_DEFINE([HAVE_FC_EXIT],1,
    [Define to 1 if your Fortran compiler supports exit()])
  fi
 
- dnl AC_MSG_RESULT(${fc_has_exit})
-]) # ABI_CHECK_FORTRAN_EXIT
+ AC_MSG_RESULT(${fc_has_exit})
+]) # _ABI_CHECK_FC_EXIT
+
+
+
+# _ABI_CHECK_FC_FLUSH()
+# ---------------------
+#
+# Checks whether the Fortran compiler supports the flush() subroutine.
+#
+AC_DEFUN([_ABI_CHECK_FC_FLUSH],
+[dnl Init
+ fc_has_flush="no"
+
+ AC_MSG_CHECKING([whether the Fortran compiler accepts flush()])
+
+ dnl Try to compile a program calling flush()
+ AC_LANG_PUSH([Fortran])
+ AC_LINK_IFELSE([AC_LANG_PROGRAM([],
+  [[
+      call flush()
+  ]])], [fc_has_flush="yes"])
+ AC_LANG_POP()
+
+ if test "${fc_has_flush}" = "yes"; then
+  AC_DEFINE([HAVE_FC_FLUSH],1,
+   [Define to 1 if your Fortran compiler supports flush()])
+ fi
+
+ AC_MSG_RESULT(${fc_has_flush})
+]) # _ABI_CHECK_FC_FLUSH
 
 
 
@@ -504,6 +567,9 @@ AC_DEFUN([ABI_PROG_FC],
   _ABI_CHECK_FC_MIPSPRO(${FC})
  fi
  if test "${fc_type}" = "UNKNOWN"; then
+  _ABI_CHECK_FC_OPEN64(${FC})
+ fi
+ if test "${fc_type}" = "UNKNOWN"; then
   _ABI_CHECK_FC_FUJITSU(${FC})
  fi
  if test "${fc_type}" = "UNKNOWN"; then
@@ -533,4 +599,8 @@ AC_DEFUN([ABI_PROG_FC],
  AC_SUBST(fc_type)
  AC_SUBST(fc_version)
  AC_SUBST(fc_wrap)
+
+ dnl Further explore compiler peculiarities
+ _ABI_CHECK_FC_EXIT
+ _ABI_CHECK_FC_FLUSH
 ]) # ABI_PROG_FC
