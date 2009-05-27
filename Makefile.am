@@ -6,6 +6,8 @@ else
 subdir_tutorials = 
 endif
 
+ACLOCAL_AMFLAGS = -I config/m4
+
 SUBDIRS = \
 	src/low_level \
 	src/group_level \

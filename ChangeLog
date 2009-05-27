@@ -1,3 +1,21 @@
+* Wed May 27 2009 Damien Caliste <damien.caliste@cea.fr> 1.0.3
+- Correct configure.ac and Makefile.am for aclocal to always run with its
+  config/m4 inclusion.
+- Modify the dielectric function specification to fullfil specs 3.3.
+- Comment out the phonon part since not yet included officially in the spec.
+
+* Thu Nov 07 2008 Damien Caliste <damien.caliste@cea.fr> 1.0.3-dev2
+- Add the proposal specification for the phonons.
+- Modify the code generation to correctly handle the case with twice the
+  same dimension in the shape declaration of an array. In that case _%d is
+  appended to the name of the attricute in the group structure.
+- Correct a bug to actually use the restriction on the number of elements
+  for the variables that have a max_something dimension but that has
+  no split flag.
+
+* Thu Nov 06 2008 Damien Caliste <damien.caliste@cea.fr> 1.0.3-dev1
+- Add the proposal specification for the dielectric function.
+
 * Thu Sep 11 2008 Damien Caliste <damien.caliste@cea.fr> 1.0.2
 - Update the fortran.m4 macro to recognise the open64 compiler.
 - Update the configure.ac to handle the open64 compiler.

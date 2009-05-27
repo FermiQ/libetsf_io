@@ -153,9 +153,14 @@ for grp in etsf_group_list:
                                           "scale_to_atomic_units", att_desc2[1])
     
    # Check for a max_something dimension
+   i = 1
    for dim in dsc[1:]:
      if (dim.startswith("max_")):
-       out_spe += "  integer :: %s__%s = etsf_spec_dimension\n" % (var_shortname(var), dim[4:])
+       if (dsc[1:].count(dim) > 1):
+         out_spe += "  integer :: %s__%s_%d = etsf_spec_dimension\n" % (var_shortname(var), dim[4:], i)
+       else:
+         out_spe += "  integer :: %s__%s = etsf_spec_dimension\n" % (var_shortname(var), dim[4:])
+     i += 1
    for dim in dsc[1:]:
      if (splitted and dim == "number_of_spins"):
        out_spe += "  integer :: %s__spin_access = etsf_no_sub_access\n" % var_shortname(var)

@@ -153,10 +153,12 @@ def output_check_statement(var, action):
     # Retrieve variable properties of interest.
     if (var_dsc[0].startswith("string")):
       if (len(var_dsc) == 2):
-        ret += "call tests_check_values(group%%%s, dims%%%s, \"%s\", &\n" % (var, var_dsc[1], var)
+        ret += "call tests_check_values(group%%%s, &\n" % var
+        ret += "                      & dims%%%s, \"%s\", &\n" % (var_dsc[1], var)
         ret += "                      & lstat, error_data)\n"
       else:
-        ret += "call tests_check_values(group%%%s, (/ dims%%%s, dims%%%s /), &\n" % (var, var_dsc[2], var_dsc[1])
+        ret += "call tests_check_values(group%%%s, &\n" % var
+        ret += "                      & (/ dims%%%s, dims%%%s /), &\n" % (var_dsc[2], var_dsc[1])
         ret += "                      & \"%s\", lstat, error_data)\n" % var
     else:
       unformatted = False
@@ -166,15 +168,16 @@ def output_check_statement(var, action):
         unformatted = ( props & ETSF_PROP_VAR_UNFORMATTED == ETSF_PROP_VAR_UNFORMATTED)
         splitted    = ( props & ETSF_PROP_VAR_SUB_ACCESS == ETSF_PROP_VAR_SUB_ACCESS)
       if (unformatted or splitted):
-        ret += "call tests_check_values(group%%%s%%data1D, \"%s\", &\n" % (var, var)
-        ret += "                      & lstat, error_data)\n"
+        ret += "call tests_check_values(group%%%s%%data1D, &\n" % var
+        ret += "                      & \"%s\", lstat, error_data)\n" % var
       else:
         if (len(var_dsc) > 2):
-          ret += "call tests_check_values(reshape(group%%%s, (/ 1 /)), \"%s\", &\n" % (var, var)
+          ret += "call tests_check_values(reshape(group%%%s, &\n" %var
+          ret += "                      & (/ 1 /)), \"%s\", &\n" % var
           ret += "                      & lstat, error_data)\n"
         else:
-          ret += "call tests_check_values(group%%%s, \"%s\", &\n" % (var, var)
-          ret += "                      & lstat, error_data)\n"
+          ret += "call tests_check_values(group%%%s, &\n" % var
+          ret += "                      & \"%s\", lstat, error_data)\n" % var
     return ret
   else:
     # Case the variable is a scalar

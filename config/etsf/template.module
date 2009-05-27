@@ -60,6 +60,7 @@ module etsf_io
   integer, parameter :: etsf_charlen = 80
   integer, parameter :: etsf_histlen = 1024
   integer, parameter :: etsf_chemlen = 2
+  integer, parameter :: etsf_2dimlen = 2
   integer, parameter :: etsf_3dimlen = 3
   integer, parameter :: etsf_spec_dimension = 0
   integer, parameter :: etsf_no_sub_access = 0

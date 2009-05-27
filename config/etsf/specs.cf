@@ -30,6 +30,7 @@ ETSF_PROP_VAR_TR_SYMMETRY = 128  # Variables use half the number of coefficients
 # ETSF constants
 etsf_constants = {
    "character_string_length":"etsf_charlen",
+   "complex":"etsf_2dimlen",
    "history_length":"etsf_histlen",
    "symbol_length":"etsf_chemlen",
    "number_of_cartesian_directions":"etsf_3dimlen",
@@ -78,6 +79,8 @@ etsf_properties = {
 
 # ETSF attributes
 etsf_attributes = {
+   "approximation_scheme":[
+      "string character_string_length"],
    "Conventions":[
       "string character_string_length",
       "\"http://www.etsf.eu/fileformats\""],
@@ -108,20 +111,28 @@ etsf_attributes = {
 # ETSF dimensions
 etsf_dimensions = [
    "character_string_length",
+   "complex",
    "max_number_of_angular_momenta",
-   "max_number_of_basis_grid_points",
+   "max_number_of_basis_grid_points",            # 2.3, wavelet basis-set
    "max_number_of_coefficients",
    "max_number_of_projectors",
    "max_number_of_states",
    "number_of_atoms",
    "number_of_atom_species",
    "number_of_cartesian_directions",
+   "number_of_coefficients_dielectric_function", # 3.0, dielectric function
    "number_of_components",
+   "number_of_frequencies_dielectric_function",  # 3.0, dielectric function
    "number_of_grid_points_vector1",
    "number_of_grid_points_vector2",
    "number_of_grid_points_vector3",
    "number_of_kpoints",
-   "number_of_localization_regions",
+##   "number_of_kpoints_electron_phonon",          # 3.0, phonons
+   "number_of_localization_regions",             # 2.3, wavelet basis-set
+##   "number_of_phonon_branches",                  # 3.0, phonons
+##   "number_of_qpoints_electron_phonon",          # 3.0, phonons
+   "number_of_qpoints_dielectric_function",      # 3.0, dielectric function
+   "number_of_qpoints_gamma_limit",              # 3.3, dielectric function
    "number_of_reduced_dimensions",
    "number_of_spinor_components",
    "number_of_spins",
@@ -153,6 +164,9 @@ etsf_variables = {
       "string",
       "number_of_atom_species",
       "symbol_length"],
+##   "coefficients_of_eliashberg":[
+##      "real double_precision",
+##      "number_of_frequencies_eliashberg"],
    "coefficients_of_wavefunctions":[
       "real double_precision",
       "number_of_spins",
@@ -183,6 +197,38 @@ etsf_variables = {
       "number_of_grid_points_vector2",
       "number_of_grid_points_vector1",
       "real_or_complex_density"],
+   "dielectric_function":[
+      "real double_precision",
+      "number_of_frequencies_dielectric_function",
+      "number_of_qpoints_dielectric_function",
+      "number_of_spins",
+      "number_of_spins",
+      "number_of_coefficients_dielectric_function",
+      "number_of_coefficients_dielectric_function",
+      "complex"],
+   "dielectric_function_head":[
+      "real double_precision",
+      "number_of_frequencies_dielectric_function",
+      "number_of_qpoints_dielectric_function",
+      "number_of_spins",
+      "number_of_spins",
+      "complex"],
+   "dielectric_function_lower_wing":[
+      "real double_precision",
+      "number_of_frequencies_dielectric_function",
+      "number_of_qpoints_gamma_limit",
+      "number_of_spins",
+      "number_of_spins",
+      "number_of_coefficients_dielectric_function",
+      "complex"],
+   "dielectric_function_upper_wing":[
+      "real double_precision",
+      "number_of_frequencies_dielectric_function",
+      "number_of_qpoints_gamma_limit",
+      "number_of_spins",
+      "number_of_spins",
+      "number_of_coefficients_dielectric_function",
+      "complex"],
    "eigenvalues":[
       "real double_precision",
       "number_of_spins",
@@ -207,12 +253,80 @@ etsf_variables = {
       "real_or_complex_potential"],
    "fermi_energy":[
       "real double_precision"],
+   "frequencies_dielectric_function":[
+      "real double_precision",
+      "number_of_frequencies_dielectric_function",
+      "complex"],
    "gw_corrections":[
       "real double_precision",
       "number_of_spins",
       "number_of_kpoints",
       "max_number_of_states",
       "real_or_complex_gw_corrections"],
+   "inverse_dielectric_function":[
+      "real double_precision",
+      "number_of_frequencies_dielectric_function",
+      "number_of_qpoints_dielectric_function",
+      "number_of_spins",
+      "number_of_spins",
+      "number_of_coefficients_dielectric_function",
+      "number_of_coefficients_dielectric_function",
+      "complex"],
+   "inverse_dielectric_function_head":[
+      "real double_precision",
+      "number_of_frequencies_dielectric_function",
+      "number_of_qpoints_dielectric_function",
+      "number_of_spins",
+      "number_of_spins",
+      "complex"],
+   "inverse_dielectric_function_lower_wing":[
+      "real double_precision",
+      "number_of_frequencies_dielectric_function",
+      "number_of_qpoints_gamma_limit",
+      "number_of_spins",
+      "number_of_spins",
+      "number_of_coefficients_dielectric_function",
+      "complex"],
+   "inverse_dielectric_function_upper_wing":[
+      "real double_precision",
+      "number_of_frequencies_dielectric_function",
+      "number_of_qpoints_gamma_limit",
+      "number_of_spins",
+      "number_of_spins",
+      "number_of_coefficients_dielectric_function",
+      "complex"],
+   "inverse_polarizability":[
+      "real double_precision",
+      "number_of_frequencies_dielectric_function",
+      "number_of_qpoints_dielectric_function",
+      "number_of_spins",
+      "number_of_spins",
+      "number_of_coefficients_dielectric_function",
+      "number_of_coefficients_dielectric_function",
+      "complex"],
+   "inverse_polarizability_head":[
+      "real double_precision",
+      "number_of_frequencies_dielectric_function",
+      "number_of_qpoints_dielectric_function",
+      "number_of_spins",
+      "number_of_spins",
+      "complex"],
+   "inverse_polarizability_lower_wing":[
+      "real double_precision",
+      "number_of_frequencies_dielectric_function",
+      "number_of_qpoints_gamma_limit",
+      "number_of_spins",
+      "number_of_spins",
+      "number_of_coefficients_dielectric_function",
+      "complex"],
+   "inverse_polarizability_upper_wing":[
+      "real double_precision",
+      "number_of_frequencies_dielectric_function",
+      "number_of_qpoints_gamma_limit",
+      "number_of_spins",
+      "number_of_spins",
+      "number_of_coefficients_dielectric_function",
+      "complex"],
    "kb_formfactors":[
       "real double_precision",
       "number_of_atom_species",
@@ -244,6 +358,17 @@ etsf_variables = {
    "kpoint_weights":[
       "real double_precision",
       "number_of_kpoints"],
+##   "kpoints_electron_phonon":[
+##      "real double_precision",
+##      "number_of_kpoints_electron_phonon",
+##      "number_of_reduced_dimensions"],
+##   "matrix_elements_of_electron_phonon":[
+##      "real double_precision",
+##      "number_of_kpoints_electron_phonon",
+##      "max_number_of_states_electron_phonon",
+##      "max_number_of_states_electron_phonon",
+##      "number_of_phonon_branches",
+##      "complex"],
    "monkhorst_pack_folding":[
       "integer",
       "number_of_vectors"],
@@ -289,6 +414,47 @@ etsf_variables = {
       "number_of_spins",
       "number_of_kpoints",
       "max_number_of_states"],
+   "polarizability":[
+      "real double_precision",
+      "number_of_frequencies_dielectric_function",
+      "number_of_qpoints_dielectric_function",
+      "number_of_spins",
+      "number_of_spins",
+      "number_of_coefficients_dielectric_function",
+      "number_of_coefficients_dielectric_function",
+      "complex"],
+   "polarizability_head":[
+      "real double_precision",
+      "number_of_frequencies_dielectric_function",
+      "number_of_qpoints_dielectric_function",
+      "number_of_spins",
+      "number_of_spins",
+      "complex"],
+   "polarizability_lower_wing":[
+      "real double_precision",
+      "number_of_frequencies_dielectric_function",
+      "number_of_qpoints_gamma_limit",
+      "number_of_spins",
+      "number_of_spins",
+      "number_of_coefficients_dielectric_function",
+      "complex"],
+   "polarizability_upper_wing":[
+      "real double_precision",
+      "number_of_frequencies_dielectric_function",
+      "number_of_qpoints_gamma_limit",
+      "number_of_spins",
+      "number_of_spins",
+      "number_of_coefficients_dielectric_function",
+      "complex"],
+##   "position_hamiltonian_commutator":[
+##      "real double_precision",
+##      "number_of_spins",
+##      "number_of_kpoints",
+##      "number_of_spins",
+##      "number_of_spins",
+##      "max_number_of_states",
+##      "max_number_of_states",
+##      "complex"],
    "primitive_vectors":[
       "real double_precision",
       "number_of_vectors",
@@ -297,6 +463,18 @@ etsf_variables = {
       "string",
       "number_of_atom_species",
       "character_string_length"],
+   "qpoints_dielectric_function":[
+      "real double_precision",
+      "number_of_qpoints_dielectric_function",
+      "number_of_reduced_dimensions"],
+##   "qpoints_electron_phonon":[
+##      "real double_precision",
+##      "number_of_qpoints_electron_phonon",
+##      "number_of_reduced_dimensions"],
+   "qpoints_gamma_limit":[
+      "real double_precision",
+      "number_of_qpoints_gamma_limit",
+      "number_of_reduced_dimensions"],
    "real_space_wavefunctions":[
       "real double_precision",
       "number_of_spins",
@@ -319,6 +497,11 @@ etsf_variables = {
       "integer",
       "number_of_kpoints",
       "max_number_of_coefficients",
+      "number_of_reduced_dimensions"],
+   "reduced_coordinates_of_plane_waves_dielectric_function":[
+      "integer",
+      "number_of_qpoints_dielectric_function",
+      "number_of_coefficients_dielectric_function",
       "number_of_reduced_dimensions"],
    "reduced_symmetry_matrices":[
       "integer",
@@ -382,6 +565,32 @@ etsf_groups = {
       "kb_formfactor_sign",
       "kb_formfactors",
       "kb_formfactor_derivative"],
+   "dielectric":[
+      "frequencies_dielectric_function",
+      "qpoints_dielectric_function",
+      "qpoints_gamma_limit",
+      "dielectric_function",
+      "dielectric_function_head",
+      "dielectric_function_lower_wing",
+      "dielectric_function_upper_wing",
+      "inverse_dielectric_function",
+      "inverse_dielectric_function_head",
+      "inverse_dielectric_function_lower_wing",
+      "inverse_dielectric_function_upper_wing",
+      "polarizability",
+      "polarizability_head",
+      "polarizability_lower_wing",
+      "polarizability_upper_wing",
+      "inverse_polarizability",
+      "inverse_polarizability_head",
+      "inverse_polarizability_lower_wing",
+      "inverse_polarizability_upper_wing"],
+##   "phonons":[
+##      "position_hamiltonian_commutator",
+##      "kpoints_electron_phonon",
+##      "qpoints_electron_phonon",
+##      "coefficients_of_eliashberg",
+##      "matrix_elements_of_electron_phonon"],
    "main":[
       "density",
       "exchange_potential",
@@ -397,6 +606,8 @@ etsf_group_list = [
    "kpoints",
    "basisdata",
    "gwdata",
+   "dielectric",
+##   "phonons",
    "main"]
 
 # Main variable nicknames
@@ -422,7 +633,21 @@ etsf_variables_shortnames = {
    "monkhorst_pack_folding":"mp_folding",
    "kb_formfactors":"kb_coeff",
    "kb_formfactor_derivative":"kb_coeff_der",
-   "kb_formfactor_sign":"kb_coeff_sig"}
+   "kb_formfactor_sign":"kb_coeff_sig",
+   "number_of_coefficients_dielectric_function":"n_coeff_dielectric",
+   "number_of_frequencies_dielectric_function":"n_freq_dielectric",
+   "number_of_qpoints_dielectric_function":"n_qpt_dielectric",
+   "reduced_coordinates_of_plane_waves_dielectric_function":"red_coord_pw_dielectric",
+   "number_of_qpoints_gamma_limit":"n_qpt_g_lim",
+   "qpoints_dielectric_function":"qpt_function",
+   "qpoints_gamma_limit":"qpt_g_lim",
+   "dielectric_function":"function",
+   "dielectric_function_head":"function_head",
+   "dielectric_function_lower_wings":"function_lower",
+   "dielectric_function_upper_wings":"function_upper",
+   "position_hamiltonian_commutator":"pos_h_commut",
+   "matrix_elements_of_electron_phonon":"elements_of_elph",
+   "number_of_states_electron_phonon":"n_states_eplh"}
 
 
    
@@ -482,5 +707,16 @@ etsf_specifications_files = {
                              ("var", "number_of_coefficients_per_grid_point"),
                              ("var", "coefficients_of_wavefunctions")]}))
     ],
-   [])
+   []),
+  "dielectric_function_data":
+  ([("var", "basis_set"),
+    ("var", "frequencies_dielectric_function"),
+    ("var", "qpoints_dielectric_function"),
+    ("var", "qpoints_gamma_limit"),
+    ("var", "reduced_coordinates_of_plane_waves_dielectric_function"),
+    ("list", ["dielectric_function",
+            "inverse_dielectric_function",
+            "polarizability",
+            "inverse_polarizability"])],
+   []),
   }

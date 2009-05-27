@@ -955,9 +955,10 @@ def code_group_copy(group):
       #  when the array is unformatted (start value) ;
       # jend is identical to jstart but for end.
       var_span = ""
+      dim_id = len(var_desc)
       for dim in var_desc[1:]:
+        dim_id -= 1
         if (dim.startswith("my_")):
-          dim_id = len(var_desc) - var_desc.index(dim)
           ret += "    if (.not. associated(split%%%s)) then\n" % \
                  dim_get_split_array(dim)
           ret += "      istop(%d)  = 1\n" % dim_id
@@ -965,6 +966,8 @@ def code_group_copy(group):
             ret += "      len = len * dims%%%s\n" % limit_length(dim)
           else:
             var_span = "jstart(%d):jend(%d), " % (dim_id, dim_id) + var_span
+            if (len(var_span) > 30):
+              var_span = "&\n  & " + var_span
             ret += "      jstart(%d) = 1\n" % dim_id
             ret += "      jend(%d)   = dims%%%s\n" % (dim_id, dim)
           ret += "    else\n"
@@ -1093,6 +1096,10 @@ end if
       att_symm    = ( props & ETSF_PROP_VAR_SYMMORPHIC == ETSF_PROP_VAR_SYMMORPHIC)
       att_units   = ( props & ETSF_PROP_VAR_UNITS == ETSF_PROP_VAR_UNITS)
       att_kdep    = ( props & ETSF_PROP_VAR_KDEP == ETSF_PROP_VAR_KDEP)
+    has_max = False
+    for dim in var_desc[1:]:
+      if (dim.startswith("max_")):
+        has_max = True
 
     if ( action == "put" ):
       action_str = "write"
@@ -1113,7 +1120,7 @@ end if
       ret += indent_code(code_attribute_kdep("read", "\"%s\"" % var, "flag"), 1)
 
     # If variable may be splitted, we build a block optional argument
-    if (splitted):
+    if (splitted or has_max):
       # Special treatment for reduced_coordinates_of_plane_waves
       if (var == "reduced_coordinates_of_plane_waves"):
         spl  = "if (flag(1:2) == \"no\") then\n"
@@ -1132,15 +1139,18 @@ end if
       i = len(var_desc) - 1
       for dim in var_desc[1:]:
         if (dim.startswith("max_")):
-          spl += "count(%d) = folder%%%s__%s\n" % (i, var_shortname(var), dim[4:])
-        if (dim == "number_of_spins"):
+          if (var_desc[1:].count(dim) > 1):
+            spl += "count(%d) = folder%%%s__%s_%d\n" % (i, var_shortname(var), dim[4:], len(var_desc) - i)
+          else:
+            spl += "count(%d) = folder%%%s__%s\n" % (i, var_shortname(var), dim[4:])
+        if (splitted and dim == "number_of_spins"):
           spl += "if (folder%%%s__spin_access /= etsf_no_sub_access) then\n" % \
                  var_shortname(var)
           spl += "  start(%d) = folder%%%s__spin_access\n" % \
                  (i, var_shortname(var))
           spl += "  count(%d) = 1\n" % (i)
           spl += "end if\n"
-        if (dim == "number_of_kpoints"):
+        if (splitted and dim == "number_of_kpoints"):
           # Special treatment for reduced_coordinates_of_plane_waves
           if (var == "reduced_coordinates_of_plane_waves"):
             spl += "if (flag(1:3) == \"yes\" .and. &\n"
@@ -1150,7 +1160,7 @@ end if
           spl += "  start(%d) = folder%%%s__kpoint_access\n" % (i, var_shortname(var))
           spl += "  count(%d) = 1\n" % (i)
           spl += "end if\n"
-        if (dim == "max_number_of_states"):
+        if (splitted and dim == "max_number_of_states"):
           spl += "if (folder%%%s__state_access /= etsf_no_sub_access) then\n" % \
                  var_shortname(var)
           spl += "  start(%d) = folder%%%s__state_access\n" % \
@@ -1186,7 +1196,7 @@ end if
       ret += buf
 
     # If variable may be splitted
-    if (splitted):
+    if (splitted or has_max):
       ret += "  deallocate(start, count)\n"
     ret += "  if (.not. lstat) then\n"
     ret += "    call etsf_io_low_error_update(error_data, my_name)\n"
