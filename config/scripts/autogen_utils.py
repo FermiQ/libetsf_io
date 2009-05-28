@@ -115,6 +115,17 @@ def code_check_spec(mandatory, optional):
       ret += "  return\n"
       ret += "end if\n"
       ret += "\n"
+    elif(type == "test"):
+      # We test a list of things depending on the presence of a given variable.
+      ret += "! Check a list of conditions if a variable is set.\n"
+      ret += "! Test the existence of a variable.\n"
+      ret += "lstat = .false.\n"
+      ret += "call etsf_io_low_read_var_infos(ncid, \"%s\", var_infos, &\n" % value[0]
+      ret += "                              & lstat, error_data = error_data)\n"
+      ret += "if (lstat) then\n"
+      ret += "  ! Apply the conditions since variable exists.\n"
+      ret += indent_code(code_check_spec(value[1], []), 1)
+      ret += "end if\n"
     elif (type == "cond"):
       # We test the existence to this variable depending on the value
       # of another variable.
