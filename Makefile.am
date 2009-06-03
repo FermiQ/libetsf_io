@@ -14,4 +14,5 @@ SUBDIRS = \
 	src/utils \
 	tests/low_level \
 	tests/group_level \
+	tests/utils \
 	$(subdir_tutorials)

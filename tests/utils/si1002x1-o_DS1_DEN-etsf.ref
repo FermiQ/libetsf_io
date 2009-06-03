@@ -1,0 +1,7 @@
+Analyse file '../../../../tests/utils/si1002x1-o_DS1_DEN-etsf.nc'
+ - No - dielectric_function_data.
+        given reason, 'frequencies_dielectric_function' -> Variable not found
+ - No - wavefunctions_data.
+        given reason, 'coefficients_of_wavefunctions, real_space_wavefunctions' -> missing one among the list.
+ - Ok - scalar_field_data.
+ - Ok - crystallographic_data.

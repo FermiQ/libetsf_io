@@ -151,6 +151,7 @@ src/tutorials/Makefile
 src/utils/Makefile
 tests/low_level/Makefile
 tests/group_level/Makefile
+tests/utils/Makefile
 ])
 AC_OUTPUT
 
