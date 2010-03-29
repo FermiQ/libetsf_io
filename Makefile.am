@@ -1,5 +1,3 @@
-EXTRA_DIST = doc
-
 if BUILD_TUTORIALS
 subdir_tutorials = src/tutorials
 else
@@ -15,4 +13,5 @@ SUBDIRS = \
 	tests/low_level \
 	tests/group_level \
 	tests/utils \
+	doc/www \
 	$(subdir_tutorials)

@@ -1,6 +1,6 @@
 # -*- Autoconf -*-
 #
-# Copyright (c) 2005-2008 ABINIT Group (Yann Pouillon)
+# Copyright (c) 2005-2010 ABINIT Group (Yann Pouillon)
 # All rights reserved.
 #
 # This file is part of the ABINIT software package. For license information,

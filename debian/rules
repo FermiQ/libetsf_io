@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+# Copyright 2010 Damien Caliste <damien.caliste@cea.fr>
+
+include /usr/share/cdbs/1/rules/debhelper.mk
+include /usr/share/cdbs/1/class/autotools.mk
+include /usr/share/cdbs/1/rules/simple-patchsys.mk
+
+DEB_MAKE_INSTALL_TARGET  := install DESTDIR=$(DEB_DESTDIR)
+DEB_INSTALL_DOCS_etsf-io-doc := -XAUTHORS -XREADME -XNEWS
+DEB_INSTALL_DOCS_libetsf-io-dev := -XAUTHORS -XREADME -XNEWS
+
+get-orig-source:
+	-uscan --upstream-version 0

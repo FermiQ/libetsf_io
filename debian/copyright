@@ -1,0 +1,25 @@
+This package was debianized by Damien Caliste <damien.caliste@cea.fr> on
+Mon, 29 Mar 2010 10:23:11 +0200.
+
+It was downloaded from <http://www.etsf.eu/resources/software/libraries_and_tools>
+
+Upstream Authors: 
+
+    Damien Caliste <damien.caliste@cea.fr>
+    Valerio Olevano <valerio.olevano@grenoble.cnrs.fr>
+    Yann Pouillon <yann.pouillon@ehu.es>
+    matthieu verstraete <matthieu.jean.verstraete@gmail.com>
+
+Copyright: 
+
+    Copyright (C) 2006, 2010 - CEA
+
+License:
+
+    LGPL v2.1, see `/usr/share/common-licenses/LGPL-2.1'.
+
+The Debian packaging is Copyright (C) 2010,
+ Damien Caliste <damien.caliste@cea.fr> and is licensed under the GPL-2,
+ see `/usr/share/common-licenses/GPL-2'.
+
+

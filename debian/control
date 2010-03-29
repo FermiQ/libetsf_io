@@ -1,0 +1,48 @@
+Source: etsf-io
+Section: science
+Priority: optional
+Maintainer: Debian Science Team <debian-science-maintainers@lists.alioth.debian.org>
+Uploaders: Sylvestre Ledru <sylvestre@debian.org>,
+ Damien Caliste <damien.caliste@cea.fr>
+Build-Depends: debhelper (>= 5), cdbs, autotools-dev, gfortran
+Standards-Version: 3.8.4
+Homepage: http://www.etsf.eu/resources/software/libraries_and_tools
+
+Package: etsf-io
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Binary tools to check, merge and read ETSF files
+ The European Theoretical Spectroscopy Facility (ETSF) is an
+ e-infrastructure dedicated to providing support and services for ongoing
+ research in academic, government and industrial laboratories.
+ .
+ To allow the adoption of its recommendations about standardization, the
+ ETSF proposes different libraries and tools implementing or using these
+ specifications, as well as widely usable pieces of software.
+ .
+ ETSF_IO is a library of F90 routines to read/write the ETSF file format.
+ This package contains the user tool to:
+  - check file conformance to the specification ;
+  - inquiry file for contents ;
+  - merge multiple files from parallel runs as specified in the
+    specification.
+
+Package: etsf-io-doc
+Section: doc
+Architecture: all
+Depends: ${misc:Depends}
+Description: Developper documentation API and tutorials for ETSF_IO
+ ETSF_IO is a library of F90 routines to read/write the ETSF file format.
+ .
+ This Package contains the HTML documentation of the API and some tutorials
+ on how to used the library in codes.
+
+Package: libetsf-io-dev
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Suggests: etsf-io-doc
+Description: Static library of ETSF_IO
+ ETSF_IO is a library of F90 routines to read/write the ETSF file format.
+ .
+ This package contains the static library provided by ETSF_IO to add
+ the capabilities of read/write ETSF files for electronic structure codes.
