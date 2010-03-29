@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+                      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html  xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta http-equiv="Content-type" content="text/html; charset=ISO-8859-1" />
+<link rel="stylesheet" href="../robodoc.css" type="text/css" />
+<title>./src/tutorials/read_write_sub_access.f90</title>
+<!-- Source: ./src/tutorials/read_write_sub_access.f90 -->
+<!-- Generated with ROBODoc Version 4.99.30 (Jun 25 2008) -->
+</head>
+<body>
+<div id="logo">
+<a name="robo_top_of_doc">ETSF_IO library - documentation pages</a>
+</div> <!-- logo -->
+<div id="navigation">
+</div> <!-- navigation -->
+<div id="content">
+<h3>TABLE OF CONTENTS</h3>
+<ul>
+<li><a href="#robo132">read_write_sub_access</a></li>
+</ul>
+<hr />
+<a name="etsf5fio5ftutorials2fread5fwrite5fsub5faccess">
+</a><a name="robo132"></a><h2>read_write_sub_access</h2>
+
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ <a href="./README_f90.html#robo119">etsf_io_tutorials</a> ] [ <a href="../robo_tuto_cat.html#robo_top_of_doc">Tutorials</a> ]</p>
+<p class="item_name">NAME</p>
+<p>  <strong>read_write_sub_access</strong>
+</p>
+<p class="item_name">FUNCTION</p>
+<p>  In this example, we will describe how to read or write sub part of arrays.
+  For example, to write the wavefunction each k point per k point, we need to
+  use the wfs_pw__kpoint_access. This tutorial will show how to use all this
+  kind of &lt;varname&gt;__something_access attributes existing in the different
+  groups (see <a href="../group_level/etsf_io_f90.html#robo123">etsf_main</a> for instance).
+</p>
+
+<p>  To compile this exemple, use (assuming default installation paths):
+</p>
+<pre>   ${F90} -I/opt/include/${F90} -o <strong>read_write_sub_access</strong> <a href="#robo_top_of_doc">read_write_sub_access.f90</a>
+          -L/opt/lib -letsf_io -letsf_io_utils -L/usr/lib -lnetcdf
+</pre>
+<p></p>
+<p class="item_name">SOURCE</p>
+<pre class="source"><span class="keyword">program</span> <strong>read_write_sub_access</strong>
+
+  <span class="keyword">use</span> <a href="../group_level/etsf_io_f90.html#robo0">etsf_io</a>
+  <span class="keyword">use</span> <a href="../utils/etsf_io_tools_f90.html#robo3">etsf_io_tools</a>
+
+  <span class="keyword">integer</span> <span class="sign">:</span><span class="sign">:</span> i<span class="sign">,</span> i_kpt<span class="sign">,</span> ncid
+</pre>
+<p class="item_name">NOTES</p>
+<p>  All groups than contain arrays that can have a sub access (on spin or on k points)
+  have attributes built on the following scheme:
+</p>
+<pre>   &lt;short_variable_name&gt;__[spin|kpoint]_access
+</pre>
+<p>  When all spin or k points values must be read or write at once, one can let
+  the default value (etsf_no_sub_access) ; but if one want to read or write only
+  one spin or one k point, one should put the desired value in this attribute.
+</p>
+
+<p>  All this tutorial is oriented for writing, but it can be adapted easily
+  for reading.
+</p>
+
+<p>  In the beginning of this tutorial, we define an ETSF file with 2 kpoints. This
+  file will contain the kpoints group (<a href="../group_level/etsf_io_f90.html#robo122">etsf_kpoints</a>), the group of wave data
+  (<a href="../group_level/etsf_io_f90.html#robo8">etsf_basisdata</a>) and the main group (<a href="../group_level/etsf_io_f90.html#robo123">etsf_main</a>) with only
+  the coefficient_of_wavefunctions array.
+</p>
+
+<p>  As shown in the first tutorial (<a href="./create_a_crystal_den_file_f90.html#robo5">create_a_crystal_den_file</a>), the classical
+  status variable lstat and error_data are created.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="keyword">logical</span>                 <span class="sign">:</span><span class="sign">:</span> lstat
+  <span class="keyword">type</span><span class="sign">(</span><a href="../low_level/public_variables_f90.html#robo68">etsf_io_low_error</a><span class="sign">)</span> <span class="sign">:</span><span class="sign">:</span> error_data
+
+  <span class="comment">! Specific variables required by the library</span>
+  <span class="keyword">type</span><span class="sign">(</span><a href="../group_level/etsf_io_f90.html#robo14">etsf_groups_flags</a><span class="sign">)</span> <span class="sign">:</span><span class="sign">:</span> flags
+  <span class="keyword">type</span><span class="sign">(</span><a href="../group_level/etsf_io_f90.html#robo10">etsf_dims</a><span class="sign">)</span>         <span class="sign">:</span><span class="sign">:</span> dims
+  <span class="keyword">type</span><span class="sign">(</span><a href="../group_level/etsf_io_f90.html#robo122">etsf_kpoints</a><span class="sign">)</span>      <span class="sign">:</span><span class="sign">:</span> kpoints
+  <span class="keyword">type</span><span class="sign">(</span><a href="../group_level/etsf_io_f90.html#robo8">etsf_basisdata</a><span class="sign">)</span>    <span class="sign">:</span><span class="sign">:</span> basisdata
+  <span class="keyword">type</span><span class="sign">(</span><a href="../group_level/etsf_io_f90.html#robo123">etsf_main</a><span class="sign">)</span>         <span class="sign">:</span><span class="sign">:</span> main
+</pre>
+<p class="item_name">NOTES</p>
+<p>  The following variables are used in the main program to store the informations.
+  The pointers in the library will be used to point on them. Only some parts of
+  each group will be used.
+</p>
+<pre>   * coef_pw: is a two dimensional array that store all the coefficients of
+   plane waves, but only for one k point.
+   * red_coord_pw_k: is a two dimensional array that stores the coordinates of plane
+   waves for each band, but restricted on one k point.
+</pre>
+<p></p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="comment">! Variables that are declared in the main program in a real case</span>
+  <span class="keyword">double</span> <span class="keyword">precision</span><span class="sign">,</span> <span class="keyword">allocatable</span><span class="sign">,</span> target <span class="sign">:</span><span class="sign">:</span> coef_pw_k<span class="sign">(</span><span class="sign">:</span><span class="sign">,</span> <span class="sign">:</span><span class="sign">)</span>
+  <span class="comment">! Variables that will be used in the basisdata group.</span>
+  <span class="keyword">integer</span><span class="sign">,</span> <span class="keyword">allocatable</span><span class="sign">,</span> target          <span class="sign">:</span><span class="sign">:</span> number_of_coefficients<span class="sign">(</span><span class="sign">:</span><span class="sign">)</span>
+  <span class="keyword">integer</span><span class="sign">,</span> <span class="keyword">allocatable</span><span class="sign">,</span> target          <span class="sign">:</span><span class="sign">:</span> red_coord_pw_k<span class="sign">(</span><span class="sign">:</span><span class="sign">,</span> <span class="sign">:</span><span class="sign">)</span>
+  <span class="comment">! Variables that will be used in the kpoints group.</span>
+  <span class="keyword">double</span> <span class="keyword">precision</span><span class="sign">,</span> <span class="keyword">allocatable</span><span class="sign">,</span> target <span class="sign">:</span><span class="sign">:</span> red_coord_kpt<span class="sign">(</span><span class="sign">:</span><span class="sign">,</span> <span class="sign">:</span><span class="sign">)</span>
+  <span class="keyword">double</span> <span class="keyword">precision</span><span class="sign">,</span> <span class="keyword">allocatable</span><span class="sign">,</span> target <span class="sign">:</span><span class="sign">:</span> kpoint_weights<span class="sign">(</span><span class="sign">:</span><span class="sign">)</span>
+  <span class="comment">! Variable to store the definition of the basis set</span>
+  <span class="keyword">character</span><span class="sign">(</span><span class="keyword">len</span> <span class="sign">=</span> etsf_charlen<span class="sign">)</span><span class="sign">,</span> target <span class="sign">:</span><span class="sign">:</span> basis
+</pre>
+<p class="item_name">NOTES</p>
+<p>  We set the dimension (2 k points, no spin, 5 bands and 100 planewave
+  coefficients).
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  dims<span class="sign">%</span>max_number_of_coefficients <span class="sign">=</span> 100
+  dims<span class="sign">%</span>max_number_of_states <span class="sign">=</span> 5
+  dims<span class="sign">%</span>number_of_kpoints <span class="sign">=</span> 2
+  dims<span class="sign">%</span>number_of_spinor_components <span class="sign">=</span> 1
+  dims<span class="sign">%</span>number_of_spins <span class="sign">=</span> 1
+  dims<span class="sign">%</span>real_or_complex_coefficients <span class="sign">=</span> 2
+</pre>
+<p class="item_name">NOTES</p>
+<p>  As in the first tutorial (<a href="./create_a_crystal_den_file_f90.html#robo5">create_a_crystal_den_file</a>), we use the high level
+  routine <a href="../group_level/etsf_io_data_init_f90.html#robo26">etsf_io_data_init</a> to define all dimensions and variables for the file
+  we want to create.
+</p>
+
+<p>  In that case, we will use a precise definition of variables, not creating all
+  variables of each included groups. For instance, the basis set will be limited
+  to the required variables for a plane wave description.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  flags<span class="sign">%</span>basisdata <span class="sign">=</span> etsf_basisdata_basis_set <span class="sign">+</span> <span class="sign">&amp;</span>
+       <span class="sign">&amp;</span> etsf_basisdata_red_coord_pw <span class="sign">+</span> <span class="sign">&amp;</span>
+       <span class="sign">&amp;</span> etsf_basisdata_n_coeff
+  flags<span class="sign">%</span>kpoints   <span class="sign">=</span> etsf_kpoints_red_coord_kpt <span class="sign">+</span> etsf_kpoints_kpoint_weights
+  flags<span class="sign">%</span>main      <span class="sign">=</span> etsf_main_wfs_coeff
+  <span class="keyword">call</span> <a href="../group_level/etsf_io_data_init_f90.html#robo26">etsf_io_data_init</a><span class="sign">(</span><span class="quote">"<strong>read_write_sub_access</strong>.nc"</span><span class="sign">,</span> flags<span class="sign">,</span> dims<span class="sign">,</span> <span class="sign">&amp;</span>
+                       <span class="sign">&amp;</span> <span class="quote">"Tutorial ETSF_IO, use sub access to read or write"</span><span class="sign">,</span> <span class="sign">&amp;</span>
+                       <span class="sign">&amp;</span> <span class="quote">"Created by the tutorial example of the library"</span><span class="sign">,</span> <span class="sign">&amp;</span>
+                       <span class="sign">&amp;</span> lstat<span class="sign">,</span> error_data<span class="sign">)</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+    <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+    stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  At this time of the example, the disk space to store the wave-function
+  informations has been reserved. In a real case, we let the main program computing
+  the plane waves and the arrays that describe them.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="keyword">write</span><span class="sign">(</span>basis<span class="sign">,</span> <span class="quote">"(A)"</span><span class="sign">)</span> <span class="quote">"plane_waves"</span>
+
+  <span class="comment">! The main program allocate memory for its computation.</span>
+  <span class="keyword">allocate</span><span class="sign">(</span>coef_pw_k<span class="sign">(</span>2<span class="sign">,</span> dims<span class="sign">%</span>max_number_of_coefficients <span class="sign">*</span> dims<span class="sign">%</span>max_number_of_states<span class="sign">)</span><span class="sign">)</span>
+  <span class="keyword">allocate</span><span class="sign">(</span>number_of_coefficients<span class="sign">(</span>dims<span class="sign">%</span>number_of_kpoints<span class="sign">)</span><span class="sign">)</span>
+  <span class="keyword">allocate</span><span class="sign">(</span>red_coord_pw_k<span class="sign">(</span>3<span class="sign">,</span> dims<span class="sign">%</span>max_number_of_coefficients<span class="sign">)</span><span class="sign">)</span>
+  <span class="keyword">allocate</span><span class="sign">(</span>red_coord_kpt<span class="sign">(</span>3<span class="sign">,</span> dims<span class="sign">%</span>number_of_kpoints<span class="sign">)</span><span class="sign">)</span>
+  <span class="keyword">allocate</span><span class="sign">(</span>kpoint_weights<span class="sign">(</span>dims<span class="sign">%</span>number_of_kpoints<span class="sign">)</span><span class="sign">)</span>
+  
+  <span class="comment">! The main program compute all coordinates for k points and plane waves...</span>
+  red_coord_kpt <span class="sign">=</span> reshape<span class="sign">(</span> <span class="sign">(</span><span class="sign">/</span> 0<span class="sign">.</span>0d0<span class="sign">,</span> 0<span class="sign">.</span>0d0<span class="sign">,</span> 0<span class="sign">.</span>0d0<span class="sign">,</span> <span class="sign">&amp;</span>
+                            <span class="sign">&amp;</span> 0<span class="sign">.</span>5d0<span class="sign">,</span> 0<span class="sign">.</span>5d0<span class="sign">,</span> 0<span class="sign">.</span>5d0 <span class="sign">/</span><span class="sign">)</span><span class="sign">,</span> <span class="sign">(</span><span class="sign">/</span> 3<span class="sign">,</span> 2 <span class="sign">/</span><span class="sign">)</span><span class="sign">)</span>
+  kpoint_weights <span class="sign">=</span> <span class="sign">(</span><span class="sign">/</span> 0<span class="sign">.</span>5d0<span class="sign">,</span> 0<span class="sign">.</span>5d0 <span class="sign">/</span><span class="sign">)</span>
+  number_of_coefficients <span class="sign">=</span> <span class="sign">(</span><span class="sign">/</span> dims<span class="sign">%</span>max_number_of_coefficients<span class="sign">,</span> <span class="sign">&amp;</span>
+       <span class="sign">&amp;</span> dims<span class="sign">%</span>max_number_of_coefficients <span class="sign">/</span><span class="sign">)</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  To read or write with sub access, there is no high level routine such as
+  <a href="../group_level/etsf_io_data_write_f90.html#robo28">etsf_io_data_write</a>(). Then, we need to open the file and set it a write state.
+  The way to open a file for writing is to use the routine <a href="../low_level/write_routines_f90.html#robo79">etsf_io_low_open_modify</a>()
+  and then to call <a href="../low_level/etsf_io_low_level_f90.html#robo89">etsf_io_low_set_write_mode</a>(). The first call will check that the
+  header is correct.
+</p>
+
+<p>  When the file is not needed anymore, the ncid id must be released and the file
+  closed, using <a href="../low_level/etsf_io_low_level_f90.html#robo64">etsf_io_low_close</a>(). This is mandatory because without this call
+  the write action may be not done.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="comment">! Open file for writing</span>
+  <span class="keyword">call</span> <a href="../low_level/write_routines_f90.html#robo79">etsf_io_low_open_modify</a><span class="sign">(</span>ncid<span class="sign">,</span> <span class="quote">"<strong>read_write_sub_access</strong>.nc"</span><span class="sign">,</span> <span class="sign">&amp;</span>
+       <span class="sign">&amp;</span> lstat<span class="sign">,</span> error_data <span class="sign">=</span> error_data<span class="sign">)</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+    <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+    stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+  
+  <span class="comment">! We switch to write mode.</span>
+  <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo89">etsf_io_low_set_write_mode</a><span class="sign">(</span>ncid<span class="sign">,</span> lstat<span class="sign">,</span> error_data <span class="sign">=</span> error_data<span class="sign">)</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+    <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+    stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  We begin the big loop on k points. In this loop, the main program will compute
+  the plane waves and the coordinates of the coefficients. Then, it will use the
+  library to write the values for the current k point.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="keyword">do</span> i_kpt <span class="sign">=</span> 1<span class="sign">,</span> dims<span class="sign">%</span>number_of_kpoints<span class="sign">,</span> 1
+     <span class="comment">! We compute the plane wave coefficient with the famous</span>
+     <span class="comment">! algorithm that works well.</span>
+     <span class="keyword">do</span> i <span class="sign">=</span> 1<span class="sign">,</span> dims<span class="sign">%</span>max_number_of_coefficients<span class="sign">,</span> 1
+        red_coord_pw_k<span class="sign">(</span><span class="sign">:</span><span class="sign">,</span> i<span class="sign">)</span> <span class="sign">=</span> <span class="sign">(</span><span class="sign">/</span> <span class="sign">-</span>i<span class="sign">,</span> 0<span class="sign">,</span> i <span class="sign">/</span><span class="sign">)</span>
+     <span class="keyword">end</span> <span class="keyword">do</span>
+     coef_pw_k<span class="sign">(</span>1<span class="sign">,</span> <span class="sign">:</span><span class="sign">)</span> <span class="sign">=</span> <span class="sign">(</span><span class="sign">/</span> <span class="sign">(</span>i<span class="sign">,</span> i <span class="sign">=</span> 1<span class="sign">,</span> <span class="sign">&amp;</span>
+          <span class="sign">&amp;</span> dims<span class="sign">%</span>max_number_of_coefficients <span class="sign">*</span> dims<span class="sign">%</span>max_number_of_states<span class="sign">)</span> <span class="sign">/</span><span class="sign">)</span>
+     coef_pw_k<span class="sign">(</span>2<span class="sign">,</span> <span class="sign">:</span><span class="sign">)</span> <span class="sign">=</span> <span class="sign">(</span><span class="sign">/</span> <span class="sign">(</span><span class="sign">-</span>i<span class="sign">,</span> i <span class="sign">=</span> 1<span class="sign">,</span> <span class="sign">&amp;</span>
+          <span class="sign">&amp;</span> dims<span class="sign">%</span>max_number_of_coefficients <span class="sign">*</span> dims<span class="sign">%</span>max_number_of_states<span class="sign">)</span> <span class="sign">/</span><span class="sign">)</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  We associate the pointers of groups we want to write with the data in memory.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">     <span class="comment">! We associate the data</span>
+     main<span class="sign">%</span>coefficients_of_wavefunctions<span class="sign">%</span>data2D <span class="sign">=</span><span class="sign">&gt;</span> coef_pw_k
+     <span class="comment">! We set the sub access.</span>
+     main<span class="sign">%</span>wfs_coeff__kpoint_access <span class="sign">=</span> i_kpt
+     <span class="comment">! Idem for the reduced coordinates of coefficients.</span>
+     basisdata<span class="sign">%</span>reduced_coordinates_of_plane_waves<span class="sign">%</span>data2D <span class="sign">=</span><span class="sign">&gt;</span> red_coord_pw_k
+     basisdata<span class="sign">%</span>red_coord_pw__kpoint_access <span class="sign">=</span> i_kpt
+</pre>
+<p class="item_name">NOTES</p>
+<p>  Now that all the arrays we want to write are associated, we can call the write
+  routine. This routine will read automatically the &lt;var&gt;__kpoint_access attribute
+  and will check the dimensions of the associated arrays.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">     <span class="comment">! We use the group level write routine.</span>
+     <span class="keyword">call</span> <a href="../group_level/etsf_io_main_put_f90.html#robo103">etsf_io_main_put</a><span class="sign">(</span>ncid<span class="sign">,</span> main<span class="sign">,</span> lstat<span class="sign">,</span> error_data<span class="sign">)</span>
+     <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+        <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+        stop
+     <span class="keyword">end</span> <span class="keyword">if</span>
+     <span class="keyword">call</span> <a href="../group_level/etsf_io_basisdata_put_f90.html#robo20">etsf_io_basisdata_put</a><span class="sign">(</span>ncid<span class="sign">,</span> basisdata<span class="sign">,</span> lstat<span class="sign">,</span> error_data<span class="sign">)</span>
+     <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+        <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+        stop
+     <span class="keyword">end</span> <span class="keyword">if</span>
+
+     <span class="comment">! End of the kpoint big loop.</span>
+  <span class="keyword">end</span> <span class="keyword">do</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  We write the other data that are independent of the kpoint loop.
+</p>
+<p class="item_name">WARNINGS</p>
+<p>  It is important to associate to nullify the already used pointers
+  to avoid to write them again.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="comment">! We set the associations.</span>
+  kpoints<span class="sign">%</span>reduced_coordinates_of_kpoints <span class="sign">=</span><span class="sign">&gt;</span> red_coord_kpt
+  kpoints<span class="sign">%</span>kpoint_weights <span class="sign">=</span><span class="sign">&gt;</span> kpoint_weights
+  basisdata<span class="sign">%</span>basis_set <span class="sign">=</span><span class="sign">&gt;</span> basis
+  basisdata<span class="sign">%</span>reduced_coordinates_of_plane_waves<span class="sign">%</span>data2D <span class="sign">=</span><span class="sign">&gt;</span> <span class="keyword">null</span><span class="sign">(</span><span class="sign">)</span>
+  basisdata<span class="sign">%</span>number_of_coefficients <span class="sign">=</span><span class="sign">&gt;</span> number_of_coefficients
+  <span class="comment">! We call the group level write routines.</span>
+  <span class="keyword">call</span> <a href="../group_level/etsf_io_kpoints_put_f90.html#robo59">etsf_io_kpoints_put</a><span class="sign">(</span>ncid<span class="sign">,</span> kpoints<span class="sign">,</span> lstat<span class="sign">,</span> error_data<span class="sign">)</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+     <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+     stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+  <span class="keyword">call</span> <a href="../group_level/etsf_io_basisdata_put_f90.html#robo20">etsf_io_basisdata_put</a><span class="sign">(</span>ncid<span class="sign">,</span> basisdata<span class="sign">,</span> lstat<span class="sign">,</span> error_data<span class="sign">)</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+     <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+     stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  We then set the use_time_reversal_at_gamma attribute for this file using
+  the <a href="../utils/etsf_io_tools_f90.html#robo3">etsf_io_tools</a> module. We write it after the other data since the routine
+  will check that the basis set is indeed a plane wave one and the two variables
+  impacted by this attributes must already exist.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="keyword">call</span> <a href="../utils/etsf_io_tools_f90.html#robo118">etsf_io_tools_set_time_reversal_symmetry</a><span class="sign">(</span>ncid<span class="sign">,</span> <span class="sign">.</span><span class="keyword">false</span><span class="sign">.</span><span class="sign">,</span> lstat<span class="sign">,</span> error_data<span class="sign">)</span>
+  <span class="comment">! We handle the error</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+    <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+    stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  As said before, we need to close the file.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="comment">! We close the file.</span>
+  <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo64">etsf_io_low_close</a><span class="sign">(</span>ncid<span class="sign">,</span> lstat<span class="sign">,</span> error_data<span class="sign">)</span>
+  <span class="comment">! We handle the error</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+    <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+    stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+  
+  <span class="comment">! The main program will deallocate its own memory.</span>
+  <span class="keyword">deallocate</span><span class="sign">(</span>coef_pw_k<span class="sign">)</span>
+  <span class="keyword">deallocate</span><span class="sign">(</span>number_of_coefficients<span class="sign">)</span>
+  <span class="keyword">deallocate</span><span class="sign">(</span>red_coord_pw_k<span class="sign">)</span>
+  <span class="keyword">deallocate</span><span class="sign">(</span>red_coord_kpt<span class="sign">)</span>
+  <span class="keyword">deallocate</span><span class="sign">(</span>kpoint_weights<span class="sign">)</span>
+<span class="keyword">end</span> <span class="keyword">program</span> <strong>read_write_sub_access</strong>
+</pre>
+
+</div> <!-- content -->
+<div id="footer">
+<p>Generated from ./src/tutorials/read_write_sub_access.f90 with <a href="http://www.xs4all.nl/~rfsber/Robo/robodoc.html">ROBODoc</a> V4.99.30 on Mon Mar 29 2010 11:04:45
+</p>
+</div> <!-- footer -->
+</body>
+</html>

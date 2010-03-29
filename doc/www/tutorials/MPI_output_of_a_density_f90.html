@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+                      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html  xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta http-equiv="Content-type" content="text/html; charset=ISO-8859-1" />
+<link rel="stylesheet" href="../robodoc.css" type="text/css" />
+<title>./src/tutorials/MPI_output_of_a_density.f90</title>
+<!-- Source: ./src/tutorials/MPI_output_of_a_density.f90 -->
+<!-- Generated with ROBODoc Version 4.99.30 (Jun 25 2008) -->
+</head>
+<body>
+<div id="logo">
+<a name="robo_top_of_doc">ETSF_IO library - documentation pages</a>
+</div> <!-- logo -->
+<div id="navigation">
+</div> <!-- navigation -->
+<div id="content">
+<h3>TABLE OF CONTENTS</h3>
+<ul>
+<li><a href="#robo129">MPI_output_of_a_density</a></li>
+</ul>
+<hr />
+<a name="etsf5fio5ftutorials2fMPI5foutput5fof5fa5fdensity">
+</a><a name="robo129"></a><h2>MPI_output_of_a_density</h2>
+
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ <a href="./README_f90.html#robo119">etsf_io_tutorials</a> ] [ <a href="../robo_tuto_cat.html#robo_top_of_doc">Tutorials</a> ]</p>
+<p class="item_name">NAME</p>
+<p>  <strong>MPI_output_of_a_density</strong>
+</p>
+<p class="item_name">FUNCTION</p>
+<p>  In this example, we run an MPI computation a density (a centered gaussian),
+  with a distribution of real space mesh through z planes among processes. The
+  ETSF files will have a split definition on number_of_grid_points_vector3.
+</p>
+
+<p>  To do it, almost every steps are the same than for the first tutorial
+  (<a href="./create_a_crystal_den_file_f90.html#robo5">create_a_crystal_den_file</a>), except that we have now an array (my_grid_points)
+  that has the definition of the points our part of the density is defined.
+  Then, we associate this array into a split (see <a href="../group_level/etsf_io_f90.html#robo124">etsf_split</a>) definition and
+  we use this split definition when the ETSF file is initialised with
+  <a href="../group_level/etsf_io_data_init_f90.html#robo26">etsf_io_data_init</a>().
+</p>
+
+<p>  To compile this example an MPI wrapper must be installed and assuming default
+  installation paths for ETSF_IO, simply use:
+</p>
+<pre>   ${MPIF90} -I/opt/include/${F90} -o <strong>MPI_output_of_a_density</strong> <a href="#robo_top_of_doc">MPI_output_of_a_density.f90</a>
+             -L/opt/lib -letsf_io -L/usr/lib -lnetcdf
+</pre>
+<p></p>
+<p class="item_name">SOURCE</p>
+<pre class="source"><span class="keyword">program</span> <strong>MPI_output_of_a_density</strong>
+  
+  <span class="keyword">use</span> <a href="../low_level/etsf_io_low_level_f90.html#robo2">etsf_io_low_level</a>
+  <span class="keyword">use</span> <a href="../group_level/etsf_io_f90.html#robo0">etsf_io</a>
+
+  <span class="keyword">implicit</span> <span class="keyword">none</span>
+
+  <span class="keyword">include</span> <span class="quote">"mpif.h"</span>
+
+  <span class="keyword">integer</span> <span class="sign">:</span><span class="sign">:</span> i<span class="sign">,</span> j<span class="sign">,</span> k<span class="sign">,</span> i_proc<span class="sign">,</span> n_proc<span class="sign">,</span> ierr
+  <span class="keyword">integer</span> <span class="sign">:</span><span class="sign">:</span> my_number_of_planes
+  <span class="keyword">character</span><span class="sign">(</span><span class="keyword">len</span> <span class="sign">=</span> 256<span class="sign">)</span> <span class="sign">:</span><span class="sign">:</span> my_filename
+  real <span class="sign">:</span><span class="sign">:</span> x2<span class="sign">,</span> y2<span class="sign">,</span> z2
+  
+  <span class="keyword">logical</span>                 <span class="sign">:</span><span class="sign">:</span> lstat
+  <span class="keyword">type</span><span class="sign">(</span><a href="../low_level/public_variables_f90.html#robo68">etsf_io_low_error</a><span class="sign">)</span> <span class="sign">:</span><span class="sign">:</span> error_data
+</pre>
+<p class="item_name">NOTES</p>
+<p>  As explained in previous tutorials, the ETSF_IO library requires to defined some
+  variable that are structures of pointers, or that store the dimensions of arrays.
+</p>
+  
+<p>  We have here a new structure: <a href="../group_level/etsf_io_f90.html#robo124">etsf_split</a>. This structure acts a bit like group
+  structures (like <a href="../group_level/etsf_io_f90.html#robo11">etsf_electrons</a>) since it is a gathering of pointers. These
+  pointers can be associated to the arrays that defined a local process definition
+  of a split variable as defined in the specifications.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="comment">! Specific variables required by the library</span>
+  <span class="keyword">type</span><span class="sign">(</span><a href="../group_level/etsf_io_f90.html#robo10">etsf_dims</a><span class="sign">)</span>             <span class="sign">:</span><span class="sign">:</span> dims
+  <span class="keyword">type</span><span class="sign">(</span><a href="../group_level/etsf_io_f90.html#robo14">etsf_groups_flags</a><span class="sign">)</span>     <span class="sign">:</span><span class="sign">:</span> flags
+  <span class="keyword">type</span><span class="sign">(</span><a href="../group_level/etsf_io_f90.html#robo124">etsf_split</a><span class="sign">)</span>            <span class="sign">:</span><span class="sign">:</span> split
+  <span class="keyword">type</span><span class="sign">(</span><a href="../group_level/etsf_io_f90.html#robo13">etsf_groups</a><span class="sign">)</span>           <span class="sign">:</span><span class="sign">:</span> groups
+  <span class="keyword">type</span><span class="sign">(</span><a href="../group_level/etsf_io_f90.html#robo12">etsf_geometry</a><span class="sign">)</span><span class="sign">,</span> target <span class="sign">:</span><span class="sign">:</span> geometry
+  <span class="keyword">type</span><span class="sign">(</span><a href="../group_level/etsf_io_f90.html#robo123">etsf_main</a><span class="sign">)</span><span class="sign">,</span> target     <span class="sign">:</span><span class="sign">:</span> main
+
+  <span class="comment">! Variables that are declared in the main program in a real case</span>
+  <span class="keyword">double</span> <span class="keyword">precision</span><span class="sign">,</span> <span class="keyword">allocatable</span><span class="sign">,</span> target <span class="sign">:</span><span class="sign">:</span> density<span class="sign">(</span><span class="sign">:</span><span class="sign">,</span> <span class="sign">:</span><span class="sign">,</span> <span class="sign">:</span><span class="sign">)</span>
+  <span class="keyword">integer</span><span class="sign">,</span> <span class="keyword">allocatable</span><span class="sign">,</span> target          <span class="sign">:</span><span class="sign">:</span> my_grid_points<span class="sign">(</span><span class="sign">:</span><span class="sign">)</span>
+  <span class="keyword">double</span> <span class="keyword">precision</span><span class="sign">,</span> target              <span class="sign">:</span><span class="sign">:</span> primitive_vector<span class="sign">(</span>3<span class="sign">,</span> 3<span class="sign">)</span>
+  
+  <span class="keyword">call</span> MPI_INIT<span class="sign">(</span>ierr<span class="sign">)</span>
+  <span class="keyword">call</span> MPI_COMM_RANK<span class="sign">(</span>MPI_COMM_WORLD<span class="sign">,</span> i_proc<span class="sign">,</span> ierr<span class="sign">)</span>
+  <span class="keyword">call</span> MPI_COMM_SIZE<span class="sign">(</span>MPI_COMM_WORLD<span class="sign">,</span> n_proc<span class="sign">,</span> ierr<span class="sign">)</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  Here, we put all unused variables to etsf_no_dimension (see <a href="../group_level/etsf_io_f90.html#robo21">ETSF_IO_CONSTANTS</a>)
+  then, all these dimensions will not be defined in the output file and all
+  depending variables will not be created. This should be used with care since
+  all variables that may depend on a dimension that has been set to
+  etsf_no_dimension, will silently be ignored by etsf_io_def_&lt;something&gt;.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  dims<span class="sign">%</span>max_number_of_angular_momenta  <span class="sign">=</span> etsf_no_dimension
+  dims<span class="sign">%</span>max_number_of_coefficients     <span class="sign">=</span> etsf_no_dimension
+  dims<span class="sign">%</span>max_number_of_projectors       <span class="sign">=</span> etsf_no_dimension
+  dims<span class="sign">%</span>max_number_of_states           <span class="sign">=</span> etsf_no_dimension
+  dims<span class="sign">%</span>number_of_atoms                <span class="sign">=</span> etsf_no_dimension
+  dims<span class="sign">%</span>number_of_atom_species         <span class="sign">=</span> etsf_no_dimension
+  dims<span class="sign">%</span>number_of_kpoints              <span class="sign">=</span> etsf_no_dimension
+  dims<span class="sign">%</span>number_of_spinor_components    <span class="sign">=</span> etsf_no_dimension
+  dims<span class="sign">%</span>number_of_spins                <span class="sign">=</span> etsf_no_dimension
+  dims<span class="sign">%</span>number_of_symmetry_operations  <span class="sign">=</span> etsf_no_dimension
+  dims<span class="sign">%</span>real_or_complex_coefficients   <span class="sign">=</span> etsf_no_dimension
+  dims<span class="sign">%</span>real_or_complex_gw_corrections <span class="sign">=</span> etsf_no_dimension
+  dims<span class="sign">%</span>real_or_complex_potential      <span class="sign">=</span> etsf_no_dimension
+  dims<span class="sign">%</span>real_or_complex_wavefunctions  <span class="sign">=</span> etsf_no_dimension
+
+  dims<span class="sign">%</span>number_of_components          <span class="sign">=</span> 1
+  dims<span class="sign">%</span>number_of_grid_points_vector1 <span class="sign">=</span> 36
+  dims<span class="sign">%</span>number_of_grid_points_vector2 <span class="sign">=</span> 36
+  dims<span class="sign">%</span>number_of_grid_points_vector3 <span class="sign">=</span> 120
+  dims<span class="sign">%</span>real_or_complex_density       <span class="sign">=</span> 1
+
+  <span class="comment">! We compute here the number of planes my process will focus on.</span>
+  <span class="keyword">if</span> <span class="sign">(</span>i_proc <span class="sign">=</span><span class="sign">=</span> n_proc <span class="sign">-</span> 1<span class="sign">)</span> <span class="keyword">then</span>
+     my_number_of_planes <span class="sign">=</span> 120 <span class="sign">-</span> 120 <span class="sign">/</span> n_proc <span class="sign">*</span> <span class="sign">(</span>n_proc <span class="sign">-</span> 1<span class="sign">)</span>
+  <span class="keyword">else</span>
+     my_number_of_planes <span class="sign">=</span> 120 <span class="sign">/</span> n_proc
+  <span class="keyword">end</span> <span class="keyword">if</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  Since we only focus on some z planes and not all, we set the number
+  of planes we used, as explained in the specifications. To do it, we use
+  the special dimensions my_&lt;something&gt;, here my_number_of_grid_points_vect3.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  dims<span class="sign">%</span>my_number_of_grid_points_vect3 <span class="sign">=</span> my_number_of_planes
+
+  <span class="comment">! We compute the list of plane ids that will be handled by my process.</span>
+  <span class="keyword">allocate</span><span class="sign">(</span>my_grid_points<span class="sign">(</span>my_number_of_planes<span class="sign">)</span><span class="sign">)</span>
+  my_grid_points<span class="sign">(</span><span class="sign">:</span><span class="sign">)</span> <span class="sign">=</span> <span class="sign">(</span><span class="sign">/</span> <span class="sign">(</span>i <span class="sign">+</span> 1<span class="sign">,</span> <span class="sign">&amp;</span>
+       <span class="sign">&amp;</span> i <span class="sign">=</span> i_proc <span class="sign">*</span> 120 <span class="sign">/</span> n_proc<span class="sign">,</span> min<span class="sign">(</span><span class="sign">(</span>i_proc <span class="sign">+</span> 1<span class="sign">)</span> <span class="sign">*</span> 120 <span class="sign">/</span> n_proc<span class="sign">,</span> 120<span class="sign">)</span><span class="sign">)</span> <span class="sign">/</span><span class="sign">)</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  The split variable is used by the library (as other groups) with only its
+  associated pointers. Here, we split only on the z axis, so we associate
+  my_grid_points_vector3.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  split<span class="sign">%</span>my_grid_points_vector3 <span class="sign">=</span><span class="sign">&gt;</span> my_grid_points
+</pre>
+<p class="item_name">NOTES</p>
+<p>  This is the point where the ETSF file is created. It uses the same routine
+  that the one presented in the first tutorial (<a href="./create_a_crystal_den_file_f90.html#robo5">create_a_crystal_den_file</a>). The
+  only difference here is that we pass the optional argument split_definition
+  with the list of z planes our process is handling.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="keyword">write</span><span class="sign">(</span>my_filename<span class="sign">,</span> <span class="quote">"(A,I2.2,A)"</span><span class="sign">)</span> <span class="quote">"MPI_density_"</span><span class="sign">,</span> i_proc<span class="sign">,</span> <span class="quote">".nc"</span>
+  flags<span class="sign">%</span>geometry <span class="sign">=</span> etsf_geometry_primitive_vectors
+  flags<span class="sign">%</span>main     <span class="sign">=</span> etsf_main_density
+  <span class="keyword">call</span> <a href="../group_level/etsf_io_data_init_f90.html#robo26">etsf_io_data_init</a><span class="sign">(</span><span class="keyword">trim</span><span class="sign">(</span>my_filename<span class="sign">)</span><span class="sign">,</span> flags<span class="sign">,</span> dims<span class="sign">,</span> <span class="sign">&amp;</span>
+       <span class="sign">&amp;</span> <span class="quote">"Tutorial ETSF_IO, create a density file with MPI"</span><span class="sign">,</span> <span class="sign">&amp;</span>
+       <span class="sign">&amp;</span> <span class="quote">"Created by the tutorial example of the library"</span><span class="sign">,</span> <span class="sign">&amp;</span>
+       <span class="sign">&amp;</span> lstat<span class="sign">,</span> error_data<span class="sign">,</span> overwrite <span class="sign">=</span> <span class="sign">.</span><span class="keyword">true</span><span class="sign">.</span><span class="sign">,</span> split_definition <span class="sign">=</span> split<span class="sign">)</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+     <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+     stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+
+  <span class="comment">! Computation of the gaussian density</span>
+  primitive_vector <span class="sign">=</span> 0<span class="sign">.</span>d0
+  primitive_vector<span class="sign">(</span>1<span class="sign">,</span> 1<span class="sign">)</span> <span class="sign">=</span> 18<span class="sign">.</span>d0
+  primitive_vector<span class="sign">(</span>2<span class="sign">,</span> 2<span class="sign">)</span> <span class="sign">=</span> 18<span class="sign">.</span>d0
+  primitive_vector<span class="sign">(</span>3<span class="sign">,</span> 3<span class="sign">)</span> <span class="sign">=</span> 60<span class="sign">.</span>d0
+  geometry<span class="sign">%</span>primitive_vectors <span class="sign">=</span><span class="sign">&gt;</span> primitive_vector
+  groups<span class="sign">%</span>geometry <span class="sign">=</span><span class="sign">&gt;</span> geometry
+
+  <span class="keyword">allocate</span><span class="sign">(</span>density<span class="sign">(</span>36<span class="sign">,</span> 36<span class="sign">,</span> my_number_of_planes<span class="sign">)</span><span class="sign">)</span>
+  main<span class="sign">%</span>density<span class="sign">%</span>data3D <span class="sign">=</span><span class="sign">&gt;</span> density
+  groups<span class="sign">%</span>main <span class="sign">=</span><span class="sign">&gt;</span> main
+  
+  <span class="comment">! We put a gaussian in the density</span>
+  <span class="keyword">do</span> k <span class="sign">=</span> 1<span class="sign">,</span> my_number_of_planes<span class="sign">,</span> 1
+     z2 <span class="sign">=</span> <span class="sign">(</span>real<span class="sign">(</span>my_grid_points<span class="sign">(</span>k<span class="sign">)</span> <span class="sign">-</span> 60<span class="sign">)</span> <span class="sign">/</span> 60<span class="sign">.</span><span class="sign">)</span> <span class="sign">*</span><span class="sign">*</span> 2
+     <span class="keyword">do</span> j <span class="sign">=</span> 1<span class="sign">,</span> 36<span class="sign">,</span> 1
+        y2 <span class="sign">=</span> <span class="sign">(</span>real<span class="sign">(</span>j <span class="sign">-</span> 18<span class="sign">)</span> <span class="sign">/</span> 18<span class="sign">.</span><span class="sign">)</span> <span class="sign">*</span><span class="sign">*</span> 2
+        <span class="keyword">do</span> i <span class="sign">=</span> 1<span class="sign">,</span> 36<span class="sign">,</span> 1
+           x2 <span class="sign">=</span> <span class="sign">(</span>real<span class="sign">(</span>i <span class="sign">-</span> 18<span class="sign">)</span> <span class="sign">/</span> 18<span class="sign">.</span><span class="sign">)</span> <span class="sign">*</span><span class="sign">*</span> 2
+           density<span class="sign">(</span>i<span class="sign">,</span> j<span class="sign">,</span> k<span class="sign">)</span> <span class="sign">=</span> exp<span class="sign">(</span><span class="sign">-</span><span class="sign">(</span>x2 <span class="sign">+</span> y2 <span class="sign">+</span> z2<span class="sign">)</span><span class="sign">)</span>
+        <span class="keyword">end</span> <span class="keyword">do</span>
+     <span class="keyword">end</span> <span class="keyword">do</span>
+  <span class="keyword">end</span> <span class="keyword">do</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  The write part is not modified by the usage of split data.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="keyword">call</span> <a href="../group_level/etsf_io_data_write_f90.html#robo28">etsf_io_data_write</a><span class="sign">(</span><span class="keyword">trim</span><span class="sign">(</span>my_filename<span class="sign">)</span><span class="sign">,</span> groups<span class="sign">,</span> lstat<span class="sign">,</span> error_data<span class="sign">)</span>
+  <span class="comment">! We handle the error</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+    <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+    stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+
+
+  <span class="comment">! Finalisation and deallocation.</span>
+  <span class="keyword">deallocate</span><span class="sign">(</span>my_grid_points<span class="sign">)</span>
+  <span class="keyword">deallocate</span><span class="sign">(</span>density<span class="sign">)</span>
+
+  <span class="keyword">call</span> MPI_FINALIZE<span class="sign">(</span>ierr<span class="sign">)</span>
+
+<span class="keyword">end</span> <span class="keyword">program</span> <strong>MPI_output_of_a_density</strong>
+</pre>
+
+</div> <!-- content -->
+<div id="footer">
+<p>Generated from ./src/tutorials/MPI_output_of_a_density.f90 with <a href="http://www.xs4all.nl/~rfsber/Robo/robodoc.html">ROBODoc</a> V4.99.30 on Mon Mar 29 2010 11:04:45
+</p>
+</div> <!-- footer -->
+</body>
+</html>

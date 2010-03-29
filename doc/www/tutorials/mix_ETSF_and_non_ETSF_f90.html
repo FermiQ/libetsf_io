@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+                      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html  xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta http-equiv="Content-type" content="text/html; charset=ISO-8859-1" />
+<link rel="stylesheet" href="../robodoc.css" type="text/css" />
+<title>./src/tutorials/mix_ETSF_and_non_ETSF.f90</title>
+<!-- Source: ./src/tutorials/mix_ETSF_and_non_ETSF.f90 -->
+<!-- Generated with ROBODoc Version 4.99.30 (Jun 25 2008) -->
+</head>
+<body>
+<div id="logo">
+<a name="robo_top_of_doc">ETSF_IO library - documentation pages</a>
+</div> <!-- logo -->
+<div id="navigation">
+</div> <!-- navigation -->
+<div id="content">
+<h3>TABLE OF CONTENTS</h3>
+<ul>
+<li><a href="#robo128">mix_ETSF_and_non_ETSF</a></li>
+</ul>
+<hr />
+<a name="etsf5fio5ftutorials2fmix5fETSF5fand5fnon5fETSF">
+</a><a name="robo128"></a><h2>mix_ETSF_and_non_ETSF</h2>
+
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ <a href="./README_f90.html#robo119">etsf_io_tutorials</a> ] [ <a href="../robo_tuto_cat.html#robo_top_of_doc">Tutorials</a> ]</p>
+<p class="item_name">NAME</p>
+<p>  <strong>mix_ETSF_and_non_ETSF</strong>
+</p>
+<p class="item_name">FUNCTION</p>
+<p>  This tutorial is based on the first tutorial that create a density
+  file. In this example, we introduce how to mix ETSF variables (the
+  density) and non-ETSF variables (user defined, program dependent values...).
+</p>
+
+<p>  The main difference is to use the etsf_io_&lt;group&gt;_put() routines instead
+  of the all-in-one <a href="../group_level/etsf_io_data_write_f90.html#robo28">etsf_io_data_write</a>() as introduced in the first tutorial.
+  The changed lines of the first tutorial are kept as commentaries for comparison
+  purposes.
+</p>
+
+<p>  To compile this exemple, use (assuming default installation paths):
+</p>
+<pre>   ${F90} -I/opt/include/${F90} -o <strong>mix_ETSF_and_non_ETSF</strong> <a href="#robo_top_of_doc">mix_ETSF_and_non_ETSF.f90</a>
+          -L/opt/lib -letsf_io_utils -letsf_io -L/usr/lib -lnetcdf
+</pre>
+<p></p>
+<p class="item_name">SOURCE</p>
+<pre class="source"><span class="keyword">program</span> <strong>mix_ETSF_and_non_ETSF</strong>
+
+  <span class="keyword">use</span> <a href="../low_level/etsf_io_low_level_f90.html#robo2">etsf_io_low_level</a>
+  <span class="keyword">use</span> <a href="../group_level/etsf_io_f90.html#robo0">etsf_io</a>
+
+  <span class="keyword">integer</span> <span class="sign">:</span><span class="sign">:</span> i
+</pre>
+<p class="item_name">NOTES</p>
+<p>  In the variable declarations relative to ETSF_IO, the etsf_group structure
+  is not used anymore, since the def and put actions will be more atomic
+  (but not as atomic as handling each variable).
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="keyword">integer</span>                 <span class="sign">:</span><span class="sign">:</span> ncid
+  <span class="keyword">logical</span>                 <span class="sign">:</span><span class="sign">:</span> lstat
+  <span class="keyword">type</span><span class="sign">(</span><a href="../low_level/public_variables_f90.html#robo68">etsf_io_low_error</a><span class="sign">)</span> <span class="sign">:</span><span class="sign">:</span> error_data
+  <span class="keyword">type</span><span class="sign">(</span><a href="../group_level/etsf_io_f90.html#robo14">etsf_groups_flags</a><span class="sign">)</span> <span class="sign">:</span><span class="sign">:</span> flags
+  <span class="keyword">type</span><span class="sign">(</span><a href="../group_level/etsf_io_f90.html#robo10">etsf_dims</a><span class="sign">)</span>         <span class="sign">:</span><span class="sign">:</span> dims
+  <span class="comment">! Specific variables required by the library</span>
+  <span class="comment">!FIRST# type(<a href="../group_level/etsf_io_f90.html#robo13">etsf_groups</a>)           :: groups</span>
+  <span class="keyword">type</span><span class="sign">(</span><a href="../group_level/etsf_io_f90.html#robo12">etsf_geometry</a><span class="sign">)</span><span class="sign">,</span> target <span class="sign">:</span><span class="sign">:</span> geometry
+  <span class="keyword">type</span><span class="sign">(</span><a href="../group_level/etsf_io_f90.html#robo123">etsf_main</a><span class="sign">)</span><span class="sign">,</span> target     <span class="sign">:</span><span class="sign">:</span> main
+</pre>
+<p class="item_name">NOTES</p>
+<p>  The variable declared in the main program are left unchanged.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="comment">! Variables that are declared in the main program in a real case</span>
+  <span class="keyword">double</span> <span class="keyword">precision</span><span class="sign">,</span> <span class="keyword">allocatable</span><span class="sign">,</span> target <span class="sign">:</span><span class="sign">:</span> density<span class="sign">(</span><span class="sign">:</span><span class="sign">)</span>
+  <span class="keyword">integer</span><span class="sign">,</span> target                       <span class="sign">:</span><span class="sign">:</span> space_group
+  <span class="keyword">double</span> <span class="keyword">precision</span><span class="sign">,</span> target              <span class="sign">:</span><span class="sign">:</span> primitive_vector<span class="sign">(</span>3<span class="sign">,</span> 3<span class="sign">)</span>
+  <span class="keyword">double</span> <span class="keyword">precision</span><span class="sign">,</span> <span class="keyword">allocatable</span><span class="sign">,</span> target <span class="sign">:</span><span class="sign">:</span> reduced_atom_positions<span class="sign">(</span><span class="sign">:</span><span class="sign">,</span><span class="sign">:</span><span class="sign">)</span>
+  <span class="keyword">integer</span><span class="sign">,</span> <span class="keyword">allocatable</span><span class="sign">,</span> target          <span class="sign">:</span><span class="sign">:</span> atom_species<span class="sign">(</span><span class="sign">:</span><span class="sign">)</span>
+  <span class="keyword">character</span><span class="sign">(</span><span class="keyword">len</span><span class="sign">=</span>2<span class="sign">)</span><span class="sign">,</span> <span class="keyword">allocatable</span><span class="sign">,</span> target <span class="sign">:</span><span class="sign">:</span> chemical_symbols<span class="sign">(</span><span class="sign">:</span><span class="sign">)</span>
+  <span class="keyword">integer</span><span class="sign">,</span> <span class="keyword">allocatable</span><span class="sign">,</span> target          <span class="sign">:</span><span class="sign">:</span> reduced_symmetry_matrices<span class="sign">(</span><span class="sign">:</span><span class="sign">,</span><span class="sign">:</span><span class="sign">,</span><span class="sign">:</span><span class="sign">)</span>
+  <span class="keyword">double</span> <span class="keyword">precision</span><span class="sign">,</span> <span class="keyword">allocatable</span><span class="sign">,</span> target <span class="sign">:</span><span class="sign">:</span> reduced_symmetry_translations<span class="sign">(</span><span class="sign">:</span><span class="sign">,</span><span class="sign">:</span><span class="sign">)</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  The definition of the dimensions is still the same
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  dims<span class="sign">%</span>max_number_of_coefficients <span class="sign">=</span> 1400
+  dims<span class="sign">%</span>max_number_of_states <span class="sign">=</span> 6
+  dims<span class="sign">%</span>number_of_atoms <span class="sign">=</span> 5
+  dims<span class="sign">%</span>number_of_atom_species <span class="sign">=</span> 2
+  dims<span class="sign">%</span>number_of_components <span class="sign">=</span> 1
+  dims<span class="sign">%</span>number_of_grid_points_vector1 <span class="sign">=</span> 36
+  dims<span class="sign">%</span>number_of_grid_points_vector2 <span class="sign">=</span> 36
+  dims<span class="sign">%</span>number_of_grid_points_vector3 <span class="sign">=</span> 36
+  dims<span class="sign">%</span>number_of_kpoints <span class="sign">=</span> 1
+  dims<span class="sign">%</span>number_of_spinor_components <span class="sign">=</span> 1
+  dims<span class="sign">%</span>number_of_spins <span class="sign">=</span> 1
+  dims<span class="sign">%</span>number_of_symmetry_operations <span class="sign">=</span> 1
+</pre>
+<p class="item_name">NOTES</p>
+<p>  The declaration of the file is almost left unchanged. A file is allocated on disk
+  with the given dimensions (see the dims variable).
+</p>
+
+<p>  But, the main group is not defined here. This is done because the main group
+  (density, coefficients of wavefunctions...) in the ETSF_IO specifications
+  must be declared last.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="comment">!FIRST# the etsf_grp_main was declared here.</span>
+  flags<span class="sign">%</span>geometry <span class="sign">=</span> etsf_geometry_all
+  flags<span class="sign">%</span>main     <span class="sign">=</span> etsf_main_none
+  <span class="keyword">call</span> <a href="../group_level/etsf_io_data_init_f90.html#robo26">etsf_io_data_init</a><span class="sign">(</span><span class="quote">"<strong>mix_ETSF_and_non_ETSF</strong>.nc"</span><span class="sign">,</span> flags<span class="sign">,</span> dims<span class="sign">,</span> <span class="sign">&amp;</span>
+                       <span class="sign">&amp;</span> <span class="quote">"Tutorial ETSF_IO, create a density file"</span><span class="sign">,</span> <span class="sign">&amp;</span>
+                       <span class="sign">&amp;</span> <span class="quote">"Created by the tutorial example of the library"</span><span class="sign">,</span> <span class="sign">&amp;</span>
+                       <span class="sign">&amp;</span> lstat<span class="sign">,</span> error_data<span class="sign">,</span> overwrite <span class="sign">=</span> <span class="sign">.</span><span class="keyword">true</span><span class="sign">.</span><span class="sign">)</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+    <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+    stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  At this time of the example, the disk space to store the density and the geometric
+  informations has been reserved. In a real case, we let the main program computing
+  the density and setting up the geometric informations.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="comment">! The main program allocate memory for its computation.</span>
+  <span class="keyword">allocate</span><span class="sign">(</span>density<span class="sign">(</span>36 <span class="sign">*</span> 36 <span class="sign">*</span> 36<span class="sign">)</span><span class="sign">)</span>
+  <span class="keyword">allocate</span><span class="sign">(</span>reduced_atom_positions<span class="sign">(</span>3<span class="sign">,</span>5<span class="sign">)</span><span class="sign">)</span>
+  <span class="keyword">allocate</span><span class="sign">(</span>atom_species<span class="sign">(</span>5<span class="sign">)</span><span class="sign">)</span>
+  <span class="keyword">allocate</span><span class="sign">(</span>chemical_symbols<span class="sign">(</span>2<span class="sign">)</span><span class="sign">)</span>
+  <span class="keyword">allocate</span><span class="sign">(</span>reduced_symmetry_matrices<span class="sign">(</span>3<span class="sign">,</span> 3<span class="sign">,</span> 1<span class="sign">)</span><span class="sign">)</span>
+  <span class="keyword">allocate</span><span class="sign">(</span>reduced_symmetry_translations<span class="sign">(</span>3<span class="sign">,</span> 1<span class="sign">)</span><span class="sign">)</span>
+  
+  <span class="comment">! The main program compute all symmetries and set up the positions...</span>
+  space_group <span class="sign">=</span> 1
+  primitive_vector <span class="sign">=</span> reshape<span class="sign">(</span> <span class="sign">(</span><span class="sign">/</span> 10<span class="sign">,</span> 0<span class="sign">,</span> 0<span class="sign">,</span> 0<span class="sign">,</span> 10<span class="sign">,</span> 0<span class="sign">,</span> 0<span class="sign">,</span> 0<span class="sign">,</span> 10 <span class="sign">/</span><span class="sign">)</span><span class="sign">,</span> <span class="sign">(</span><span class="sign">/</span> 3<span class="sign">,</span> 3 <span class="sign">/</span><span class="sign">)</span><span class="sign">)</span>
+  reduced_symmetry_matrices <span class="sign">=</span> reshape<span class="sign">(</span> <span class="sign">(</span><span class="sign">/</span> 1<span class="sign">,</span> 0<span class="sign">,</span> 0<span class="sign">,</span> 0<span class="sign">,</span> 1<span class="sign">,</span> 0<span class="sign">,</span> 0<span class="sign">,</span> 0<span class="sign">,</span> 1 <span class="sign">/</span><span class="sign">)</span><span class="sign">,</span> <span class="sign">(</span><span class="sign">/</span> 3<span class="sign">,</span> 3<span class="sign">,</span> 1 <span class="sign">/</span><span class="sign">)</span><span class="sign">)</span>
+  reduced_symmetry_translations <span class="sign">=</span> reshape<span class="sign">(</span> <span class="sign">(</span><span class="sign">/</span> 0<span class="sign">,</span> 0<span class="sign">,</span> 0 <span class="sign">/</span><span class="sign">)</span><span class="sign">,</span> <span class="sign">(</span><span class="sign">/</span> 3<span class="sign">,</span> 1 <span class="sign">/</span><span class="sign">)</span><span class="sign">)</span>
+  reduced_atom_positions <span class="sign">=</span> reshape<span class="sign">(</span> <span class="sign">(</span><span class="sign">/</span> 0<span class="sign">.</span>5d0<span class="sign">,</span> 0<span class="sign">.</span>5d0<span class="sign">,</span> 0<span class="sign">.</span>5d0<span class="sign">,</span> <span class="sign">&amp;</span>
+                                     <span class="sign">&amp;</span> 0<span class="sign">.</span>6d0<span class="sign">,</span> 0<span class="sign">.</span>6d0<span class="sign">,</span> 0<span class="sign">.</span>6d0<span class="sign">,</span> <span class="sign">&amp;</span>
+                                     <span class="sign">&amp;</span> 0<span class="sign">.</span>6d0<span class="sign">,</span> 0<span class="sign">.</span>4d0<span class="sign">,</span> 0<span class="sign">.</span>4d0<span class="sign">,</span> <span class="sign">&amp;</span>
+                                     <span class="sign">&amp;</span> 0<span class="sign">.</span>4d0<span class="sign">,</span> 0<span class="sign">.</span>4d0<span class="sign">,</span> 0<span class="sign">.</span>6d0<span class="sign">,</span> <span class="sign">&amp;</span>
+                                     <span class="sign">&amp;</span> 0<span class="sign">.</span>4d0<span class="sign">,</span> 0<span class="sign">.</span>6d0<span class="sign">,</span> 0<span class="sign">.</span>4d0 <span class="sign">/</span><span class="sign">)</span><span class="sign">,</span> <span class="sign">(</span><span class="sign">/</span> 3<span class="sign">,</span> 5 <span class="sign">/</span><span class="sign">)</span><span class="sign">)</span>
+  atom_species <span class="sign">=</span> <span class="sign">(</span><span class="sign">/</span> 2<span class="sign">,</span> 1<span class="sign">,</span> 1<span class="sign">,</span> 1<span class="sign">,</span> 1 <span class="sign">/</span><span class="sign">)</span>
+  chemical_symbols <span class="sign">=</span> <span class="sign">(</span><span class="sign">/</span> <span class="quote">"H "</span><span class="sign">,</span> <span class="quote">"Si"</span> <span class="sign">/</span><span class="sign">)</span>
+
+  <span class="comment">! We compute the density with a powerful algorithm.</span>
+  density <span class="sign">=</span> <span class="sign">(</span><span class="sign">/</span> <span class="sign">(</span>0<span class="sign">.</span>d0 <span class="sign">+</span> i<span class="sign">,</span> i <span class="sign">=</span> 1<span class="sign">,</span> 36 <span class="sign">*</span> 36 <span class="sign">*</span> 36<span class="sign">)</span> <span class="sign">/</span><span class="sign">)</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  The associations between the structures used in the group level and
+  variable in the main program memory are also kept. Only the gathering of
+  all groups in the <a href="../group_level/etsf_io_f90.html#robo13">etsf_groups</a> structure is not done.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="comment">! We associate the geometry</span>
+  geometry<span class="sign">%</span>space_group <span class="sign">=</span><span class="sign">&gt;</span> space_group
+  geometry<span class="sign">%</span>primitive_vectors <span class="sign">=</span><span class="sign">&gt;</span> primitive_vector
+  geometry<span class="sign">%</span>reduced_symmetry_matrices <span class="sign">=</span><span class="sign">&gt;</span> reduced_symmetry_matrices
+  geometry<span class="sign">%</span>reduced_symmetry_translations <span class="sign">=</span><span class="sign">&gt;</span> reduced_symmetry_translations
+  geometry<span class="sign">%</span>atom_species <span class="sign">=</span><span class="sign">&gt;</span> atom_species
+  geometry<span class="sign">%</span>reduced_atom_positions <span class="sign">=</span><span class="sign">&gt;</span> reduced_atom_positions
+  geometry<span class="sign">%</span>chemical_symbols <span class="sign">=</span><span class="sign">&gt;</span> chemical_symbols
+  <span class="comment">! We associate the main data</span>
+  <span class="comment">! We don't want to dupplicate the density data even if ours is 1D</span>
+  <span class="comment">! and ETSF is 5D, so we use the unformatted pointer in the <a href="../group_level/etsf_io_f90.html#robo123">etsf_main</a></span>
+  <span class="comment">! structure.</span>
+  main<span class="sign">%</span>density<span class="sign">%</span>data1D <span class="sign">=</span><span class="sign">&gt;</span> density
+  <span class="comment">!FIRST# ! We associate our two group in the container.</span>
+  <span class="comment">!FIRST# groups%geometry =&gt; geometry</span>
+  <span class="comment">!FIRST# groups%main =&gt; main</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  The write action is modified. We prefer to do it to avoid to open the file
+  for the ETSF variables, close it, and reopen it for the non-ETSF variable.
+  This is of course possible, but the idea of this tutorial is to show how
+  to use a lower level of access for the ETSF variables.
+</p>
+
+<p>  Then, we open the created file with <a href="../low_level/write_routines_f90.html#robo79">etsf_io_low_open_modify</a>().
+  The file is then in a define mode, so we can easily define the non-ETSF
+  variables.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="comment">! Open file for writing</span>
+  <span class="keyword">call</span> <a href="../low_level/write_routines_f90.html#robo79">etsf_io_low_open_modify</a><span class="sign">(</span>ncid<span class="sign">,</span><span class="quote">"<strong>mix_ETSF_and_non_ETSF</strong>.nc"</span><span class="sign">,</span> <span class="sign">&amp;</span>
+       <span class="sign">&amp;</span> lstat<span class="sign">,</span> error_data <span class="sign">=</span> error_data<span class="sign">)</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+    <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+    stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+
+  <span class="comment">! We define some private non-ETSF variables (and dimensions if necessary).</span>
+  <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo67">etsf_io_low_def_var</a><span class="sign">(</span>ncid<span class="sign">,</span> <span class="quote">"age_of_captain"</span><span class="sign">,</span> etsf_io_low_integer<span class="sign">,</span> <span class="sign">&amp;</span>
+       <span class="sign">&amp;</span> lstat<span class="sign">,</span> error_data <span class="sign">=</span> error_data<span class="sign">)</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+    <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+    stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+  <span class="keyword">call</span> <a href="../low_level/write_routines_f90.html#robo97">etsf_io_low_write_dim</a><span class="sign">(</span>ncid<span class="sign">,</span> <span class="quote">"number_of_captains_children"</span><span class="sign">,</span> 2<span class="sign">,</span> <span class="sign">&amp;</span>
+       <span class="sign">&amp;</span> lstat<span class="sign">,</span> error_data <span class="sign">=</span> error_data<span class="sign">)</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+    <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+    stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+  <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo67">etsf_io_low_def_var</a><span class="sign">(</span>ncid<span class="sign">,</span> <span class="quote">"age_of_captains_children"</span><span class="sign">,</span> etsf_io_low_integer<span class="sign">,</span> <span class="sign">&amp;</span>
+       <span class="sign">&amp;</span> <span class="sign">(</span><span class="sign">/</span> <span class="quote">"number_of_captains_children"</span> <span class="sign">/</span><span class="sign">)</span><span class="sign">,</span> lstat<span class="sign">,</span> error_data <span class="sign">=</span> error_data<span class="sign">)</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+    <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+    stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  Now that the non-ETSF variables has been added, we can defined the main
+  ETSF variables that will be at the end of the file, as required in the
+  specifications.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="keyword">call</span> <a href="../group_level/etsf_io_main_def_f90.html#robo101">etsf_io_main_def</a><span class="sign">(</span>ncid<span class="sign">,</span> lstat<span class="sign">,</span> error_data<span class="sign">,</span> flags <span class="sign">=</span> etsf_main_density<span class="sign">)</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+    <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+    stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  The all-in-one routine <a href="../group_level/etsf_io_data_write_f90.html#robo28">etsf_io_data_write</a>() is replaced here by a group per
+  group put action.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="comment">! We write the ETSF variable with the group methods.</span>
+  <span class="keyword">call</span> <a href="../group_level/etsf_io_geometry_put_f90.html#robo51">etsf_io_geometry_put</a><span class="sign">(</span>ncid<span class="sign">,</span> geometry<span class="sign">,</span> lstat<span class="sign">,</span> error_data<span class="sign">)</span>
+  <span class="comment">!FIRST# call <a href="../group_level/etsf_io_data_write_f90.html#robo28">etsf_io_data_write</a>("<a href="./create_a_crystal_den_file_f90.html#robo5">create_a_crystal_den_file</a>.nc", &amp;</span>
+  <span class="comment">!FIRST#                       &amp; etsf_grp_main + etsf_grp_geometry, &amp;</span>
+  <span class="comment">!FIRST#                       &amp; groups, lstat, error_data)</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+    <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+    stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+  <span class="keyword">call</span> <a href="../group_level/etsf_io_main_put_f90.html#robo103">etsf_io_main_put</a><span class="sign">(</span>ncid<span class="sign">,</span> main<span class="sign">,</span> lstat<span class="sign">,</span> error_data<span class="sign">)</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+    <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+    stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  After that, we change the file status for write access with
+  <a href="../low_level/etsf_io_low_level_f90.html#robo89">etsf_io_low_set_write_mode</a>() (this is automatically done by the put()
+  routines in the group level. The  non-ETSF variables are written.
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="comment">! We switch to write mode.</span>
+  <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo89">etsf_io_low_set_write_mode</a><span class="sign">(</span>ncid<span class="sign">,</span> lstat<span class="sign">,</span> error_data <span class="sign">=</span> error_data<span class="sign">)</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+    <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+    stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+
+  <span class="comment">! We write the non-ETSF variables by hand.</span>
+  <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo99">etsf_io_low_write_var</a><span class="sign">(</span>ncid<span class="sign">,</span> <span class="quote">"age_of_captain"</span><span class="sign">,</span> 42<span class="sign">,</span> <span class="sign">&amp;</span>
+       <span class="sign">&amp;</span> lstat<span class="sign">,</span> error_data <span class="sign">=</span> error_data<span class="sign">)</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+    <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+    stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+  <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo99">etsf_io_low_write_var</a><span class="sign">(</span>ncid<span class="sign">,</span> <span class="quote">"age_of_captains_children"</span><span class="sign">,</span> <span class="sign">(</span><span class="sign">/</span> 12<span class="sign">,</span> 13 <span class="sign">/</span><span class="sign">)</span><span class="sign">,</span> <span class="sign">&amp;</span>
+       <span class="sign">&amp;</span> lstat<span class="sign">,</span> error_data <span class="sign">=</span> error_data<span class="sign">)</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+    <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+    stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+</pre>
+<p class="item_name">NOTES</p>
+<p>  We don't forget to close the file!
+</p>
+<p class="item_name">SOURCE</p>
+<pre class="source">  <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo64">etsf_io_low_close</a><span class="sign">(</span>ncid<span class="sign">,</span> lstat<span class="sign">,</span> error_data <span class="sign">=</span> error_data<span class="sign">)</span>
+  <span class="keyword">if</span> <span class="sign">(</span><span class="sign">.</span><span class="keyword">not</span><span class="sign">.</span> lstat<span class="sign">)</span> <span class="keyword">then</span>
+    <span class="keyword">call</span> <a href="../low_level/etsf_io_low_level_f90.html#robo70">etsf_io_low_error_handle</a><span class="sign">(</span>error_data<span class="sign">)</span>
+    stop
+  <span class="keyword">end</span> <span class="keyword">if</span>
+  
+  <span class="comment">! The main program will deallocate its own memory.</span>
+  <span class="keyword">deallocate</span><span class="sign">(</span>density<span class="sign">)</span>
+  <span class="keyword">deallocate</span><span class="sign">(</span>reduced_atom_positions<span class="sign">)</span>
+  <span class="keyword">deallocate</span><span class="sign">(</span>atom_species<span class="sign">)</span>
+  <span class="keyword">deallocate</span><span class="sign">(</span>chemical_symbols<span class="sign">)</span>
+  <span class="keyword">deallocate</span><span class="sign">(</span>reduced_symmetry_matrices<span class="sign">)</span>
+  <span class="keyword">deallocate</span><span class="sign">(</span>reduced_symmetry_translations<span class="sign">)</span>
+<span class="keyword">end</span> <span class="keyword">program</span> <strong>mix_ETSF_and_non_ETSF</strong>
+</pre>
+
+</div> <!-- content -->
+<div id="footer">
+<p>Generated from ./src/tutorials/mix_ETSF_and_non_ETSF.f90 with <a href="http://www.xs4all.nl/~rfsber/Robo/robodoc.html">ROBODoc</a> V4.99.30 on Mon Mar 29 2010 11:04:45
+</p>
+</div> <!-- footer -->
+</body>
+</html>
