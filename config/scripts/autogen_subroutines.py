@@ -1647,7 +1647,7 @@ includes_str = ""
 includes_am = ""
 for filename in includes:
   includes_str += "  include \"%s\"\n" % filename
-  includes_am += "\\\n\t%s" % filename
+  includes_am += "\t%s \\\n" % filename
 
 # Write the includes in the module file.
 src = file("%s/etsf_io.f90" % (etsf_file_srcdir), "r").read()
@@ -1656,9 +1656,15 @@ out = file("%s/etsf_io.f90" % (etsf_file_srcdir), "w")
 out.write(src)
 out.close()
 
-# Create theMakefile.am
+# Create the source and doc Makefile.am.
 src = file("config/etsf/template.Makefile.am", "r").read()
-src = re.sub("@INCLUDED_FILES@", includes_am, src)
+src = re.sub("@INCLUDED_FILES@", includes_am[:-2], src)
 out = file("%s/Makefile.am" % (etsf_file_srcdir), "w")
+out.write(src)
+out.close()
+src = file("config/etsf/template.doc_group_Makefile.am", "r").read()
+includes_am = re.sub(".f90", "_f90.html", includes_am)
+src = re.sub("@INCLUDED_FILES@\n", includes_am, src)
+out = file("doc/www/group_level/Makefile.am", "w")
 out.write(src)
 out.close()

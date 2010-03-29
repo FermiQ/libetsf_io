@@ -1,0 +1,5 @@
+groupleveldoc_DATA = \
+@INCLUDED_FILES@
+	etsf_io_f90.html
+
+EXTRA_DIST = $(groupleveldoc_DATA)

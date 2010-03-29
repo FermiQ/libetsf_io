@@ -228,9 +228,16 @@ for (id, (mandatory, optional)) in etsf_specifications_files.items():
   out.write(ret)
   out.close()
 
+# Create the source and doc Makefile.am.
 ret = file("config/etsf/template.utils_Makefile.am", "r").read()
 ret = re.sub("@SPEC_CHECK_LIST@\n", makefile_list, ret)
 out = file("%s/Makefile.am" % (etsf_utils_srcdir),"w")
+out.write(ret)
+out.close()
+ret = file("config/etsf/template.doc_utils_Makefile.am", "r").read()
+makefile_doc_list = re.sub(".f90", "_f90.html", makefile_list)
+ret = re.sub("@SPEC_CHECK_LIST@\n", makefile_doc_list, ret)
+out = file("doc/www/utils/Makefile.am", "w")
 out.write(ret)
 out.close()
 
