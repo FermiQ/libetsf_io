@@ -5,9 +5,12 @@ include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/autotools.mk
 include /usr/share/cdbs/1/rules/simple-patchsys.mk
 
+DEB_CONFIGURE_USER_FLAGS := --docdir=\$${prefix}/share/doc/libetsf-io-doc --with-moduledir=\$${includedir}
+DEB_CONFIGURE_SCRIPT_ENV += FC="gfortran-4.3"
 DEB_MAKE_INSTALL_TARGET  := install DESTDIR=$(DEB_DESTDIR)
-DEB_INSTALL_DOCS_etsf-io-doc := -XAUTHORS -XREADME -XNEWS
-DEB_INSTALL_DOCS_libetsf-io-dev := -XAUTHORS -XREADME -XNEWS
+DEB_INSTALL_DOCS_etsf-io := -XTODO
+DEB_INSTALL_DOCS_libetsf-io-doc := -XAUTHORS -XREADME -XNEWS -XTODO
+DEB_INSTALL_DOCS_libetsf-io-dev := -XAUTHORS -XREADME -XNEWS -XTODO
 
 get-orig-source:
 	-uscan --upstream-version 0

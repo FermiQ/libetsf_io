@@ -1,6 +1,6 @@
 etsf-io (1.0.3-1) unstable; urgency=low
 
   * Initial packaging from upstream version 1.0.3.
+  * Use dpkg-source 3.0 (quilt) format.
 
- -- Damien Caliste <damien.caliste@cea.fr>  Mon, 29 Mar 2010 10:20:34 +0200
-
+ -- Damien Caliste <damien.caliste@cea.fr>  Mon, 29 Mar 2010 11:51:15 +0200

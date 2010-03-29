@@ -1,0 +1,6 @@
+debian/tmp/usr/share/doc/libetsf-io-doc/*.html
+debian/tmp/usr/share/doc/libetsf-io-doc/low_level/*
+debian/tmp/usr/share/doc/libetsf-io-doc/group_level/*
+debian/tmp/usr/share/doc/libetsf-io-doc/utils/*
+src/tutorials/*.f90 usr/share/doc/libetsf-io-doc/tutorials
+debian/tmp/usr/share/doc/libetsf-io-doc/tutorials/*

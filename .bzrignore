@@ -14,6 +14,7 @@ doc/www/toc_index.html
 doc/www/low_level/*_f90.html
 doc/www/group_level/etsf_io_*f90.html
 doc/www/utils/etsf_io_*f90.html
+doc/www/tutorials/*_f90.html
 src/low_level/*_auto.f90
 src/group_level/Makefile.am
 src/group_level/etsf_io.f90

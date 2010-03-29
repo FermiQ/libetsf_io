@@ -12,6 +12,8 @@ doc_DATA = \
 	robo_tuto_cat.html \
 	toc_index.html
 
+EXTRA_DIST = $(doc_DATA)
+
 SUBDIRS = \
 	low_level \
 	group_level \
