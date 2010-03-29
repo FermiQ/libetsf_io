@@ -1,8 +1,12 @@
-* Wed May 27 2009 Damien Caliste <damien.caliste@cea.fr> 1.0.3
+* Mon Mar 29 2010 Damien Caliste <damien.caliste@cea.fr> 1.0.3
 - Correct configure.ac and Makefile.am for aclocal to always run with its
   config/m4 inclusion.
 - Modify the dielectric function specification to fullfil specs 3.3.
-- Comment out the phonon part since not yet included officially in the spec.
+- Comment out the phonon part since not yet included officially in the
+  spec.
+- Modify the NetCDF detection in configure.ac to automatically detect
+  NetCDF on Debian (using -lnetcdff and -lnetcdf).
+- Modify the build system in doc to properly install the developper doc.
 
 * Thu Nov 07 2008 Damien Caliste <damien.caliste@cea.fr> 1.0.3-dev2
 - Add the proposal specification for the phonons.
