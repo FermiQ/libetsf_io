@@ -31,7 +31,7 @@ tests_copy_LDADD = -letsf_io
 
 TESTS = run
 
-CLEANFILES = run tests_init.log tests_write.log tests_read.log tests_copy.log
+CLEANFILES = run tests_init.log tests_write.log tests_read.log tests_copy.log tests.mod tests.MOD TESTS.MOD test_init_*.nc test_write_*.nc test_read_*.nc test_copy_*.nc
 
 #dependencies
 tests_init.o: tests_init.f90 \

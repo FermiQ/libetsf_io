@@ -1,8 +1,4 @@
-Analyse file '../../../../tests/utils/wfs_real-etsf.nc'
  - No - dielectric_function_data.
-        given reason, 'basis_set' -> Variable not found
  - Ok - wavefunctions_data.
  - No - scalar_field_data.
-        given reason, 'density, correlation_potential, exchange_potential, exchange_correlation_p...' -> missing one among the list.
  - No - crystallographic_data.
-        given reason, 'space_group' -> Variable not found
