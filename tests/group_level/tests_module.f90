@@ -85,8 +85,7 @@ contains
     character(len = *), parameter :: me = "check_read_nD"
     integer, allocatable :: int_array(:)
     double precision, allocatable :: dbl_array(:)
-    character(len = dims(1)), allocatable :: strings(:)
-    integer :: i
+    character(len = 256), allocatable :: strings(:)
 
     ! Allocate temporary read space
     if (type == "integer") then
@@ -330,7 +329,6 @@ contains
     type(etsf_io_low_error), intent(inout) :: error_data
 
     character(len = *), parameter :: me = "check_mem_dbl_nD"
-    double precision, allocatable :: read_array(:)
     integer :: i
 
     ! Check values
