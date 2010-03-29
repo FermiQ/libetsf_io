@@ -99,24 +99,36 @@ AC_ARG_WITH(netcdf-ldflags, AS_HELP_STRING([--with-netcdf-ldflags], [Give the fl
 if test -n "$ac_netcdf_dir" ; then
   LDFLAGS="$LDFLAGS $ac_netcdf_dir"
 fi
+AC_MSG_CHECKING([for netcdf library])
 FCFLAGS_SVG=$FCFLAGS
 FCFLAGS="$FCFLAGS -I$ac_netcdf_mod"
-LIBS="$LIBS -lnetcdf"
-AC_MSG_CHECKING([for netcdf library])
+LIBS_SVG=$LIBS
+LIBS="$LIBS_SVG -lnetcdf"
 AC_LINK_IFELSE([
 program main
   use netcdf
   integer :: s, ncid
   s = nf90_open(path = "", mode = NF90_NOWRITE, ncid = ncid)
 end program main
-], withnetcdf=yes, withnetcdf=no)
-AC_MSG_RESULT([$withnetcdf])
-FCFLAGS=$FCFLAGS_SVG
+], withnetcdf="-lnetcdf", withnetcdf=no)
 if test "$withnetcdf" = "no" ; then
-  echo "LDFLAGS was $LDFLAGS"
+  LIBS="$LIBS_SVG -lnetcdff -lnetcdf"
+  AC_LINK_IFELSE([
+program main
+  use netcdf
+  integer :: s, ncid
+  s = nf90_open(path = "", mode = NF90_NOWRITE, ncid = ncid)
+end program main
+], withnetcdf="-lnetcdff -lnetcdf", withnetcdf=no)
+fi
+AC_MSG_RESULT([$withnetcdf])
+if test "$withnetcdf" = "no" ; then
+  echo "LDFLAGS was '$LDFLAGS'"
   echo "Action: install NetCDF and set the library link path with --with-netcdf-ldflags."
   AC_MSG_ERROR(["No 'NetCDF' library found."])
 fi
+FCFLAGS=$FCFLAGS_SVG
+LIBS="$LIBS_SVG"$withnetcdf
 
 dnl Test if only the library must be built
 ac_build_tutorials="no"
@@ -142,6 +154,15 @@ dnl Append $FCFLAGS_SRCEXT to $FCFLAGS since the former is not
 dnl added automatically in the Makefile.in.
 FCFLAGS="$FCFLAGS $FCFLAGS_f90"
 
+lowleveldocdir=$docdir"/low_level"
+AC_SUBST(lowleveldocdir)
+groupleveldocdir=$docdir"/group_level"
+AC_SUBST(groupleveldocdir)
+utilsdocdir=$docdir"/utils"
+AC_SUBST(utilsdocdir)
+tutorialsdocdir=$docdir"/tutorials"
+AC_SUBST(tutorialsdocdir)
+
 dnl Give the name of file.in to transform to file
 AC_CONFIG_FILES([
 Makefile
@@ -152,6 +173,11 @@ src/utils/Makefile
 tests/low_level/Makefile
 tests/group_level/Makefile
 tests/utils/Makefile
+doc/www/Makefile
+doc/www/low_level/Makefile
+doc/www/group_level/Makefile
+doc/www/utils/Makefile
+doc/www/tutorials/Makefile
 ])
 AC_OUTPUT
 
@@ -164,4 +190,5 @@ Basics:
   Linked libraries:       $LIBS
   Installed module dir:   $moduledir
   Installed lib dir:      $libdir
+  Installed doc dir:      $docdir
 "
