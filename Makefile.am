@@ -6,6 +6,8 @@ endif
 
 ACLOCAL_AMFLAGS = -I config/m4
 
+man1_MANS = doc/etsf_io.1
+
 SUBDIRS = \
 	src/low_level \
 	src/group_level \
