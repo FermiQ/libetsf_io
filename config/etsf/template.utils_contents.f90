@@ -12,7 +12,7 @@
 !!  it matches. It is usefull to know if the file is a valid density file...
 !!
 !! COPYRIGHT
-!!  Copyright (C) 2006, 2007 (Damien Caliste)
+!!  Copyright (C) 2006-2010 (Damien Caliste)
 !!  This file is distributed under the terms of the
 !!  GNU Lesser General Public License, see the COPYING file
 !!  or http://www.gnu.org/copyleft/lesser.txt .

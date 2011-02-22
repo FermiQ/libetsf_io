@@ -1,0 +1,91 @@
+
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH "ETSF_IO" "1" "Feb 22, 2011"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+etsf_io \- a command-line tool to handle ETSF files
+.SH SYNOPSIS
+.B etsf_io
+.B [-h
+.B ]
+.B [-a
+.I action
+.B ]
+.B [-i
+.I file
+.B ]
+.B [-f
+.I flag
+.B ]
+.B [-o
+.I file
+.B ]
+.B [arguments
+.B ]
+.PP
+This manual page documents briefly the
+.B etsf_io
+commands. It is a software to handle NetCDF files following ETSF specifications.
+.SH OPTIONS
+.PP
+This program follows the usual GNU command line syntax, with long
+options starting with two dashes (`-').
+.PP
+A complete list of options is included below.
+    
+.TP
+.B \-h, \-\-help
+show this little help.
+
+.TP
+.B \-a, \-\-action value
+give the action to perform. Possible action may be:
+ * 'merge' to gather several files that have been splitted.
+ * 'content' to get the name of specifications the file matches.
+ * 'check' to check the validity of the file against specifications.
+
+.TP
+.B \-o, \-\-output-file file
+give the path to the output ETSF file in case of merge action.
+
+.TP
+.B \-i, \-\-input-file file
+give the path for an input file. This option can be used one or several times.
+
+.TP
+.B \-l, \-\-list
+when action is check, it give the list of available flags.
+
+.TP
+.B \-f, \-\-flag value
+give a flag name (get valid names from -l option).
+
+
+.SH EXAMPLES
+Merge three files, etsf_io -a merge -i file1.nc -i file2.nc -i file3.nc -o output.nc
+
+Get the contents of file test.nc, etsf_io -a content test.nc
+
+Get the list of flags for validity checks, etsf_io -a check -l
+
+Checks with two flags, etsf_io -a check -f flag1 -f flag2 test.nc
+
+.SH AUTHOR
+etsf_io was written by Damien Caliste.
+.PP
+This manual page was written by Damien Caliste <damien.caliste@cea.fr>.
+    
