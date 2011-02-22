@@ -23,3 +23,5 @@ src/utils/Makefile.am
 src/utils/etsf_io_file.f90
 src/utils/etsf_io_file_contents.f90
 src/utils/etsf_io_file_check*.f90
+debian/*svn
+debian/*/*svn

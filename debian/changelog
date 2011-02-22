@@ -1,6 +1,20 @@
+etsf-io (1.0.3-3) unstable; urgency=low
+
+  * Remove myself from uploaders
+  * Standards-Version updated to version 3.9.1
+   [ Damien Caliste ]
+  * Correct wrong copyright notice (LP: #676077).
+
+ -- Sylvestre Ledru <sylvestre@debian.org>  Mon, 21 Feb 2011 10:23:17 +0100
+
+etsf-io (1.0.3-2) unstable; urgency=low
+
+  * Build with gfortran instead of g77 now (Closes: #580724)
+
+ -- Sylvestre Ledru <sylvestre@debian.org>  Sat, 08 May 2010 10:42:18 +0200
+
 etsf-io (1.0.3-1) unstable; urgency=low
 
-  * Initial packaging from upstream version 1.0.3.
-  * Use dpkg-source 3.0 (quilt) format.
+  * Initial packaging from upstream version 1.0.3 (Closes: #578288)
 
- -- Damien Caliste <damien.caliste@cea.fr>  Mon, 29 Mar 2010 11:51:15 +0200
+ -- Sylvestre Ledru <sylvestre@debian.org>  Sun, 18 Apr 2010 19:07:10 +0200

@@ -1,0 +1,4 @@
+version=3
+opts=filenamemangle=s/.*etsf_io-(.*).tar_.gz/etsf-io_$1.orig.tar.gz/,downloadurlmangle=s/tar_/tar/ \
+  http://www.etsf.eu/resources/software/libraries_and_tools/etsfio_history \
+  http://www.etsf.eu/sites/default/files/etsf_io-(.*)\.tar_\.gz
