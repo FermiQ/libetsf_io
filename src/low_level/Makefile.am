@@ -12,7 +12,7 @@ else
 module_DATA = etsf_io_low_level.@MODULE_EXT@
 endif
 
-AM_FCFLAGS = -I@NETCDF_CFLAGS@ -I$(srcdir)
+AM_FCFLAGS = @NETCDF_INCLUDES@ -I$(srcdir)
 
 libetsf_io_low_level_a_SOURCES = etsf_io_low_level.f90
 

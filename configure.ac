@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.59)
+AC_PREREQ(2.62)
 
 dnl Init basic data for package
 dnl define following variables :
@@ -9,23 +9,23 @@ dnl  - PACKAGE_TARNAME, the name used for the tarball ;
 dnl  - PACKAGE_VERSION, the version ;
 dnl  - PACKAGE_STRING, the name + the version ;
 dnl  - PACKAGE_BUGREPORT, the mail.
-AC_INIT([ETSF - IO library], [1.0.3], [damien.caliste@cea.fr], [etsf_io])
+AC_INIT([ETSF - IO library], [1.0.4], [https://bugs.launchpad.net/etsf-io], [etsf_io])
 
 dnl All temporary building files are put in this directory.
 dnl his must be called before AM_INIT_AUTOMAKE
-AC_CONFIG_AUX_DIR(config)
+AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([config/m4])
 
 dnl Init something, don't know exactly what...
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE(1.10)
 
 dnl Defining fortran language for tests.
-AC_LANG(Fortran)
-AC_FC_SRCEXT(f90)
+AC_LANG([Fortran])
+AC_FC_SRCEXT([f90])
 
 dnl Set th default prefix to /opt (see the discussion
 dnl on the nanoquanta mailing list of october 2006).
-AC_PREFIX_DEFAULT(/opt)
+AC_PREFIX_DEFAULT([/opt])
 
 dnl If FC environement variable is not already set, it
 dnl looks for a modern Fortran compiler, prefering newest
@@ -51,84 +51,87 @@ case "$fc_type" in
 esac
 AC_MSG_RESULT([$capitalize_module_ext])
 
-dnl We custom the module naming scheme depending on the compiler
+dnl We customize the module naming scheme depending on the compiler
 dnl and the platform.
 dnl Not done yet
 AM_CONDITIONAL(CAPITALIZE, test "$capitalize_module" = "yes")
 AC_SUBST(MODULE_EXT, $capitalize_module_ext)
 
-dnl Set the FCFLAGS and FFLAGS variable
-if test -z "$FFLAGS" ; then
-  AC_SUBST(FFLAGS, "-O2")
-fi
-if test -z "$FCFLAGS" ; then
-  AC_SUBST(FCFLAGS, "-O2")
-fi
-
 dnl Look for ranlib and canonicalize it with the $host variable
 AC_CHECK_TOOL(RANLIB, ranlib, :)
-if test "$ranlib" = ":" ; then
+if test "$RANLIB" = ":" ; then
   AC_MSG_ERROR(["No 'ranlib' program found."])
 fi
 dnl Look for ar and canonicalize it with the $host variable
 AC_CHECK_TOOL(AR, ar, :)
-if test "$ar" = ":" ; then
+if test "$AR" = ":" ; then
   AC_MSG_ERROR(["No 'ar' program found."])
 fi
 
-dnl Get the NetCDF module
-AC_ARG_WITH(netcdf-module-path, AS_HELP_STRING([--with-netcdf-module-path], [Give the path of the NetCDF Fortran90 module (default = /usr/include).]),
-            ac_netcdf_mod=$withval, ac_netcdf_mod=/usr/include)
-AC_CHECK_FILE(${ac_netcdf_mod}/netcdf.mod, withnetcdf=yes, withnetcdf=no)
-if test "$withnetcdf" = "no" ; then
-  AC_CHECK_FILE(${ac_netcdf_mod}/NETCDF.mod, withnetcdf=yes, withnetcdf=no)
-  if test "$withnetcdf" = "no" ; then
-    AC_CHECK_FILE(${ac_netcdf_mod}/NETCDF.MOD, withnetcdf=yes, withnetcdf=no)
+dnl NetCDF options
+AC_ARG_WITH([netcdf-incs],
+  AS_HELP_STRING([--with-netcdf-incs],
+    [Include flags for the NetCDF Fortran90 modules (default = /usr/include).]),
+  [ac_netcdf_incs="$withval"],
+  [ac_netcdf_incs="-I/usr/include"])
+AC_ARG_WITH([netcdf-libs],
+  AS_HELP_STRING([--with-netcdf-libs],
+    [NetCDF link flags.]),
+  [ac_netcdf_libs="$withval"],
+  [ac_netcdf_libs=""])
+AC_ARG_WITH([netcdf-prefix],
+  AS_HELP_STRING([--with-netcdf-prefix],
+    [Prefix directory where to look for NetCDF components.]),
+  [ac_netcdf_prefix="$withval"],
+  [ac_netcdf_prefix=""])
+
+dnl Look for NetCDF parameters
+if test "$ac_netcdf_prefix" != ""; then
+  AC_MSG_CHECKING([for nc-config (will override configure options)])
+  nc_config_bin="$ac_netcdf_prefix/bin/nc-config"
+  if test -x "$nc_config_bin"; then
+    AC_MSG_RESULT([yes])
+    ac_netcdf_incs="-I`$nc_config_bin --includedir`"
+    ac_netcdf_libs=`$nc_config_bin --flibs`
+    ac_netcdf_fcflags=`$nc_config_bin --fflags`
+  else
+    AC_MSG_RESULT([no])
   fi
 fi
-if test "$withnetcdf" = "no" ; then
-  echo "Action: install NetCDF and set its path with --with-netcdf-module-path."
-  AC_MSG_ERROR(["No 'NetCDF' module found."])
-fi
-AC_SUBST(NETCDF_CFLAGS, "$ac_netcdf_mod")
+AC_MSG_CHECKING([for NetCDF includes])
+AC_MSG_RESULT([$ac_netcdf_incs])
+AC_MSG_CHECKING([for NetCDF libraries])
+AC_MSG_RESULT([$ac_netcdf_libs])
+AC_MSG_CHECKING([for NetCDF Fortran flags])
+AC_MSG_RESULT([$ac_netcdf_fcflags])
+AC_SUBST(NETCDF_INCLUDES, $ac_netcdf_incs)
 
-dnl Get the NetCDF library
-ac_netcdf_dir=/usr/lib
-AC_ARG_WITH(netcdf-ldflags, AS_HELP_STRING([--with-netcdf-ldflags], [Give the flags required to link with the NetCDF library (default is -L/usr/lib).]),
-            ac_netcdf_dir=$withval, ac_netcdf_dir=)
-if test -n "$ac_netcdf_dir" ; then
-  LDFLAGS="$LDFLAGS $ac_netcdf_dir"
+dnl Set the FCFLAGS and FFLAGS variables
+if test -z "$FCFLAGS" ; then
+  AC_SUBST(FCFLAGS, "$ac_netcdf_fcflags")
 fi
-AC_MSG_CHECKING([for netcdf library])
-FCFLAGS_SVG=$FCFLAGS
-FCFLAGS="$FCFLAGS -I$ac_netcdf_mod"
-LIBS_SVG=$LIBS
-LIBS="$LIBS_SVG -lnetcdf"
+if test -z "$FFLAGS" ; then
+  AC_SUBST(FFLAGS, "$ac_netcdf_fcflags")
+fi
+
+dnl Check whether NetCDF is working
+AC_MSG_CHECKING([for NetCDF])
+FCFLAGS_SVG="$FCFLAGS"
+LIBS_SVG="$LIBS"
+FCFLAGS="$FCFLAGS $ac_netcdf_incs"
+LIBS="$ac_netcdf_libs $LIBS"
 AC_LINK_IFELSE([
 program main
   use netcdf
   integer :: s, ncid
   s = nf90_open(path = "", mode = NF90_NOWRITE, ncid = ncid)
 end program main
-], withnetcdf="-lnetcdf", withnetcdf=no)
-if test "$withnetcdf" = "no" ; then
-  LIBS="$LIBS_SVG -lnetcdff -lnetcdf"
-  AC_LINK_IFELSE([
-program main
-  use netcdf
-  integer :: s, ncid
-  s = nf90_open(path = "", mode = NF90_NOWRITE, ncid = ncid)
-end program main
-], withnetcdf="-lnetcdff -lnetcdf", withnetcdf=no)
-fi
+], withnetcdf="yes", withnetcdf="no")
 AC_MSG_RESULT([$withnetcdf])
 if test "$withnetcdf" = "no" ; then
-  echo "LDFLAGS was '$LDFLAGS'"
-  echo "Action: install NetCDF and set the library link path with --with-netcdf-ldflags."
+  echo "Action: install NetCDF and set its parameters through --with-netcdf-incs and --with-netcdf-libs."
   AC_MSG_ERROR(["No 'NetCDF' library found."])
 fi
-FCFLAGS=$FCFLAGS_SVG
-LIBS="$LIBS_SVG"$withnetcdf
 
 dnl Test if only the library must be built
 ac_build_tutorials="no"

@@ -8,6 +8,8 @@ ACLOCAL_AMFLAGS = -I config/m4
 
 man1_MANS = doc/etsf_io.1
 
+EXTRA_DIST = $(man1_MANS)
+
 SUBDIRS = \
 	src/low_level \
 	src/group_level \

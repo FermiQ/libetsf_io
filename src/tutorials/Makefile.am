@@ -1,7 +1,7 @@
 vpath %.a $(top_builddir)/src/group_level \
 	$(top_builddir)/src/utils
 
-AM_FCFLAGS = -I@NETCDF_CFLAGS@ -I$(top_builddir)/src/low_level -I$(top_builddir)/src/group_level -I$(top_builddir)/src/utils
+AM_FCFLAGS = @NETCDF_INCLUDES@ -I$(top_builddir)/src/low_level -I$(top_builddir)/src/group_level -I$(top_builddir)/src/utils
 
 EXTRA_DIST = MPI_output_of_a_density.f90 README.f90
 
