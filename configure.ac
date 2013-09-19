@@ -78,7 +78,7 @@ AC_ARG_WITH([netcdf-libs],
   AS_HELP_STRING([--with-netcdf-libs],
     [NetCDF link flags.]),
   [ac_netcdf_libs="$withval"],
-  [ac_netcdf_libs=""])
+  [ac_netcdf_libs="-lnetcdff -lnetcdf"])
 AC_ARG_WITH([netcdf-prefix],
   AS_HELP_STRING([--with-netcdf-prefix],
     [Prefix directory where to look for NetCDF components.]),
@@ -132,6 +132,24 @@ if test "$withnetcdf" = "no" ; then
   echo "Action: install NetCDF and set its parameters through --with-netcdf-incs and --with-netcdf-libs."
   AC_MSG_ERROR(["No 'NetCDF' library found."])
 fi
+
+dnl Check whether NetCDF has the comm argument for parallel IO
+AC_MSG_CHECKING([for parallel IO with NetCDF])
+FCFLAGS_SVG="$FCFLAGS"
+LIBS_SVG="$LIBS"
+FCFLAGS="$FCFLAGS $ac_netcdf_incs"
+LIBS="$ac_netcdf_libs $LIBS"
+AC_LINK_IFELSE([
+program main
+  use netcdf
+  integer :: s, ncid
+  s = nf90_open(path = "", mode = NF90_NOWRITE, ncid = ncid, comm = 1, info = 1)
+end program main
+], withpio="yes", withpio="no")
+AC_MSG_RESULT([$withpio])
+LIBS="$LIBS_SVG"
+FCFLAGS="$FCFLAGS_SVG"
+AM_CONDITIONAL(HAVE_PARALLEL_IO, test "$withpio" = "yes")
 
 dnl Test if only the library must be built
 ac_build_tutorials="no"
