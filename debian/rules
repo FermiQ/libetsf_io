@@ -1,11 +1,10 @@
 #!/usr/bin/make -f
-# Copyright 2010 Damien Caliste <damien.caliste@cea.fr>
+# Copyright 2010-2013 Damien Caliste <damien.caliste@cea.fr>
 
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/autotools.mk
-include /usr/share/cdbs/1/rules/simple-patchsys.mk
 
-DEB_CONFIGURE_USER_FLAGS := --docdir=\$${prefix}/share/doc/libetsf-io-doc --with-moduledir=\$${includedir}
+DEB_CONFIGURE_USER_FLAGS := --docdir=\$${prefix}/share/doc/libetsf-io-doc --with-moduledir=\$${includedir} FCFLAGS="-O2 -fPIC"
 DEB_MAKE_INSTALL_TARGET  := install DESTDIR=$(DEB_DESTDIR)
 DEB_INSTALL_DOCS_etsf-io := -XTODO
 DEB_INSTALL_DOCS_libetsf-io-doc := -XAUTHORS -XREADME -XNEWS -XTODO

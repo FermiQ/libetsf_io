@@ -1,7 +1,41 @@
+etsf-io (1.0.4-1) unstable; urgency=low
+
+  [ Damien Caliste ]
+  * New minor upstream release with parallel IO support introduced by NetCDF 4.
+  * 
+
+ -- Sylvestre Ledru <sylvestre@debian.org>  Thu, 19 Sep 2013 10:50:37 +0200
+
+etsf-io (1.0.3-5) unstable; urgency=low
+
+  [ Damien Caliste ]
+  * Standards-Version updated to version 3.9.4
+  * Add a -fPIC compilation flag to allow to build .so libraries
+    from the static libraries of ETSF_IO.
+
+ -- Sylvestre Ledru <sylvestre@debian.org>  Tue, 19 Feb 2013 10:46:37 +0100
+
+etsf-io (1.0.3-4) unstable; urgency=low
+
+  [ Sylvestre Ledru ]
+  * Team upload
+  * Man page added
+  * Lintian warning removed
+
+  [ Damien Caliste ]
+  * Standards-Version updated to version 3.9.2
+  * Add a missing dependency for the devel package on NetCDF
+    (Closes: #618168, #615652)
+  * Add a pkg-config configuration file for ease of use.
+
+ -- Sylvestre Ledru <sylvestre@debian.org>  Sat, 19 Nov 2011 13:58:37 +0100
+
 etsf-io (1.0.3-3) unstable; urgency=low
 
+  * Team upload
   * Remove myself from uploaders
   * Standards-Version updated to version 3.9.1
+
    [ Damien Caliste ]
   * Correct wrong copyright notice (LP: #676077).
 

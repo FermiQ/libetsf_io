@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Debian Science Team <debian-science-maintainers@lists.alioth.debian.org>
 Uploaders:  Damien Caliste <damien.caliste@cea.fr>
 Build-Depends: debhelper (>= 5), cdbs, autotools-dev, gfortran, libnetcdf-dev
-Standards-Version: 3.9.1
+Standards-Version: 3.9.4
 Homepage: http://www.etsf.eu/resources/software/libraries_and_tools
 Vcs-Svn: svn://svn.debian.org/svn/debian-science/packages/etsf-io/
 Vcs-Browser: http://svn.debian.org/viewsvn/debian-science/packages/etsf-io/
@@ -51,7 +51,7 @@ Description: Developer documentation API and tutorials for ETSF_IO
 Package: libetsf-io-dev
 Section: libdevel
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, libnetcdf-dev
 Suggests: libetsf-io-doc
 Description: Static libraries and Fortran module files of ETSF_IO
  ETSF_IO is a library of F90 routines to read/write the ETSF file format.

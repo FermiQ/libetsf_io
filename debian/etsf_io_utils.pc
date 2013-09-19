@@ -1,0 +1,12 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+fc=gfortran
+fcflags=-I${includedir}
+
+Name: etsf_io_utils
+Description: ETSF_IO library, read / write library for NetCDF electronic structure files
+Version: 1.0.4
+Libs: -L${libdir} -letsf_io_utils
+Requires: etsf_io
