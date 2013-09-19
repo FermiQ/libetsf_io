@@ -16,7 +16,9 @@ else
 module_DATA = etsf_io_file.@MODULE_EXT@ etsf_io_tools.@MODULE_EXT@
 endif
 
-AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(top_builddir)/src/group_level  -I@NETCDF_CFLAGS@
+CLEANFILES = $(module_DATA)
+
+AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(top_builddir)/src/group_level @NETCDF_INCLUDES@
 
 libetsf_io_utils_a_SOURCES = etsf_io_file.f90 \
 	etsf_io_tools.f90

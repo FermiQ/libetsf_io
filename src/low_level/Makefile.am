@@ -23,6 +23,8 @@ endif
 libetsf_io_low_level_a_SOURCES = etsf_io_low_level.f90 \
 	$(NETCDF_WRAPPERS)
 
+CLEANFILES = $(module_DATA)
+
 #dependencies
 etsf_io_low_level.o: etsf_io_low_level.f90 \
 	public_variables.f90 \
