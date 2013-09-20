@@ -2,7 +2,6 @@ etsf-io (1.0.4-1) unstable; urgency=low
 
   [ Damien Caliste ]
   * New minor upstream release with parallel IO support introduced by NetCDF 4.
-  * 
 
  -- Sylvestre Ledru <sylvestre@debian.org>  Thu, 19 Sep 2013 10:50:37 +0200
 
