@@ -20,7 +20,7 @@ EXTRA_DIST = \
 	$(test_dependencies) \
 	tests_run.sh
 
-AM_FCFLAGS = -I$(top_builddir)/src/low_level -I@NETCDF_CFLAGS@
+AM_FCFLAGS = -I$(top_builddir)/src/low_level @NETCDF_INCLUDES@
 
 check_PROGRAMS = tests_read \
 	tests_write

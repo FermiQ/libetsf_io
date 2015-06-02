@@ -898,7 +898,8 @@ contains
     integer              :: i
     
     if (trim(error_data%target_name) /= "") then
-      write(line_tgtname, "(A,A,A)") "  Target (name)      : ", trim(error_data%target_name), char(10)
+      write(line_tgtname, "(A,A,A)") "  Target (name)      : ", &
+           & trim(error_data%target_name(1:min(55, len(error_data%target_name)))), char(10)
     else
       write(line_tgtname, "(A)") ""
     end if
@@ -1260,6 +1261,31 @@ contains
     end if
     var_infos%ncattnames => null()
   end subroutine etsf_io_low_free_var_infos
+  !!***
+
+  !!****m* etsf_io_low_check_group/etsf_io_low_check_parallel_io
+  !! NAME
+  !!  etsf_io_low_check_parallel_io
+  !!
+  !! FUNCTION
+  !!  This function returns if the compiled version of ETSF_IO support parallel
+  !!  IO or not.
+  !!
+  !! COPYRIGHT
+  !!  Copyright (C) 2011, 2011 (Damien Caliste)
+  !!  This file is distributed under the terms of the
+  !!  GNU Lesser General Public License, see the COPYING file
+  !!  or http://www.gnu.org/copyleft/lesser.txt .
+  !!
+  !! RETURN VALUE
+  !!  * check_parallel_io = .true. if one can pass an MPI communicator
+  !!                        to the etsf_io_low_open_create() routine.
+  !!
+  !! SOURCE
+  logical function etsf_io_low_check_parallel_io()
+    logical :: wrap_nf90_support_parallel
+    etsf_io_low_check_parallel_io = wrap_nf90_support_parallel()
+  end function etsf_io_low_check_parallel_io
   !!***
 
   include "read_routines.f90"

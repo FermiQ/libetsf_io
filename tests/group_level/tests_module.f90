@@ -85,7 +85,7 @@ contains
     character(len = *), parameter :: me = "check_read_nD"
     integer, allocatable :: int_array(:)
     double precision, allocatable :: dbl_array(:)
-    character(len = 256), allocatable :: strings(:)
+    character(len = dims(1)), allocatable :: strings(:)
 
     ! Allocate temporary read space
     if (type == "integer") then

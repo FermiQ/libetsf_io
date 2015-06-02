@@ -14,9 +14,16 @@ endif
 
 AM_FCFLAGS = @NETCDF_INCLUDES@ -I$(srcdir)
 
-libetsf_io_low_level_a_SOURCES = etsf_io_low_level.f90
+if HAVE_PARALLEL_IO
+NETCDF_WRAPPERS = netcdf4_wrappers.f90
+else
+NETCDF_WRAPPERS = netcdf3_wrappers.f90
+endif
 
+libetsf_io_low_level_a_SOURCES = etsf_io_low_level.f90 \
+	$(NETCDF_WRAPPERS)
 
+CLEANFILES = $(module_DATA)
 
 #dependencies
 etsf_io_low_level.o: etsf_io_low_level.f90 \
@@ -27,3 +34,5 @@ etsf_io_low_level.o: etsf_io_low_level.f90 \
 	write_routines_auto.f90
 
 etsf_io_low_level.@MODULE_EXT@ ETSF_IO_LOW_LEVEL.@MODULE_EXT@: etsf_io_low_level.o
+
+netcdf3_wrappers.o netcdf4_wrappers.o: etsf_io_low_level.o

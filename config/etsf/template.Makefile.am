@@ -9,12 +9,20 @@ else
 module_DATA = etsf_io.@MODULE_EXT@
 endif
 
-AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(srcdir) -I@NETCDF_CFLAGS@
+CLEANFILES = $(module_DATA)
+
+if HAVE_PARALLEL_IO
+NETCDF_WRAPPERS = $(top_builddir)/src/low_level/netcdf4_wrappers.o
+else
+NETCDF_WRAPPERS = $(top_builddir)/src/low_level/netcdf3_wrappers.o
+endif
+
+AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(srcdir) @NETCDF_INCLUDES@
 
 libetsf_io_a_SOURCES = etsf_io.f90
 
-libetsf_io_a_LIBADD = $(top_builddir)/src/low_level/etsf_io_low_level.o
-
+libetsf_io_a_LIBADD = $(top_builddir)/src/low_level/etsf_io_low_level.o \
+	$(NETCDF_WRAPPERS)
 
 #dependencies
 etsf_io.o: etsf_io.f90 \

@@ -1,6 +1,7 @@
-* Fri Nov 25 2011 Yann Pouillon <yann.pouillon@ehu.es> 1.0.4
+* Thu Sep 19 2013 Yann Pouillon <yann.pouillon@ehu.es> and Damien Caliste <damien.caliste@cea.fr> 1.0.4
 - Upgrade configure.ac to correct different badly written autoconf tests.
 - Modify NetCDF detection for enhanced results.
+- Add support for parallel I/O introduced in NetCDF 4.
 
 * Mon Mar 29 2010 Damien Caliste <damien.caliste@cea.fr> 1.0.3
 - Correct configure.ac and Makefile.am for aclocal to always run with its

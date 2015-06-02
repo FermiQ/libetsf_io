@@ -1,2 +1,4 @@
 debian/tmp/usr/include/*
 debian/tmp/usr/lib
+debian/etsf_io.pc /usr/lib/pkgconfig
+debian/etsf_io_utils.pc /usr/lib/pkgconfig

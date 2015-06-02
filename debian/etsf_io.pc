@@ -1,0 +1,13 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+fc=gfortran
+fcflags=-I${includedir}
+
+Name: etsf_io
+Description: ETSF_IO library, read / write library for NetCDF electronic structure files
+Version: 1.0.4
+Libs: -L${libdir} -letsf_io
+# To be activated later when Debian upgrade to NetCDF 4.2 or later.
+#Requires: netcdf-fortran

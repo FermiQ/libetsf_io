@@ -43,7 +43,7 @@
   !! SOURCE
   subroutine etsf_io_low_open_create(ncid, filename, version, lstat, &
                                    & title, history, error_data, with_etsf_header, &
-                                   & overwrite)
+                                   & overwrite, mpi_comm, mpi_info)
     integer, intent(out)                           :: ncid
     character(len = *), intent(in)                 :: filename
     real, intent(in)                               :: version
@@ -53,6 +53,7 @@
     type(etsf_io_low_error), intent(out), optional :: error_data
     logical, intent(in), optional                  :: with_etsf_header
     logical, intent(in), optional                  :: overwrite
+    integer, intent(in), optional                  :: mpi_comm, mpi_info
     
     !Local
     character(len = *), parameter :: me = "etsf_io_low_open_create"
@@ -70,6 +71,16 @@
       end if
       return
     end if
+    ! Checking that optional arguments are coherent.
+    if ((present(mpi_comm) .and. .not. present(mpi_info)) .or. &
+         & (.not. present(mpi_comm) .and. present(mpi_info))) then
+      if (present(error_data)) then
+        write(err, "(A)") "Both MPI_comm and MPI_info argument must be provided together."
+        call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_OWR, me, &
+                     & tgtname = "MPI_comm or MPI_info", errmess = err)
+      end if
+      return
+    end if
     ! Open file for writing
     cmode = NF90_NOCLOBBER
     if (present(overwrite)) then
@@ -79,7 +90,11 @@
     end if
     ! We don't use the 64bits flag since the specifications advice
     ! to split huge quantities of data into several smaller files.
-    s = nf90_create(path = filename, cmode = cmode, ncid = ncid)
+    if (present(mpi_comm)) then
+       call wrap_nf90_create(s, filename, cmode, ncid, .true., mpi_comm, mpi_info)
+    else
+       call wrap_nf90_create(s, filename, cmode, ncid, .false., 0, 0)
+    end if
     if (s /= nf90_noerr) then
       if (present(error_data)) then
         call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_OWR, &
@@ -198,7 +213,8 @@
   !!
   !! SOURCE
   subroutine etsf_io_low_open_modify(ncid, filename, lstat, &
-                                   & title, history, version, error_data, with_etsf_header)
+                                   & title, history, version, error_data, with_etsf_header, &
+                                   & mpi_comm, mpi_info)
     integer, intent(out)                           :: ncid
     character(len = *), intent(in)                 :: filename
     logical, intent(out)                           :: lstat
@@ -207,6 +223,7 @@
     real, intent(in), optional                     :: version
     type(etsf_io_low_error), intent(out), optional :: error_data
     logical, intent(in), optional                  :: with_etsf_header
+    integer, intent(in), optional                  :: mpi_comm, mpi_info
     
     !Local
     character(len = *), parameter :: me = "etsf_io_low_open_modify"
@@ -228,8 +245,22 @@
         return
       end if
     end if
+    ! Checking that optional arguments are coherent.
+    if ((present(mpi_comm) .and. .not. present(mpi_info)) .or. &
+         & (.not. present(mpi_comm) .and. present(mpi_info))) then
+      if (present(error_data)) then
+        write(err, "(A)") "Both MPI_comm and MPI_info argument must be provided together."
+        call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_OWR, me, &
+                     & tgtname = "MPI_comm or MPI_info", errmess = err)
+      end if
+      return
+    end if
     ! Open file for writing
-    s = nf90_open(path = filename, mode = NF90_WRITE, ncid = ncid)
+    if (present(mpi_comm)) then
+       call wrap_nf90_open(s, filename, NF90_WRITE, ncid, .true., mpi_comm, mpi_info)
+    else
+       call wrap_nf90_open(s, filename, NF90_WRITE, ncid, .false., 0, 0)
+    end if
     if (s /= nf90_noerr) then
       if (present(error_data)) then
         call etsf_io_low_error_set(error_data, ERROR_MODE_IO, ERROR_TYPE_OWR, &
