@@ -1,4 +1,4 @@
-lib_LIBRARIES = libetsf_io_low_level.a
+lib_LTLIBRARIES = libetsf_io_low_level.la
 
 EXTRA_DIST = public_variables.f90 \
 	read_routines_auto.f90 \
@@ -20,7 +20,7 @@ else
 NETCDF_WRAPPERS = netcdf3_wrappers.f90
 endif
 
-libetsf_io_low_level_a_SOURCES = etsf_io_low_level.f90 \
+libetsf_io_low_level_la_SOURCES = etsf_io_low_level.f90 \
 	$(NETCDF_WRAPPERS)
 
 CLEANFILES = $(module_DATA)

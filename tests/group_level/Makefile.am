@@ -1,4 +1,4 @@
-vpath %.a $(top_builddir)/src/group_level
+vpath %.la $(top_builddir)/src/group_level
 
 AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(top_builddir)/src/group_level @NETCDF_INCLUDES@
 
@@ -15,19 +15,19 @@ check_PROGRAMS = tests_init tests_write tests_read tests_copy
 
 tests_init_SOURCES = tests_init.f90
 tests_init_LDFLAGS = -L$(top_builddir)/src/group_level
-tests_init_LDADD = -letsf_io
+tests_init_LDADD = libetsf_io.la
 
 tests_write_SOURCES = tests_module.f90 tests_write.f90
 tests_write_LDFLAGS = -L$(top_builddir)/src/group_level
-tests_write_LDADD = -letsf_io
+tests_write_LDADD = libetsf_io.la
 
 tests_read_SOURCES = tests_module.f90 tests_read.f90
 tests_read_LDFLAGS = -L$(top_builddir)/src/group_level
-tests_read_LDADD = -letsf_io
+tests_read_LDADD = libetsf_io.la
 
 tests_copy_SOURCES = tests_module.f90 tests_copy.f90
 tests_copy_LDFLAGS = -L$(top_builddir)/src/group_level
-tests_copy_LDADD = -letsf_io
+tests_copy_LDADD = libetsf_io.la
 
 TESTS = run
 
@@ -35,19 +35,19 @@ CLEANFILES = run tests_init.log tests_write.log tests_read.log tests_copy.log te
 
 #dependencies
 tests_init.o: tests_init.f90 \
-	libetsf_io.a
+	libetsf_io.la
 
 tests_read.o: tests_read.f90 \
 	tests_module.o \
-	libetsf_io.a
+	libetsf_io.la
 
 tests_write.o: tests_write.f90 \
 	tests_module.o \
-	libetsf_io.a
+	libetsf_io.la
 
 tests_copy.o: tests_copy.f90 \
 	tests_module.o \
-	libetsf_io.a
+	libetsf_io.la
 
 tests_module.o: tests_module.f90
 

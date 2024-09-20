@@ -29,14 +29,14 @@ tests_read_SOURCES = tests_read.f90
 
 tests_read_LDFLAGS = -L$(top_builddir)/src/low_level
 
-tests_read_LDADD = -letsf_io_low_level
+tests_read_LDADD = libetsf_io_low_level.la
 
 
 tests_write_SOURCES = tests_write.f90
 
 tests_write_LDFLAGS = -L$(top_builddir)/src/low_level
 
-tests_write_LDADD = -letsf_io_low_level
+tests_write_LDADD = libetsf_io_low_level.la
 
 TESTS = run
 

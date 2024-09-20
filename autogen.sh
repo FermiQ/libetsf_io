@@ -22,6 +22,8 @@ echo
 echo "== Generate build system =="
 echo "Listing known macro with 'aclocal'."
 aclocal -I config/m4
+echo "Prepare package to use libtool."
+libtoolize
 echo "Creating configure script  with 'autoconf'."
 autoconf
 echo "Creating required files for autotools."

@@ -1,8 +1,8 @@
-vpath %.a $(top_builddir)/src/group_level
+vpath %.la $(top_builddir)/src/group_level
 
 bin_PROGRAMS = etsf_io
 
-lib_LIBRARIES = libetsf_io_utils.a
+lib_LTLIBRARIES = libetsf_io_utils.la
 
 EXTRA_DIST = \
 @SPEC_CHECK_LIST@
@@ -20,24 +20,24 @@ CLEANFILES = $(module_DATA)
 
 AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(top_builddir)/src/group_level @NETCDF_INCLUDES@
 
-libetsf_io_utils_a_SOURCES = etsf_io_file.f90 \
+libetsf_io_utils_la_SOURCES = etsf_io_file.f90 \
 	etsf_io_tools.f90
 
 etsf_io_SOURCES = etsf_io.f90
 etsf_io_LDFLAGS = -L$(top_builddir)/src/group_level -L.
-etsf_io_LDADD = -letsf_io_utils -letsf_io
+etsf_io_LDADD = libetsf_io_utils.la $(top_builddir)/src/group_level/libetsf_io.la $(top_builddir)/src/low_level/libetsf_io_low_level.la
 
 
 #dependencies
-etsf_io_file.o: libetsf_io.a \
+etsf_io_file.o: libetsf_io.la \
 @SPEC_CHECK_LIST@
 	etsf_io_file_contents.f90 \
 	etsf_io_file_private.f90 \
 	etsf_io_file_public.f90
 
-etsf_io_tools.o: libetsf_io.a
+etsf_io_tools.o: libetsf_io.la
 
-etsf_io.o: libetsf_io_utils.a
+etsf_io.o: libetsf_io_utils.la
 
 ETSF_IO_FILE.@MODULE_EXT@ etsf_io_file.@MODULE_EXT@: \
 	etsf_io_file.o

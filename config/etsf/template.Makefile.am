@@ -1,4 +1,4 @@
-lib_LIBRARIES = libetsf_io.a
+lib_LTLIBRARIES = libetsf_io.la
 
 EXTRA_DIST = \
 @INCLUDED_FILES@
@@ -19,9 +19,9 @@ endif
 
 AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(srcdir) @NETCDF_INCLUDES@
 
-libetsf_io_a_SOURCES = etsf_io.f90
+libetsf_io_la_SOURCES = etsf_io.f90
 
-libetsf_io_a_LIBADD = $(top_builddir)/src/low_level/etsf_io_low_level.o \
+libetsf_io_la_LIBADD = $(top_builddir)/src/low_level/etsf_io_low_level.o \
 	$(NETCDF_WRAPPERS)
 
 #dependencies
