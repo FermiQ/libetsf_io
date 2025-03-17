@@ -22,7 +22,7 @@ jobs:
 
       - name: Build robodoc
         run: |
-          curl -LO https://github.com/gumpu/ROBODoc/releases/download/v4.99.44/robodoc-4.99.44.zip
+          curl -fLO https://github.com/gumpu/ROBODoc/releases/download/v4.99.44/robodoc-4.99.44.zip
           unzip robodoc-4.99.44.zip
           cd robodoc-4.99.44/
           ./configure
@@ -34,11 +34,11 @@ jobs:
       - name: Build etsf-io
         run: |
           mkdir src/group_level/
-          bash autogen.sh
+          bash -e autogen.sh
           mkdir build/
           cd build/
           ../configure
-          make -j
+          make
 
       - name: Test etsf-io
         run: |
