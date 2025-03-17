@@ -10,7 +10,7 @@
 
 from time import gmtime,strftime
 
-import commands
+import subprocess
 import os
 import re
 import sys
@@ -27,17 +27,17 @@ my_configs = ["config/etsf/code.cf"]
 
 # Check if we are in the top of the ETSF_IO source tree
 if ( not os.path.exists("configure.ac") ):
- print "%s: You must be in the top of the library source tree." % my_name
- print "%s: Aborting now." % my_name
+ print("%s: You must be in the top of the library source tree." % my_name)
+ print("%s: Aborting now." % my_name)
  sys.exit(1)
 
 # Read config file(s)
 for cnf in my_configs:
  if ( os.path.exists(cnf) ):
-  execfile(cnf)
+  exec(compile(open(cnf, "rb").read(), cnf, 'exec'))
  else:
-  print "%s: Could not find config file (%s)." % (my_name,cnf)
-  print "%s: Aborting now." % my_name
+  print("%s: Could not find config file (%s)." % (my_name,cnf))
+  print("%s: Aborting now." % my_name)
   sys.exit(2)
 
 # This script auto generate the read method for the nD dimensional arrays.
@@ -58,8 +58,8 @@ banner += "! produced by the config/scripts/%s.\n" % my_name
 banner += "!================================================================\n"
 
 # We load the template and replace in it.
-var_template = file("config/etsf/template.low_level_var", "r").read()
-att_template = file("config/etsf/template.low_level_att", "r").read()
+var_template = open("config/etsf/template.low_level_var", "r").read()
+att_template = open("config/etsf/template.low_level_att", "r").read()
 
 for (action, tgt_file) in NC_ACTION:
   if (action == "read"):
@@ -132,7 +132,7 @@ for (action, tgt_file) in NC_ACTION:
       ret += sub_src + "\n"
     
   # We create the file
-  out = file("%s/%s_routines_auto.f90" % (etsf_low_level_file_srcdir, action), "w")
+  out = open("%s/%s_routines_auto.f90" % (etsf_low_level_file_srcdir, action), "w")
   out.write(banner + "\n" + ret)
   out.close()
 
@@ -258,7 +258,7 @@ for (action, tgt_file) in NC_ACTION:
         ret += sub_src + "\n"
     
   # We create the file
-  out = file("%s/%s_routines_auto.f90" % (etsf_low_level_file_srcdir, action), "w")
+  out = open("%s/%s_routines_auto.f90" % (etsf_low_level_file_srcdir, action), "w")
   out.write(banner + "\n" + ret)
   out.close()
   

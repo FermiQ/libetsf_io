@@ -10,7 +10,7 @@
 
 from time import gmtime,strftime
 
-import commands
+import subprocess
 import os
 import re
 import sys
@@ -318,17 +318,17 @@ my_configs = ["config/etsf/specs.cf",
 
 # Check if we are in the top of the ETSF_IO source tree
 if ( not os.path.exists("configure.ac") ):
- print "%s: You must be in the top of the library source tree." % my_name
- print "%s: Aborting now." % my_name
+ print("%s: You must be in the top of the library source tree." % my_name)
+ print("%s: Aborting now." % my_name)
  sys.exit(1)
 
 # Read config file(s)
 for cnf in my_configs:
  if ( os.path.exists(cnf) ):
-  execfile(cnf)
+  exec(compile(open(cnf, "rb").read(), cnf, 'exec'))
  else:
-  print "%s: Could not find config file (%s)." % (my_name,cnf)
-  print "%s: Aborting now." % my_name
+  print("%s: Could not find config file (%s)." % (my_name,cnf))
+  print("%s: Aborting now." % my_name)
   sys.exit(2)
 
 # Create tests for data_init()
@@ -338,13 +338,13 @@ for grp in etsf_group_list:
   # Load template
   init_grp_src += init_grp(grp, "etsf_grp_" + grp)
 
-ret = file("config/etsf/template.tests_init", "r").read()
+ret = open("config/etsf/template.tests_init", "r").read()
 
 # Substitute patterns
 ret = re.sub("@INIT_GRP@", init_grp_src, ret)
 
 # Write routine
-out = file("%s/tests_init.f90" % (etsf_tests_srcdir),"w")
+out = open("%s/tests_init.f90" % (etsf_tests_srcdir),"w")
 out.write(ret)
 out.close()
 
@@ -358,7 +358,7 @@ for action in ["write", "read", "copy"]:
     action_grp_src += action_grp(grp, "etsf_grp_" + grp, action)
     call_grp_src += "  call test_%s_%s()\n" % (action, grp)
 
-  ret = file("config/etsf/template.tests", "r").read()
+  ret = open("config/etsf/template.tests", "r").read()
 
   # Substitute patterns
   ret = re.sub("@SUBROUTINE_GRP@", action_grp_src, ret)
@@ -367,6 +367,6 @@ for action in ["write", "read", "copy"]:
   ret = re.sub("@ACTION@", action, ret)
 
   # Write routine
-  out = file("%s/tests_%s.f90" % (etsf_tests_srcdir, action),"w")
+  out = open("%s/tests_%s.f90" % (etsf_tests_srcdir, action),"w")
   out.write(ret)
   out.close()

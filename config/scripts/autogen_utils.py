@@ -10,7 +10,7 @@
 
 from time import gmtime,strftime
 
-import commands
+import subprocess
 import os
 import re
 import sys
@@ -140,7 +140,7 @@ def code_check_spec(mandatory, optional):
              + "end if\n"
       ret += "call strip(string_value)\n"
       first = True
-      for key in value[1].keys():
+      for key in list(value[1].keys()):
         if (first):
           ret += "if (trim(string_value) == \"%s\") then\n" % key
           first = False
@@ -161,7 +161,7 @@ def code_check_spec(mandatory, optional):
 def code_contents():
   ret = ""
   i = 1
-  for (id, stuff) in etsf_specifications_files.items():
+  for (id, stuff) in list(etsf_specifications_files.items()):
     ret += "call etsf_io_file_check_%s(ncid, lstat, errors(%d))\n" % (id, i)
     ret += "if (lstat) then\n"
     ret += "  read_flags = read_flags + etsf_%s\n" % id
@@ -186,64 +186,64 @@ my_configs = ["config/etsf/specs.cf",
 
 # Check if we are in the top of the ETSF_IO source tree
 if ( not os.path.exists("configure.ac") ):
- print "%s: You must be in the top of the library source tree." % my_name
- print "%s: Aborting now." % my_name
+ print("%s: You must be in the top of the library source tree." % my_name)
+ print("%s: Aborting now." % my_name)
  sys.exit(1)
 
 # Read config file(s)
 for cnf in my_configs:
  if ( os.path.exists(cnf) ):
-  execfile(cnf)
+  exec(compile(open(cnf, "rb").read(), cnf, 'exec'))
  else:
-  print "%s: Could not find config file (%s)." % (my_name,cnf)
-  print "%s: Aborting now." % my_name
+  print("%s: Could not find config file (%s)." % (my_name,cnf))
+  print("%s: Aborting now." % my_name)
   sys.exit(2)
 
 # Create the validating routine
 # =============================
 str_check = indent_code(code_contents(), 1)
 
-ret = file("config/etsf/template.utils_contents.f90", "r").read()
+ret = open("config/etsf/template.utils_contents.f90", "r").read()
 
 # Substitute patterns
 ret = re.sub("@CODE@", str_check, ret)
 
 # Write routine
-out = file("%s/etsf_io_file_contents.f90" % (etsf_utils_srcdir),"w")
+out = open("%s/etsf_io_file_contents.f90" % (etsf_utils_srcdir),"w")
 out.write(ret)
 out.close()
 
 makefile_list = ""
 include_list = ""
 public_list = ""
-for (id, (mandatory, optional)) in etsf_specifications_files.items():
+for (id, (mandatory, optional)) in list(etsf_specifications_files.items()):
   makefile_list += "\tetsf_io_file_check_%s.f90 \\\n" % id
   include_list  += "  include \"etsf_io_file_check_%s.f90\"\n" % id
   public_list   += "  public :: etsf_io_file_check_%s\n" % id
   str_check = indent_code(code_check_spec(mandatory, optional), 1)
-  ret = file("config/etsf/template.utils_check.f90", "r").read()
+  ret = open("config/etsf/template.utils_check.f90", "r").read()
   ret = re.sub("@SPEC_NAME@", id, ret)
   ret = re.sub("@CODE@", str_check, ret)
-  out = file("%s/etsf_io_file_check_%s.f90" % (etsf_utils_srcdir, id),"w")
+  out = open("%s/etsf_io_file_check_%s.f90" % (etsf_utils_srcdir, id),"w")
   out.write(ret)
   out.close()
 
 # Create the source and doc Makefile.am.
-ret = file("config/etsf/template.utils_Makefile.am", "r").read()
+ret = open("config/etsf/template.utils_Makefile.am", "r").read()
 ret = re.sub("@SPEC_CHECK_LIST@\n", makefile_list, ret)
-out = file("%s/Makefile.am" % (etsf_utils_srcdir),"w")
+out = open("%s/Makefile.am" % (etsf_utils_srcdir),"w")
 out.write(ret)
 out.close()
-ret = file("config/etsf/template.doc_utils_Makefile.am", "r").read()
+ret = open("config/etsf/template.doc_utils_Makefile.am", "r").read()
 makefile_doc_list = re.sub(".f90", "_f90.html", makefile_list)
 ret = re.sub("@SPEC_CHECK_LIST@\n", makefile_doc_list, ret)
-out = file("doc/www/utils/Makefile.am", "w")
+out = open("doc/www/utils/Makefile.am", "w")
 out.write(ret)
 out.close()
 
-ret = file("config/etsf/template.utils_file.f90", "r").read()
+ret = open("config/etsf/template.utils_file.f90", "r").read()
 ret = re.sub("@SPEC_CHECK_INCLUDE@\n", include_list, ret)
 ret = re.sub("@SPEC_CHECK_PUBLIC@\n", public_list, ret)
-out = file("%s/etsf_io_file.f90" % (etsf_utils_srcdir),"w")
+out = open("%s/etsf_io_file.f90" % (etsf_utils_srcdir),"w")
 out.write(ret)
 out.close()
