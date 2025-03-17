@@ -8,6 +8,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Add historical Ubuntu repository for robodoc
+        run: |
+          # Ubuntu 11.10 (Oneiric Ocelot) is the last release to contain robodoc
+          # The keys are long expired, so we need to use [trusted=yes]
+          echo "deb [trusted=yes] http://old-releases.ubuntu.com/ubuntu/ oneiric universe" | sudo tee /etc/apt/sources.list.d/precise.list
+          sudo apt-get update
+
       - name: Install dependencies
         run: >-
           sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y
@@ -19,17 +26,7 @@ jobs:
           gfortran
           libnetcdff-dev
           python-is-python3
-
-      - name: Build robodoc
-        run: |
-          curl -fLO https://github.com/gumpu/ROBODoc/releases/download/v4.99.44/robodoc-4.99.44.zip
-          unzip robodoc-4.99.44.zip
-          cd robodoc-4.99.44/
-          ./configure
-          make -j
-          sudo make install
-          cd ..
-          rm -rf robodoc-4.99.44.zip robodoc-4.99.44/
+          robodoc
 
       - name: Build etsf-io
         run: |
@@ -38,9 +35,14 @@ jobs:
           mkdir build/
           cd build/
           ../configure
-          make
+          make V=1
 
       - name: Test etsf-io
         run: |
           cd build/
-          make check
+          make check V=1
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          path: build/config.log
