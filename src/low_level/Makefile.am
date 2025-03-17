@@ -26,13 +26,11 @@ libetsf_io_low_level_la_SOURCES = etsf_io_low_level.f90 \
 CLEANFILES = $(module_DATA)
 
 #dependencies
-etsf_io_low_level.o: etsf_io_low_level.f90 \
+$(libetsf_io_low_level_la_OBJECTS): \
 	public_variables.f90 \
 	read_routines.f90 \
 	read_routines_auto.f90 \
 	write_routines.f90 \
 	write_routines_auto.f90
 
-etsf_io_low_level.@MODULE_EXT@ ETSF_IO_LOW_LEVEL.@MODULE_EXT@: etsf_io_low_level.o
-
-netcdf3_wrappers.o netcdf4_wrappers.o: etsf_io_low_level.o
+etsf_io_low_level.@MODULE_EXT@ ETSF_IO_LOW_LEVEL.@MODULE_EXT@: libetsf_io_low_level.la

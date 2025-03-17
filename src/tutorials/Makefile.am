@@ -1,6 +1,3 @@
-vpath %.la $(top_builddir)/src/group_level \
-	$(top_builddir)/src/utils
-
 AM_FCFLAGS = @NETCDF_INCLUDES@ -I$(top_builddir)/src/low_level -I$(top_builddir)/src/group_level -I$(top_builddir)/src/utils
 
 EXTRA_DIST = MPI_output_of_a_density.f90 README.f90
@@ -30,22 +27,3 @@ convert_to_xyz_LDADD = libetsf_io_utils.la libetsf_io.la
 mix_ETSF_and_non_ETSF_SOURCES = mix_ETSF_and_non_ETSF.f90
 mix_ETSF_and_non_ETSF_LDFLAGS = -L$(top_builddir)/src/group_level
 mix_ETSF_and_non_ETSF_LDADD = libetsf_io.la
-
-#dependencies
-create_a_crystal_den_file.o: create_a_crystal_den_file.f90 \
-	libetsf_io.la
-
-read_write_sub_access.o: read_write_sub_access.f90 \
-	libetsf_io.la \
-	libetsf_io_utils.la
-
-read_a_file.o: read_a_file.f90 \
-	libetsf_io.la \
-	libetsf_io_utils.la
-
-convert_to_xyz.o: convert_to_xyz.f90 \
-	libetsf_io.la \
-	libetsf_io_utils.la
-
-mix_ETSF_and_non_ETSF.o: mix_ETSF_and_non_ETSF.f90 \
-	libetsf_io.la

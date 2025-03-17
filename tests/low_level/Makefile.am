@@ -1,5 +1,3 @@
-vpath %.o $(top_builddir)/src/low_level
-
 test_dependencies = \
 	check_att_t01.nc \
 	check_var_t01.nc \

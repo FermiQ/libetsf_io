@@ -29,18 +29,16 @@ etsf_io_LDADD = libetsf_io_utils.la $(top_builddir)/src/group_level/libetsf_io.l
 
 
 #dependencies
-etsf_io_file.o: libetsf_io.la \
+$(libetsf_io_utils_la_OBJECTS): libetsf_io.la \
 @SPEC_CHECK_LIST@
 	etsf_io_file_contents.f90 \
 	etsf_io_file_private.f90 \
 	etsf_io_file_public.f90
 
-etsf_io_tools.o: libetsf_io.la
-
-etsf_io.o: libetsf_io_utils.la
+$(etsf_io_OBJECTS): libetsf_io_utils.la
 
 ETSF_IO_FILE.@MODULE_EXT@ etsf_io_file.@MODULE_EXT@: \
-	etsf_io_file.o
+	libetsf_io_utils.la
 
 ETSF_IO_TOOLS.@MODULE_EXT@ etsf_io_tools.@MODULE_EXT@: \
-	etsf_io_tools.o
+	libetsf_io_utils.la

@@ -35,7 +35,7 @@ jobs:
           mkdir build/
           cd build/
           ../configure
-          make V=1
+          make -j V=1
 
       - name: Test etsf-io
         run: |

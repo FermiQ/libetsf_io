@@ -31,7 +31,7 @@ jobs:
           mkdir build/
           cd build/
           ../configure --with-netcdf-incs="$(pkg-config --cflags netcdf-fortran)"  --with-netcdf-libs="$(pkg-config --libs netcdf-fortran)"
-          make V=1
+          make -j V=1
 
       # - name: Test etsf-io
       #   run: |

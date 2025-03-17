@@ -1,5 +1,3 @@
-vpath %.la $(top_builddir)/src/group_level
-
 AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(top_builddir)/src/group_level @NETCDF_INCLUDES@
 
 EXTRA_DIST = \
