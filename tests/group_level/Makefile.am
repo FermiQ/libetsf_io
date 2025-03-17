@@ -15,41 +15,23 @@ check_PROGRAMS = tests_init tests_write tests_read tests_copy
 
 tests_init_SOURCES = tests_init.f90
 tests_init_LDFLAGS = -L$(top_builddir)/src/group_level
-tests_init_LDADD = libetsf_io.la
+tests_init_LDADD = $(top_builddir)/src/group_level/libetsf_io.la
 
 tests_write_SOURCES = tests_module.f90 tests_write.f90
 tests_write_LDFLAGS = -L$(top_builddir)/src/group_level
-tests_write_LDADD = libetsf_io.la
+tests_write_LDADD = $(top_builddir)/src/group_level/libetsf_io.la
 
 tests_read_SOURCES = tests_module.f90 tests_read.f90
 tests_read_LDFLAGS = -L$(top_builddir)/src/group_level
-tests_read_LDADD = libetsf_io.la
+tests_read_LDADD = $(top_builddir)/src/group_level/libetsf_io.la
 
 tests_copy_SOURCES = tests_module.f90 tests_copy.f90
 tests_copy_LDFLAGS = -L$(top_builddir)/src/group_level
-tests_copy_LDADD = libetsf_io.la
+tests_copy_LDADD = $(top_builddir)/src/group_level/libetsf_io.la
 
 TESTS = run
 
 CLEANFILES = run tests_init.log tests_write.log tests_read.log tests_copy.log tests.mod tests.MOD TESTS.MOD test_init_*.nc test_write_*.nc test_read_*.nc test_copy_*.nc
-
-#dependencies
-tests_init.o: tests_init.f90 \
-	libetsf_io.la
-
-tests_read.o: tests_read.f90 \
-	tests_module.o \
-	libetsf_io.la
-
-tests_write.o: tests_write.f90 \
-	tests_module.o \
-	libetsf_io.la
-
-tests_copy.o: tests_copy.f90 \
-	tests_module.o \
-	libetsf_io.la
-
-tests_module.o: tests_module.f90
 
 #additional rules
 run: $(srcdir)/tests_run.sh tests_init.log tests_write.log tests_read.log tests_copy.log

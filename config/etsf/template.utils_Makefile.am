@@ -25,7 +25,7 @@ libetsf_io_utils_la_SOURCES = etsf_io_file.f90 \
 
 etsf_io_SOURCES = etsf_io.f90
 etsf_io_LDFLAGS = -L$(top_builddir)/src/group_level -L.
-etsf_io_LDADD = libetsf_io_utils.la $(top_builddir)/src/group_level/libetsf_io.la $(top_builddir)/src/low_level/libetsf_io_low_level.la
+etsf_io_LDADD = libetsf_io_utils.la $(top_builddir)/src/group_level/libetsf_io.la
 
 
 #dependencies

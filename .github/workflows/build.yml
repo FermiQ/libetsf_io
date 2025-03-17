@@ -1,0 +1,45 @@
+name: Linux
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: >-
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y
+          build-essential
+          autoconf
+          automake
+          libtool
+          gcc
+          gfortran
+          libnetcdff-dev
+          python-is-python3
+
+      - name: Build robodoc
+        run: |
+          curl -LO https://github.com/gumpu/ROBODoc/releases/download/v4.99.44/robodoc-4.99.44.zip
+          unzip robodoc-4.99.44.zip
+          cd robodoc-4.99.44/
+          ./configure
+          make -j
+          sudo make install
+          cd ..
+          rm -rf robodoc-4.99.44.zip robodoc-4.99.44/
+
+      - name: Build etsf-io
+        run: |
+          bash autogen.sh
+          mkdir build/
+          cd build/
+          ../configure
+          make -j
+
+      - name: Test etsf-io
+        run: |
+          cd build/
+          make check

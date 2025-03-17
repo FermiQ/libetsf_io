@@ -21,7 +21,7 @@ AM_FCFLAGS = -I$(top_builddir)/src/low_level -I$(srcdir) @NETCDF_INCLUDES@
 
 libetsf_io_la_SOURCES = etsf_io.f90
 
-libetsf_io_la_LIBADD = $(top_builddir)/src/low_level/etsf_io_low_level.o \
+libetsf_io_la_LIBADD = $(top_builddir)/src/low_level/libetsf_io_low_level.la \
 	$(NETCDF_WRAPPERS)
 
 #dependencies
