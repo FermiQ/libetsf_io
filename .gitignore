@@ -1,0 +1,33 @@
+# Build-system files
+/aclocal.m4
+/autom4te.cache/
+/configure
+/configure~
+/config/gnu/
+/config/m4/libtool.m4
+/config/m4/ltoptions.m4
+/config/m4/ltsugar.m4
+/config/m4/ltversion.m4
+/config/m4/lt~obsolete.m4
+Makefile.in
+
+# Generated source files
+/src/group_level/
+/src/low_level/read_routines_auto.f90
+/src/low_level/write_routines_auto.f90
+/src/utils/Makefile.am
+/src/utils/etsf_io_file.f90
+/src/utils/etsf_io_file_check_crystallographic_data.f90
+/src/utils/etsf_io_file_check_dielectric_function_data.f90
+/src/utils/etsf_io_file_check_scalar_field_data.f90
+/src/utils/etsf_io_file_check_wavefunctions_data.f90
+/src/utils/etsf_io_file_contents.f90
+
+# Generated tests
+/tests/group_level/tests_copy.f90
+/tests/group_level/tests_init.f90
+/tests/group_level/tests_read.f90
+/tests/group_level/tests_write.f90
+
+# Documentation
+/robodoc.log

@@ -1637,6 +1637,8 @@ for sub in list(etsf_subprograms.keys()):
           indent_code(eval("code_%s(%s)" % (sub_code,sub_cprm)),1),src)
 
    # Write routine
+   if not os.path.exists(etsf_file_srcdir):
+       os.mkdir(etsf_file_srcdir)
    out = open("%s/etsf_io_%s_%s.f90" % (etsf_file_srcdir,sub_name,action),"w")
    out.write(src)
    out.close()

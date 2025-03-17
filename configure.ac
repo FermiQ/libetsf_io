@@ -13,7 +13,7 @@ AC_INIT([ETSF - IO library], [1.0.4], [https://bugs.launchpad.net/etsf-io], [ets
 
 dnl All temporary building files are put in this directory.
 dnl his must be called before AM_INIT_AUTOMAKE
-AC_CONFIG_AUX_DIR([config])
+AC_CONFIG_AUX_DIR([config/gnu])
 AC_CONFIG_MACRO_DIR([config/m4])
 
 dnl Init something, don't know exactly what...

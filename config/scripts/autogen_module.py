@@ -260,6 +260,9 @@ src = re.sub("@SPLIT_GROUP@",vsp,src)
 src = re.sub("@SPLIT_NAME_GROUP@",vsn,src)
 
 # Write module
+etsf_file_srcdir = os.path.dirname(etsf_file_module)
+if not os.path.exists(etsf_file_srcdir):
+   os.mkdir(etsf_file_srcdir)
 mod = open(etsf_file_module,"w")
 mod.write(src)
 mod.close()
