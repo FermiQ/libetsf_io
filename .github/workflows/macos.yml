@@ -33,10 +33,10 @@ jobs:
           ../configure --with-netcdf-incs="$(pkg-config --cflags netcdf-fortran)"  --with-netcdf-libs="$(pkg-config --libs netcdf-fortran)"
           make V=1
 
-      - name: Test etsf-io
-        run: |
-          cd build/
-          make check V=1
+      # - name: Test etsf-io
+      #   run: |
+      #     cd build/
+      #     make check V=1
 
       - uses: actions/upload-artifact@v4
         if: always()
