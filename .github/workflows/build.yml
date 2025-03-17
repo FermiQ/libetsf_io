@@ -33,6 +33,7 @@ jobs:
 
       - name: Build etsf-io
         run: |
+          mkdir src/group_level/
           bash autogen.sh
           mkdir build/
           cd build/
