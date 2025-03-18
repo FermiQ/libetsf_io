@@ -24,19 +24,26 @@ jobs:
           echo PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH" >> $GITHUB_ENV
           echo FC=gfortran-14 >> $GITHUB_ENV
 
-      - name: Build etsf-io
+      - name: Configure etsf-io
         run: |
           mkdir src/group_level/
           bash -e autogen.sh
           mkdir build/
           cd build/
           ../configure --with-netcdf-incs="$(pkg-config --cflags netcdf-fortran)"  --with-netcdf-libs="$(pkg-config --libs netcdf-fortran)"
+        env:
+          FFLAGS: "-O0 -g3 -fno-omit-frame-pointer -fsanitize=address"
+          LDFLAGS: "-fsanitize=address"
+
+      - name: Compile etsf-io
+        working-directory: build/
+        run: |
           make -j V=1
 
       # - name: Test etsf-io
+      #   working-directory: build/
       #   run: |
-      #     cd build/
-      #     make check V=1
+      #     make -j check V=1
 
       - uses: actions/upload-artifact@v4
         if: always()
