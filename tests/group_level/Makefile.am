@@ -15,17 +15,26 @@ tests_init_SOURCES = tests_init.f90
 tests_init_LDFLAGS = -L$(top_builddir)/src/group_level
 tests_init_LDADD = $(top_builddir)/src/group_level/libetsf_io.la
 
-tests_write_SOURCES = tests_module.f90 tests_write.f90
+tests_write_SOURCES = tests_write.f90
 tests_write_LDFLAGS = -L$(top_builddir)/src/group_level
-tests_write_LDADD = $(top_builddir)/src/group_level/libetsf_io.la
+tests_write_LDADD = tests_module.$(OBJEXT) $(top_builddir)/src/group_level/libetsf_io.la
+EXTRA_tests_write_SOURCES = tests_module.f90
+EXTRA_tests_write_DEPENDENCIES = tests_module.$(OBJEXT)
+$(tests_write_OBJECTS): tests_module.$(OBJEXT)
 
-tests_read_SOURCES = tests_module.f90 tests_read.f90
+tests_read_SOURCES = tests_read.f90
 tests_read_LDFLAGS = -L$(top_builddir)/src/group_level
-tests_read_LDADD = $(top_builddir)/src/group_level/libetsf_io.la
+tests_read_LDADD = tests_module.$(OBJEXT) $(top_builddir)/src/group_level/libetsf_io.la
+EXTRA_tests_read_SOURCES = tests_module.f90
+EXTRA_tests_read_DEPENDENCIES = tests_module.$(OBJEXT)
+$(tests_read_OBJECTS): tests_module.$(OBJEXT)
 
-tests_copy_SOURCES = tests_module.f90 tests_copy.f90
+tests_copy_SOURCES = tests_copy.f90
 tests_copy_LDFLAGS = -L$(top_builddir)/src/group_level
-tests_copy_LDADD = $(top_builddir)/src/group_level/libetsf_io.la
+tests_copy_LDADD = tests_module.$(OBJEXT) $(top_builddir)/src/group_level/libetsf_io.la
+EXTRA_tests_copy_SOURCES = tests_module.f90
+EXTRA_tests_copy_DEPENDENCIES = tests_module.$(OBJEXT)
+$(tests_copy_OBJECTS): tests_module.$(OBJEXT)
 
 TESTS = run
 
