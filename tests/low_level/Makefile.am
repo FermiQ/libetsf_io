@@ -1,5 +1,3 @@
-vpath %.o $(top_builddir)/src/low_level
-
 test_dependencies = \
 	check_att_t01.nc \
 	check_var_t01.nc \
@@ -29,25 +27,18 @@ tests_read_SOURCES = tests_read.f90
 
 tests_read_LDFLAGS = -L$(top_builddir)/src/low_level
 
-tests_read_LDADD = -letsf_io_low_level
+tests_read_LDADD = $(top_builddir)/src/low_level/libetsf_io_low_level.la
 
 
 tests_write_SOURCES = tests_write.f90
 
 tests_write_LDFLAGS = -L$(top_builddir)/src/low_level
 
-tests_write_LDADD = -letsf_io_low_level
+tests_write_LDADD = $(top_builddir)/src/low_level/libetsf_io_low_level.la
 
 TESTS = run
 
 CLEANFILES = run tests_read.log tests_write.log
-
-#dependencies
-tests_read.o: tests_read.f90 \
-	etsf_io_low_level.o
-
-tests_write.o: tests_write.f90 \
-	etsf_io_low_level.o
 
 #additional rules
 run: $(srcdir)/tests_run.sh tests_read.log tests_write.log

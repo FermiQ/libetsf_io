@@ -10,7 +10,7 @@
 
 from time import gmtime,strftime
 
-import commands
+import subprocess
 import os
 import re
 import sys
@@ -1220,7 +1220,7 @@ end if
       ret_att += "end if\n\n"
 
   # Add attribute code if some
-  if (ret_att is not ""):
+  if (ret_att != ""):
     ret += "\n! Handle all attributes for the group.\n"
     if (action == "put"):
       ret += "call etsf_io_low_set_define_mode(ncid, lstat, error_data = error_data)\n"
@@ -1312,7 +1312,7 @@ def code_attribute_symm(action, ivar, att_value = None):
 
 # Code for read/write attributes.
 def code_attributes(action, varid, attname, attvalue, attlen):
-  if (action == "read" and attlen is not ""):
+  if (action == "read" and attlen != ""):
     lenarg = attlen + ", "
   else:
     lenarg = ""
@@ -1424,7 +1424,7 @@ def indent_code(code,offset):
 def init_routine(name,template,info,script,args,type="subroutine"):
 
  # Init
- ret = file("config/etsf/template.%s" % (template),"r").read()
+ ret = open("config/etsf/template.%s" % (template),"r").read()
 
  if ( type == "subroutine" ):
   ret = re.sub("@SUBPROGRAM@",type,ret)
@@ -1562,22 +1562,22 @@ my_configs = ["config/etsf/specs.cf",
 
 # Check if we are in the top of the ETSF_IO source tree
 if ( not os.path.exists("configure.ac") ):
- print "%s: You must be in the top of the library source tree." % my_name
- print "%s: Aborting now." % my_name
+ print("%s: You must be in the top of the library source tree." % my_name)
+ print("%s: Aborting now." % my_name)
  sys.exit(1)
 
 # Read config file(s)
 for cnf in my_configs:
  if ( os.path.exists(cnf) ):
-  execfile(cnf)
+  exec(compile(open(cnf, "rb").read(), cnf, 'exec'))
  else:
-  print "%s: Could not find config file (%s)." % (my_name,cnf)
-  print "%s: Aborting now." % my_name
+  print("%s: Could not find config file (%s)." % (my_name,cnf))
+  print("%s: Aborting now." % my_name)
   sys.exit(2)
 
 # Create routines
 includes = []
-for sub in etsf_subprograms.keys():
+for sub in list(etsf_subprograms.keys()):
  dsc = etsf_subprograms[sub]
 
  # Look for peculiarities
@@ -1637,7 +1637,9 @@ for sub in etsf_subprograms.keys():
           indent_code(eval("code_%s(%s)" % (sub_code,sub_cprm)),1),src)
 
    # Write routine
-   out = file("%s/etsf_io_%s_%s.f90" % (etsf_file_srcdir,sub_name,action),"w")
+   if not os.path.exists(etsf_file_srcdir):
+       os.mkdir(etsf_file_srcdir)
+   out = open("%s/etsf_io_%s_%s.f90" % (etsf_file_srcdir,sub_name,action),"w")
    out.write(src)
    out.close()
    includes.append("etsf_io_%s_%s.f90" % (sub_name,action))
@@ -1650,21 +1652,21 @@ for filename in includes:
   includes_am += "\t%s \\\n" % filename
 
 # Write the includes in the module file.
-src = file("%s/etsf_io.f90" % (etsf_file_srcdir), "r").read()
+src = open("%s/etsf_io.f90" % (etsf_file_srcdir), "r").read()
 src = re.sub("@INCLUDES@", includes_str, src)
-out = file("%s/etsf_io.f90" % (etsf_file_srcdir), "w")
+out = open("%s/etsf_io.f90" % (etsf_file_srcdir), "w")
 out.write(src)
 out.close()
 
 # Create the source and doc Makefile.am.
-src = file("config/etsf/template.Makefile.am", "r").read()
+src = open("config/etsf/template.Makefile.am", "r").read()
 src = re.sub("@INCLUDED_FILES@", includes_am[:-2], src)
-out = file("%s/Makefile.am" % (etsf_file_srcdir), "w")
+out = open("%s/Makefile.am" % (etsf_file_srcdir), "w")
 out.write(src)
 out.close()
-src = file("config/etsf/template.doc_group_Makefile.am", "r").read()
+src = open("config/etsf/template.doc_group_Makefile.am", "r").read()
 includes_am = re.sub(".f90", "_f90.html", includes_am)
 src = re.sub("@INCLUDED_FILES@\n", includes_am, src)
-out = file("doc/www/group_level/Makefile.am", "w")
+out = open("doc/www/group_level/Makefile.am", "w")
 out.write(src)
 out.close()

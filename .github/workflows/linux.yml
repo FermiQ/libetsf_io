@@ -1,0 +1,55 @@
+name: Linux
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add historical Ubuntu repository for robodoc
+        run: |
+          # Ubuntu 11.10 (Oneiric Ocelot) is the last release to contain robodoc
+          # The keys are long expired, so we need to use [trusted=yes]
+          echo "deb [trusted=yes] http://old-releases.ubuntu.com/ubuntu/ oneiric universe" | sudo tee /etc/apt/sources.list.d/precise.list
+          sudo apt-get update
+
+      - name: Install dependencies
+        run: >-
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y
+          build-essential
+          autoconf
+          automake
+          libtool
+          gcc
+          gfortran
+          libnetcdff-dev
+          python-is-python3
+          robodoc
+
+      - name: Configure etsf-io
+        run: |
+          bash -e autogen.sh
+          mkdir build/
+          cd build/
+          ../configure
+          make -j V=1
+        env:
+          FFLAGS: "-O0 -g3 -fno-omit-frame-pointer -fsanitize=address"
+          LDFLAGS: "-fsanitize=address"
+
+      - name: Compile etsf-io
+        working-directory: build/
+        run: |
+          make -j V=1
+
+      - name: Test etsf-io
+        working-directory: build/
+        run: |
+          make -j check V=1
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          path: build/config.log

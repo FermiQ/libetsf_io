@@ -370,8 +370,8 @@ contains
   end subroutine allocate_str_1D
 
   subroutine check_mem_str_0D(string, length, varname, lstat, error_data)
-    character(len = length), intent(in) :: string
     integer, intent(in) :: length
+    character(len = length), intent(in) :: string
     character(len = *), intent(in) :: varname
     logical, intent(out) :: lstat
     type(etsf_io_low_error), intent(inout) :: error_data

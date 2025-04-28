@@ -10,7 +10,7 @@
 
 from time import gmtime,strftime
 
-import commands
+import subprocess
 import os
 import re
 import sys
@@ -30,22 +30,22 @@ my_configs = ["config/etsf/specs.cf",
 
 # Check if we are in the top of the ETSF_IO source tree
 if ( not os.path.exists("configure.ac") ):
- print "%s: You must be in the top of the library source tree." % my_name
- print "%s: Aborting now." % my_name
+ print("%s: You must be in the top of the library source tree." % my_name)
+ print("%s: Aborting now." % my_name)
  sys.exit(1)
 
 # Read config file(s)
 for cnf in my_configs:
  if ( os.path.exists(cnf) ):
-  execfile(cnf)
+  exec(compile(open(cnf, "rb").read(), cnf, 'exec'))
  else:
-  print "%s: Could not find config file (%s)." % (my_name,cnf)
-  print "%s: Aborting now." % my_name
+  print("%s: Could not find config file (%s)." % (my_name,cnf))
+  print("%s: Aborting now." % my_name)
   sys.exit(2)
 
 # Global attributes
 ead = " ! Global attributes"
-for att in etsf_attributes.keys():
+for att in list(etsf_attributes.keys()):
  att_desc = etsf_attributes[att]
 
  if ( att in etsf_properties ):
@@ -236,7 +236,7 @@ vlf_id = ""
 ivlf = 0
 vlf += "  integer, parameter :: etsf_%-30s = 0\n" % "specs_none"
 vlf_id = "  character(len = *), parameter :: etsf_specs_names(%d) = (/ &\n" % len(etsf_specifications_files)
-for id in etsf_specifications_files.keys():
+for id in list(etsf_specifications_files.keys()):
   vlf += "  integer, parameter :: etsf_%-30s = %d\n" % (id, 2 ** ivlf)
   vlf_id += "    & \"%-25s\", &\n" % id
   ivlf += 1
@@ -246,7 +246,7 @@ vlf += vlf_id
   
 
 # Import template
-src = file("config/etsf/template.%s" % (etsf_modules["etsf_io"]),"r").read()
+src = open("config/etsf/template.%s" % (etsf_modules["etsf_io"]),"r").read()
 src = re.sub("@SCRIPT@",my_name,src)
 src = re.sub("@CONSTANTS@",ead,src)
 src = re.sub("@FLAGS_GROUPS@",egc,src)
@@ -260,6 +260,9 @@ src = re.sub("@SPLIT_GROUP@",vsp,src)
 src = re.sub("@SPLIT_NAME_GROUP@",vsn,src)
 
 # Write module
-mod = file(etsf_file_module,"w")
+etsf_file_srcdir = os.path.dirname(etsf_file_module)
+if not os.path.exists(etsf_file_srcdir):
+   os.mkdir(etsf_file_srcdir)
+mod = open(etsf_file_module,"w")
 mod.write(src)
 mod.close()

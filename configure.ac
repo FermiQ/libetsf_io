@@ -13,7 +13,7 @@ AC_INIT([ETSF - IO library], [1.0.4], [https://bugs.launchpad.net/etsf-io], [ets
 
 dnl All temporary building files are put in this directory.
 dnl his must be called before AM_INIT_AUTOMAKE
-AC_CONFIG_AUX_DIR([config])
+AC_CONFIG_AUX_DIR([config/gnu])
 AC_CONFIG_MACRO_DIR([config/m4])
 
 dnl Init something, don't know exactly what...
@@ -35,6 +35,10 @@ AC_PROG_FC()
 dnl Imported script from ABINIT to defined which compiler is under usage.
 dnl It will define fc_type and fc_version that are required when installing.
 ABI_PROG_FC()
+
+dnl Add support for libtool
+AM_PROG_AR
+LT_INIT([disable-shared])
 
 dnl Set if the module name are capitalized or not with the FC compiler.
 AC_MSG_CHECKING([for module extension for compiler '$fc_type'])

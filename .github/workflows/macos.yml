@@ -1,0 +1,51 @@
+name: macOS
+
+on: push
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: >-
+          brew install
+          autoconf
+          automake
+          libtool
+          gcc@14
+          netcdf-fortran
+          pkg-config
+          robodoc
+
+      - name: Add gnubin to PATH
+        run: |
+          echo PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH" >> $GITHUB_ENV
+          echo FC=gfortran-14 >> $GITHUB_ENV
+
+      - name: Configure etsf-io
+        run: |
+          mkdir src/group_level/
+          bash -e autogen.sh
+          mkdir build/
+          cd build/
+          ../configure --with-netcdf-incs="$(pkg-config --cflags netcdf-fortran)"  --with-netcdf-libs="$(pkg-config --libs netcdf-fortran)"
+        env:
+          FFLAGS: "-O0 -g3 -fno-omit-frame-pointer -fsanitize=address"
+          LDFLAGS: "-fsanitize=address"
+
+      - name: Compile etsf-io
+        working-directory: build/
+        run: |
+          make -j V=1
+
+      # - name: Test etsf-io
+      #   working-directory: build/
+      #   run: |
+      #     make -j check V=1
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          path: build/config.log
